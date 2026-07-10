@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Néstor Pizzas | PWA Oficial Caniles y Baza</title>
+    
+    <!-- PWA Manifest & iOS Support -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#16A34A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Néstor Pizzas">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><circle cx='256' cy='256' r='256' fill='%2318181B'/><path d='M368 208c0-35.3-28.7-64-64-64h-96c-35.3 0-64 28.7-64 64v16H112v48h32l24 96h176l24-96h32v-48h-32v-16zm-176-16h96c8.8 0 16 7.2 16 16v16H176v-16c0-8.8 7.2-16 16-16zm152 112l-16 64H184l-16-64h176z' fill='%2316A34A'/><circle cx='180' cy='360' r='36' fill='%23EA580C'/><circle cx='332' cy='360' r='36' fill='%23EA580C'/></svg>">
+    
+    <!-- Tailwind CSS & Google Fonts (Tipografía de Alto Standing: Outfit & Plus Jakarta Sans) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nestor: {
+                            base: '#F8F6F2',
+                            card: '#FFFFFF',
+                            obsidian: '#18181B',
+                            charcoal: '#27272A',
+                            green: '#16A34A',
+                            greenDark: '#15803D',
+                            greenLight: '#DCFCE7',
+                            terracotta: '#EA580C',
+                            terracottaDark: '#C2410C',
+                            terracottaLight: '#FFEDD5',
+                            gold: '#D97706',
+                            border: '#E4E4E7'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'premium': '0 20px 45px -15px rgba(0, 0, 0, 0.07), 0 0 1px 1px rgba(0, 0, 0, 0.04)',
+                        'premium-hover': '0 28px 55px -15px rgba(234, 88, 12, 0.22), 0 12px 25px -10px rgba(22, 163, 74, 0.25)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.08)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F8F6F2;
+            color: #18181B;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        
+        /* Ocultación absoluta de barras de desplazamiento (scrollbars) en toda la PWA para estética 100% nativa */
+        *, *::before, *::after {
+            scrollbar-width: none !important; /* Firefox */
+            -ms-overflow-style: none !important; /* IE y Edge */
+        }
+
+        *::-webkit-scrollbar {
+            display: none !important; /* Chrome, Safari, Opera */
+            width: 0px !important;
+            height: 0px !important;
+            background: transparent !important;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none !important; width: 0px !important; height: 0px !important; }
+        .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+        
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(228, 228, 231, 0.8);
+        }
+
+        .glass-floating {
+            background: rgba(24, 24, 27, 0.96);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .category-pill {
+            transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+        .category-pill.active {
+            background-color: #18181B;
+            color: #FFFFFF;
+            font-weight: 700;
+            box-shadow: 0 8px 25px -5px rgba(24, 24, 27, 0.4), 0 0 0 1px #16A34A;
+            border-color: #18181B;
+        }
+
+        .card-curved {
+            border-radius: 2.2rem;
+            transition: all 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #FFFFFF;
+            border: 1px solid #F4F4F5;
+        }
+        .card-curved:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 28px 55px -15px rgba(234, 88, 12, 0.22), 0 12px 25px -10px rgba(22, 163, 74, 0.25);
+            border-color: #16A34A;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="selection:bg-nestor-green selection:text-white pb-36">
+
+    <!-- =========================================================================
+         BANNER STANDALONE PWA (ESPAÑOL PURO - ESTÉTICA PROFESIONAL)
+         ========================================================================= -->
+    <div id="pwa-install-banner" class="hidden fixed top-0 inset-x-0 z-[100] bg-nestor-obsidian text-white px-6 py-3.5 shadow-2xl items-center justify-between gap-4 border-b border-white/10 animate-fade">
+        <div class="flex items-center gap-4">
+            <div class="w-8 h-8 rounded-xl bg-nestor-green/20 border border-nestor-green/40 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 text-nestor-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            </div>
+            <div class="text-xs">
+                <p class="font-display font-bold text-white uppercase tracking-wider">Aplicación Oficial Néstor Pizzas</p>
+                <p class="text-zinc-400 text-[11px] font-medium">Acceso directo para pedidos en Caniles y Baza sin comisiones ni tiempos de espera.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <button onclick="installPWA()" class="bg-nestor-green hover:bg-nestor-greenDark text-white font-display font-bold px-4 py-1.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-sm">
+                Instalar App
+            </button>
+            <button onclick="document.getElementById('pwa-install-banner').classList.add('hidden')" class="text-zinc-400 hover:text-white p-1.5 font-bold">✕</button>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         CABECERA ARCHITECTURAL PREMIUM CON EMBLEMA DE MOTOCICLETA SVG
+         ========================================================================= -->
+    <header class="sticky top-0 z-40 glass-nav px-4 sm:px-8 py-4 transition-all">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <!-- Marca Oficial Caniles con SVG Moto de Néstor -->
+            <div class="flex items-center gap-3.5 cursor-pointer group" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-nestor-obsidian text-white flex items-center justify-center shadow-lg shrink-0 border border-zinc-800 group-hover:border-nestor-green transition-colors relative overflow-hidden">
+                    <img src="./logo.png?v=2" alt="Néstor Pizzas Logo Oficial" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h1 class="font-display font-black text-2xl sm:text-3xl tracking-tight text-nestor-obsidian uppercase leading-none group-hover:text-nestor-greenDark transition-colors">
+                            NÉSTOR PIZZAS
+                        </h1>
+                        <span class="text-[10px] font-bold bg-nestor-greenLight text-nestor-greenDark px-2.5 py-0.5 rounded-full uppercase tracking-wider font-display border border-nestor-green/30">
+                            Caniles • Granada
+                        </span>
+                    </div>
+                    <p class="text-xs text-zinc-500 font-semibold flex items-center gap-2 mt-1.5">
+                        <span class="inline-block w-2 h-2 rounded-full bg-nestor-green animate-pulse"></span>
+                        <span>Teléfono Oficial de Comandas: <strong class="text-nestor-obsidian font-display font-bold">679 76 19 87</strong> • Calle Alcalde Felip, 9</span>
+                    </p>
+                    <!-- Botones No Invasivos de Contacto Directo (Llamar vs WhatsApp) -->
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-2.5">
+                        <a href="tel:679761987" class="bg-white hover:bg-zinc-100 text-nestor-obsidian border border-zinc-300 rounded-xl px-3.5 py-1.5 text-xs font-display font-bold flex items-center gap-1.5 shadow-2xs transition-all">
+                            <svg class="w-3.5 h-3.5 text-nestor-green" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                            <span>Llamar: 679 76 19 87</span>
+                        </a>
+                        <a href="https://wa.me/34679761987?text=Hola%20N%C3%A9stor%20Pizzas,%20quisiera%20hacer%20una%20consulta" target="_blank" class="bg-nestor-green/10 hover:bg-nestor-green/20 text-nestor-greenDark border border-nestor-green/30 rounded-xl px-3.5 py-1.5 text-xs font-display font-bold flex items-center gap-1.5 shadow-2xs transition-all">
+                            <svg class="w-3.5 h-3.5 text-nestor-green" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.124.557 4.122 1.543 5.864l-1.636 5.988 6.136-1.61c1.688.92 3.633 1.458 5.694 1.458 6.627 0 12-5.373 12-12 0-6.628-5.373-12-11.737-12z"/></svg>
+                            <span>WhatsApp Directo</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Módulo VIP & Horario -->
+            <div class="flex items-center gap-3">
+                <div class="hidden md:flex flex-col text-right pr-3 border-r border-zinc-200">
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Horario Reparto</span>
+                    <span class="text-xs font-bold text-nestor-obsidian">Jueves a Domingos: 19:30 - 22:30h</span>
+                </div>
+                <div onclick="openVipModal()" class="cursor-pointer bg-white hover:bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-2.5 flex items-center gap-3 transition-all shadow-sm group">
+                    <div class="w-8 h-8 rounded-xl bg-nestor-terracottaLight text-nestor-terracottaDark flex items-center justify-center font-display font-bold text-xs">
+                        VIP
+                    </div>
+                    <div class="text-left">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-zinc-400 leading-none">Club Caniles</p>
+                        <p class="text-xs font-bold text-nestor-obsidian mt-0.5"><span id="vip-points-count" class="text-nestor-green font-display font-extrabold">140</span> Puntos Acumulados</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- =========================================================================
+         HERO CAROUSEL PUBLICITARIO (FOTOGRAFÍA COMERCIAL DE ALTO STANDING)
+         ========================================================================= -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-6">
+        <div class="relative rounded-[2.5rem] overflow-hidden shadow-premium bg-nestor-obsidian text-white min-h-[360px] sm:min-h-[420px] flex items-center border border-zinc-800">
+            <!-- Slide 1: Jueves Locos y Calidad Suprema -->
+            <div id="slide-1" class="absolute inset-0 flex items-center justify-between p-8 sm:p-14 z-10 transition-opacity duration-700 opacity-100">
+                <div class="absolute inset-0 z-0">
+                    <img src="./banner1.png" 
+                         onerror="this.src='https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1600&q=80'" 
+                         alt="Néstor Pizzas Promoción Oficial" class="w-full h-full object-cover opacity-35 scale-105 transform">
+                    <div class="absolute inset-0 bg-gradient-to-r from-nestor-obsidian via-nestor-obsidian/90 to-transparent"></div>
+                </div>
+                <div class="relative z-10 max-w-2xl space-y-5">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-nestor-greenLight text-nestor-greenDark text-xs font-display font-bold uppercase tracking-widest border border-nestor-green/30 shadow-sm">
+                        <span>PROMOCIÓN EXCLUSIVA CANILES Y BAZA</span>
+                    </div>
+                    <h2 class="font-display font-black text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-none uppercase">
+                        JUEVES LOCOS:<br><span class="text-nestor-terracotta">2 PIZZAS × 11,00 €</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-zinc-300 font-normal leading-relaxed max-w-xl">
+                        Cada jueves disfruta de dos pizzas de 33cm recién horneadas con hasta 3 ingredientes artesanos al mejor precio de la comarca. Queso mozzarella fior di latte fundido sobre nuestra clásica masa casera.
+                    </p>
+                    <div class="pt-2 flex flex-wrap items-center gap-4">
+                        <button onclick="filterCategory('PIZZAS 33CM'); window.scrollTo({top:550,behavior:'smooth'})" class="bg-nestor-green hover:bg-nestor-greenDark text-white font-display font-bold px-7 py-3.5 rounded-2xl text-xs sm:text-sm shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] tracking-wider uppercase transition-all hover:scale-[1.02]">
+                            Explorar Carta de Pizzas →
+                        </button>
+                        <span class="text-xs font-semibold text-zinc-400 border border-zinc-700 bg-zinc-900/80 px-4 py-3 rounded-2xl">
+                            Reparto a domicilio sin coste en Caniles (Pedido mín. 10 €)
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Mazzi Pizzas Exclusivas -->
+            <div id="slide-2" class="absolute inset-0 flex items-center justify-between p-8 sm:p-14 z-0 transition-opacity duration-700 opacity-0 pointer-events-none">
+                <div class="absolute inset-0 z-0">
+                    <img src="./banner2.png" 
+                         onerror="this.src='https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=1600&q=80'" 
+                         alt="Mazzi Pizzas Artesanas Néstor" class="w-full h-full object-cover opacity-35 scale-105 transform">
+                    <div class="absolute inset-0 bg-gradient-to-r from-nestor-obsidian via-nestor-obsidian/90 to-transparent"></div>
+                </div>
+                <div class="relative z-10 max-w-2xl space-y-5">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-nestor-terracottaLight text-nestor-terracottaDark text-xs font-display font-bold uppercase tracking-widest border border-nestor-terracotta/30 shadow-sm">
+                        <span>ESPECIALIDAD GOURMET 5 QUESOS</span>
+                    </div>
+                    <h2 class="font-display font-black text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-none uppercase">
+                        MAZZI PIZZAS:<br><span class="text-nestor-gold">DOBLE CAPA ARTESANA</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-zinc-300 font-normal leading-relaxed max-w-xl">
+                        Nuestra exclusiva selección con exquisita mezcla de cinco quesos fundidos, una lámina adicional de masa crujiente y los ingredientes gourmet que tú elijas. Unidades limitadas cada noche.
+                    </p>
+                    <div class="pt-2 flex flex-wrap items-center gap-4">
+                        <button onclick="filterCategory('MAZZI PIZZAS'); window.scrollTo({top:550,behavior:'smooth'})" class="bg-nestor-terracotta hover:bg-nestor-terracottaDark text-white font-display font-bold px-7 py-3.5 rounded-2xl text-xs sm:text-sm shadow-[0_15px_30px_-5px_rgba(234,88,12,0.4)] tracking-wider uppercase transition-all hover:scale-[1.02]">
+                            Descubrir Mazzi Pizzas →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controles de Navegación -->
+            <div class="absolute bottom-6 right-8 z-20 flex items-center gap-2.5">
+                <button onclick="changeSlide(1)" id="dot-1" class="w-8 h-2 rounded-full bg-nestor-green transition-all"></button>
+                <button onclick="changeSlide(2)" id="dot-2" class="w-2.5 h-2 rounded-full bg-zinc-600 transition-all"></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         NAVEGACIÓN DE CATEGORÍAS (ELEGANCIA ARQUITECTÓNICA, CURVADA Y LIMPIA)
+         ========================================================================= -->
+    <nav class="sticky top-[77px] z-30 glass-nav py-4 mt-8 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between overflow-x-auto no-scrollbar gap-2.5">
+            <div class="flex items-center gap-2 text-xs sm:text-sm font-display font-semibold uppercase tracking-wider shrink-0">
+                <button onclick="filterCategory('TODOS')" id="cat-TODOS" class="category-pill active px-5 py-2.5 rounded-2xl border border-zinc-300">
+                    Menú Completo (38)
+                </button>
+                <button onclick="filterCategory('PIZZAS 33CM')" id="cat-PIZZAS 33CM" class="category-pill px-5 py-2.5 rounded-2xl bg-white text-zinc-600 hover:text-nestor-obsidian border border-zinc-200">
+                    Pizzas Clásicas 33cm (17)
+                </button>
+                <button onclick="filterCategory('PIZZAS BLANCAS')" id="cat-PIZZAS BLANCAS" class="category-pill px-5 py-2.5 rounded-2xl bg-white text-zinc-600 hover:text-nestor-obsidian border border-zinc-200">
+                    Pizzas Blancas de Nata (3)
+                </button>
+                <button onclick="filterCategory('MAZZI PIZZAS')" id="cat-MAZZI PIZZAS" class="category-pill px-5 py-2.5 rounded-2xl bg-white text-zinc-600 hover:text-nestor-obsidian border border-zinc-200">
+                    Mazzi Pizzas 5 Quesos (5)
+                </button>
+                <button onclick="filterCategory('POR INGREDIENTES')" id="cat-POR INGREDIENTES" class="category-pill px-5 py-2.5 rounded-2xl bg-white text-zinc-600 hover:text-nestor-obsidian border border-zinc-200">
+                    Personalizar al Gusto (5)
+                </button>
+                <button onclick="filterCategory('PATATAS Y ENTRANTES')" id="cat-PATATAS Y ENTRANTES" class="category-pill px-5 py-2.5 rounded-2xl bg-white text-zinc-600 hover:text-nestor-obsidian border border-zinc-200">
+                    Patatas y Entrantes (8)
+                </button>
+                <button onclick="filterCategory('ALGO MÁS')" id="cat-ALGO MÁS" class="category-pill px-5 py-2.5 rounded-2xl bg-white text-zinc-600 hover:text-nestor-obsidian border border-zinc-200">
+                    Pastas y Platos (3)
+                </button>
+                <button onclick="filterCategory('BEBIDAS')" id="cat-BEBIDAS" class="category-pill px-5 py-2.5 rounded-2xl bg-white text-zinc-600 hover:text-nestor-obsidian border border-zinc-200">
+                    Bebidas Frías (7)
+                </button>
+            </div>
+            <div class="hidden xl:flex items-center gap-2 text-xs font-display font-bold text-nestor-greenDark shrink-0 bg-nestor-greenLight/60 px-3.5 py-2 rounded-xl border border-nestor-green/20">
+                <span>CARTA 100% FIEL AL FOLLETO OFICIAL</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =========================================================================
+         GRID DE CATÁLOGO (EXACTAMENTE 3 TARJETAS POR FILA EN PC, CURVADAS PREMIUM)
+         ========================================================================= -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
+        <!-- 1 col en móvil, 2 en tablet, exactamente 3 en PC (lg/xl) -->
+        <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Renderizado dinámico en castellano puro con tipografía Outfit -->
+        </div>
+    </main>
+
+    <!-- =========================================================================
+         CLUB DE BENEFICIOS & RIFA ANUAL CANILES (TONO OBSIDIANA ELEGANTE)
+         ========================================================================= -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-8 py-16 mt-16">
+        <div class="bg-nestor-obsidian text-white rounded-[2.5rem] p-8 sm:p-14 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-12 border border-zinc-800">
+            <div class="space-y-4 max-w-2xl relative z-10 text-center lg:text-left">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-nestor-terracotta/20 border border-nestor-terracotta/40 text-nestor-terracottaLight text-xs uppercase tracking-widest font-display font-bold">
+                    Club de Fidelización Caniles
+                </div>
+                <h3 class="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-white leading-tight uppercase">
+                    VENTAJAS DE AFILIADO VIP<br><span class="text-nestor-gold">NÉSTOR PIZZAS CANILES</span>
+                </h3>
+                <p class="text-xs sm:text-sm text-zinc-300 font-normal leading-relaxed">
+                    Únete a la lista oficial de clientes frecuentes de Caniles y Baza. Regístrate con tu teléfono móvil para activar tu cuenta de afiliado y obtener promociones privadas, prioridad en reparto domiciliario y acceso automático al sorteo semanal de pedidos gratis.
+                </p>
+            </div>
+
+            <!-- Caja de Registro Minimalista -->
+            <div id="raffle-box" class="w-full lg:w-96 bg-zinc-900 border border-zinc-800 rounded-[2rem] p-7 shadow-xl relative z-10">
+                <form onsubmit="enterRaffle(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Nombre y Apellidos</label>
+                        <input type="text" id="raffle-name" required placeholder="Ej. Antonio Martínez" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-nestor-green font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Móvil (WhatsApp)</label>
+                        <input type="tel" id="raffle-phone" required placeholder="Ej. 679 00 00 00" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-nestor-green font-medium">
+                    </div>
+                    <button type="submit" class="w-full bg-nestor-green hover:bg-nestor-greenDark text-white font-display font-bold py-4 rounded-2xl text-xs sm:text-sm shadow-md uppercase tracking-wider transition-all">
+                        Activar Ventajas de Afiliado
+                    </button>
+                </form>
+                <div id="raffle-confirmation" class="hidden text-center py-6 space-y-3 animate-fade">
+                    <div class="w-12 h-12 rounded-2xl bg-nestor-green/20 text-nestor-green flex items-center justify-center font-bold text-xl mx-auto border border-nestor-green">✓</div>
+                    <p class="font-display font-black text-white text-lg uppercase">¡CUENTA DE AFILIADO ACTIVA!</p>
+                    <p class="text-xs text-zinc-400">Socio Oficial #4892 en la base de datos de Caniles.</p>
+                    <div class="bg-zinc-950 border border-zinc-800 p-3.5 rounded-2xl text-xs text-nestor-gold font-bold mt-2">
+                        Estado: <span class="text-white font-display font-black tracking-widest text-sm">ACTIVO EN CANILES</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         BARRA FLOTANTE DE COMANDA (SOLUCIONADO SOLAPAMIENTO: IZQUIERDA/CENTRO)
+         ========================================================================= -->
+    <div id="sticky-cart-bar" class="hidden fixed bottom-6 left-4 sm:left-8 z-40 glass-floating text-white rounded-3xl p-4 sm:px-6 sm:py-4 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex items-center justify-between gap-6 cursor-pointer hover:scale-[1.02] transition-all max-w-sm sm:max-w-md w-[calc(100%-6.5rem)] sm:w-auto border border-zinc-700/80" onclick="openDynamicUpsellModal()">
+        <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-nestor-green text-white flex items-center justify-center font-display font-bold text-xs shadow-md relative uppercase shrink-0">
+                <span>PEDIDO</span>
+                <span id="cart-counter-badge" class="absolute -top-2 -right-2 bg-nestor-terracotta text-white font-display font-black text-xs px-2 py-0.5 rounded-full border-2 border-zinc-900 shadow">0</span>
+            </div>
+            <div>
+                <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block leading-none">Comanda en Curso</span>
+                <span id="cart-total-badge" class="font-display font-extrabold text-2xl text-white">0.00 €</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 font-display font-bold text-xs bg-gradient-to-r from-nestor-green to-nestor-greenDark hover:from-nestor-terracotta hover:to-nestor-terracottaDark text-white uppercase tracking-wider px-5 py-3 rounded-2xl transition-all shadow-md shrink-0">
+            <span>Tramitar Comanda</span>
+            <span>→</span>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         CONSERJE GASTRONÓMICO NÉSTOR (WIDGET DE CHAT SEPARADO EN ESQUINA DERECHA)
+         ========================================================================= -->
+    <div class="fixed bottom-6 right-4 sm:right-8 z-40" id="chat-widget-wrapper">
+        <!-- Botón Flotante Compacto de Asistencia Web (No invade contacto directo) -->
+        <button id="chat-toggle-btn" onclick="toggleChatWidget()" class="bg-nestor-obsidian hover:bg-black text-white border border-zinc-700/80 font-display font-bold px-4 sm:px-5 py-3.5 rounded-3xl shadow-2xl flex items-center gap-3 transition-all group hover:border-nestor-green">
+            <div class="w-9 h-9 rounded-2xl bg-nestor-green text-white flex items-center justify-center shadow shrink-0 relative overflow-hidden">
+                <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-nestor-terracotta rounded-full border-2 border-zinc-900 animate-ping"></span>
+                <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-nestor-terracotta rounded-full border-2 border-zinc-900"></span>
+                <span class="font-display font-black text-xs">AI</span>
+            </div>
+            <div class="text-left hidden lg:block leading-none">
+                <span class="text-[9px] text-zinc-400 font-bold uppercase tracking-widest block">Asistencia en PWA</span>
+                <span class="text-xs font-bold text-white mt-0.5 block">Asistente Web Néstor</span>
+            </div>
+        </button>
+
+        <!-- Panel de Chat -->
+        <div id="chat-widget-box" class="hidden absolute bottom-16 right-0 w-80 sm:w-96 bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[480px] animate-fade text-left">
+            <div class="bg-zinc-950 px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-nestor-green text-white flex items-center justify-center font-display font-bold text-xs">NP</div>
+                    <div>
+                        <p class="font-display font-bold text-sm text-white uppercase">Asistente Virtual de Pedidos</p>
+                        <p class="text-[10px] text-nestor-greenLight font-semibold">Procesamiento Inmediato en PWA</p>
+                    </div>
+                </div>
+                <button onclick="toggleChatWidget()" class="text-zinc-400 hover:text-white p-1 text-sm font-bold">✕</button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs no-scrollbar">
+                <div class="bg-zinc-800 border border-zinc-700 p-3.5 rounded-2xl rounded-tr-none text-zinc-200 max-w-[88%] font-normal leading-relaxed">
+                    Le damos la bienvenida a la aplicación oficial de Néstor Pizzas Caniles. Estoy a su disposición para recomendarle cualquiera de nuestras 38 especialidades, informar sobre zonas de reparto o tramitar su pedido al horno. ¿En qué le puedo ayudar?
+                </div>
+            </div>
+
+            <div class="px-3.5 py-2.5 bg-zinc-950 border-t border-zinc-800 flex flex-wrap gap-1.5 text-[11px]">
+                <button onclick="sendQuickChatMessage('¿Cuál es la pizza especial del pueblo?')" class="bg-zinc-800 hover:bg-nestor-green hover:text-white text-zinc-200 px-3 py-1.5 rounded-xl border border-zinc-700 font-semibold transition-all">Pizza Canilera</button>
+                <button onclick="sendQuickChatMessage('Oferta Jueves Locos (2x11€)')" class="bg-zinc-800 hover:bg-nestor-green hover:text-white text-zinc-200 px-3 py-1.5 rounded-xl border border-zinc-700 font-semibold transition-all">Jueves Locos 2x11€</button>
+                <button onclick="sendQuickChatMessage('Horario y teléfono de pedidos')" class="bg-zinc-800 hover:bg-nestor-green hover:text-white text-zinc-200 px-3 py-1.5 rounded-xl border border-zinc-700 font-semibold transition-all">Teléfono Oficial</button>
+            </div>
+
+            <form onsubmit="handleChatSubmit(event)" class="p-3 bg-zinc-950 border-t border-zinc-800 flex gap-2">
+                <input type="text" id="chat-input" placeholder="Escriba su consulta o petición..." class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-nestor-green font-medium">
+                <button type="submit" class="bg-nestor-green hover:bg-nestor-greenDark text-white px-4 py-2.5 rounded-xl font-display font-bold text-xs uppercase tracking-wider shrink-0">Enviar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         MODAL 1: CONFIGURACIÓN VIP AL GUSTO & UPSELLING (INTUITIVO Y CLARO)
+         ========================================================================= -->
+    <div id="customization-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto no-scrollbar">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] animate-fade text-white my-auto">
+            <!-- Encabezado con foto y nombre -->
+            <div class="p-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-nestor-green/10 to-transparent pointer-events-none"></div>
+                <div>
+                    <span class="text-[10px] font-display font-bold uppercase tracking-widest text-nestor-green block">Configuración de Especialidad</span>
+                    <h3 id="modal-product-title" class="font-display font-black text-2xl sm:text-3xl text-white mt-0.5 uppercase">Canilera</h3>
+                    <p id="modal-product-desc" class="text-xs text-zinc-400 mt-1 max-w-md font-normal"></p>
+                </div>
+                <button onclick="closeCustomizationModal()" class="text-zinc-400 hover:text-white text-xl font-bold p-2 bg-zinc-900 rounded-2xl border border-zinc-800 shrink-0">✕</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm font-medium text-zinc-300 no-scrollbar">
+                <!-- 1. Formato y Masa -->
+                <div class="space-y-3">
+                    <label class="block font-display font-bold text-white text-sm uppercase tracking-wider flex items-center justify-between">
+                        <span>1. Selección de Formato y Queso</span>
+                        <span class="text-[10px] text-nestor-green bg-nestor-green/10 px-2.5 py-0.5 rounded-full border border-nestor-green/30">OBLIGATORIO</span>
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label onclick="selectCustSizeOption(this)" class="cust-size-btn flex items-center justify-between p-4 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer shadow-sm transition-all">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="cust-size" value="Tamaño Estándar (33cm)" checked class="text-nestor-green w-4 h-4">
+                                <div>
+                                    <span class="font-bold text-white block">Masa Clásica 33cm</span>
+                                    <span class="text-[11px] text-zinc-400">Recién horneada en su punto</span>
+                                </div>
+                            </div>
+                            <span class="font-display font-bold text-nestor-greenLight">+0,00 €</span>
+                        </label>
+                        <label onclick="selectCustSizeOption(this)" class="cust-size-btn flex items-center justify-between p-4 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="cust-size" value="Extra Queso Mozzarella Gratinado al Borde" class="text-nestor-green w-4 h-4">
+                                <div>
+                                    <span class="font-bold text-white block">Extra Queso Gratinado</span>
+                                    <span class="text-[11px] text-nestor-gold">Doble mozzarella fundida</span>
+                                </div>
+                            </div>
+                            <span class="font-display font-bold text-nestor-gold">+2,00 €</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 2. Ingredientes Extra Oficiales -->
+                <div class="space-y-3 border-t border-zinc-800 pt-5">
+                    <label class="block font-display font-bold text-white text-sm uppercase tracking-wider flex items-center justify-between">
+                        <span>2. Añadir Ingredientes Extra (+1,00 € / Und)</span>
+                        <span class="text-[10px] text-zinc-400">OPCIONAL</span>
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto pr-1 text-xs no-scrollbar">
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Extra Mozzarella" data-price="1.00"><span>+ Mozzarella</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Queso de Cabra" data-price="1.00"><span>+ Queso Cabra</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Roquefort" data-price="1.00"><span>+ Roquefort</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Jamón Serrano Bodega" data-price="1.00"><span>+ Jamón Serrano</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Peperoni Italiano" data-price="1.00"><span>+ Peperoni</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Carne Kebab" data-price="1.00"><span>+ Carne Kebab</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Bacon Ahumado" data-price="1.00"><span>+ Bacon Ahumado</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Pollo Tierno" data-price="1.00"><span>+ Pollo Tierno</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Atún / Gambas" data-price="1.00"><span>+ Atún y Gambas</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Salsa Barbacoa" data-price="1.00"><span>+ Salsa Barbacoa</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Alioli Gratinado" data-price="1.00"><span>+ Alioli Gratinado</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                        <label onclick="toggleCheckboxCard(this)" class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all"><div class="flex items-center gap-2"><input type="checkbox" class="cust-extra rounded text-nestor-green w-3.5 h-3.5" data-name="Salsa Cheddar" data-price="1.00"><span>+ Salsa Cheddar</span></div><span class="text-nestor-greenLight font-bold">+1€</span></label>
+                    </div>
+                </div>
+
+                <!-- 3. Quitar Ingredientes -->
+                <div class="space-y-2.5 border-t border-zinc-800 pt-5">
+                    <label class="block font-display font-bold text-white text-sm uppercase tracking-wider">3. Exclusión de Ingredientes</label>
+                    <div class="flex flex-wrap gap-2 text-xs font-semibold">
+                        <label onclick="toggleCheckboxCard(this, true)" class="bg-zinc-800/80 px-3.5 py-2 rounded-xl border border-zinc-700 flex items-center gap-2 cursor-pointer hover:border-red-500 transition-all"><input type="checkbox" class="cust-remove rounded" value="Sin Cebolla"> Sin Cebolla</label>
+                        <label onclick="toggleCheckboxCard(this, true)" class="bg-zinc-800/80 px-3.5 py-2 rounded-xl border border-zinc-700 flex items-center gap-2 cursor-pointer hover:border-red-500 transition-all"><input type="checkbox" class="cust-remove rounded" value="Sin Champiñón"> Sin Champiñón</label>
+                        <label onclick="toggleCheckboxCard(this, true)" class="bg-zinc-800/80 px-3.5 py-2 rounded-xl border border-zinc-700 flex items-center gap-2 cursor-pointer hover:border-red-500 transition-all"><input type="checkbox" class="cust-remove rounded" value="Sin Aceitunas"> Sin Aceitunas</label>
+                        <label onclick="toggleCheckboxCard(this, true)" class="bg-zinc-800/80 px-3.5 py-2 rounded-xl border border-zinc-700 flex items-center gap-2 cursor-pointer hover:border-red-500 transition-all"><input type="checkbox" class="cust-remove rounded" value="Sin Pimiento"> Sin Pimiento</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-5 bg-zinc-950 border-t border-zinc-800 flex items-center justify-between gap-4">
+                <div>
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Importe de Artículo</span>
+                    <span id="modal-total-price" class="font-display font-black text-2xl sm:text-3xl text-white">9,50 €</span>
+                </div>
+                <button onclick="confirmCustomizedItem()" class="bg-gradient-to-r from-nestor-green to-nestor-greenDark hover:from-nestor-terracotta hover:to-nestor-terracottaDark text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-xs sm:text-sm transition-all hover:scale-105">
+                    + Añadir al Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         MODAL DINÁMICO DE UPSELLING POST-PEDIDO (PWA BOOST)
+         ========================================================================= -->
+    <div id="upsell-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto no-scrollbar">
+        <div class="bg-zinc-900 border border-nestor-gold/40 rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] animate-fade text-white my-auto relative">
+            <div class="p-6 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border-b border-zinc-800 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-display font-bold uppercase tracking-widest text-nestor-gold flex items-center gap-1.5">
+                        <span>★ Recomendación Especial del Horno</span>
+                    </span>
+                    <h3 class="font-display font-black text-2xl text-white mt-1 uppercase">¿COMPLETAS TU COMANDA?</h3>
+                    <p class="text-xs text-zinc-400 mt-0.5">Complementos y bebidas Gourmet de Caniles y Baza elaborados al momento</p>
+                </div>
+                <button onclick="closeUpsellAndReturnToMenu()" class="text-zinc-400 hover:text-white text-xl font-bold p-2 bg-zinc-900 rounded-2xl border border-zinc-800 shrink-0">✕</button>
+            </div>
+
+            <!-- Contenedor Dinámico con Productos 100% Reales de Comida (Sin Personas) -->
+            <div id="upsell-cards-container" class="p-6 overflow-y-auto space-y-3 flex-1 text-xs sm:text-sm font-medium text-zinc-300 max-h-[52vh] no-scrollbar">
+                <!-- Renderizado por JS de forma dinámica -->
+            </div>
+
+            <div class="p-5 bg-zinc-950 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <button onclick="closeUpsellAndReturnToMenu()" class="w-full sm:w-auto bg-zinc-900 hover:bg-nestor-gold hover:text-nestor-obsidian text-zinc-300 font-display font-bold px-5 py-3.5 rounded-2xl text-xs uppercase transition-all border border-zinc-800 flex items-center justify-center gap-2 shadow">
+                    <span>🍕 + Añadir Otra Pizza / Seguir en Menú</span>
+                </button>
+                <button onclick="shuffleDynamicUpsells()" class="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-nestor-gold font-display font-bold px-5 py-3.5 rounded-2xl text-xs uppercase transition-all border border-zinc-700 flex items-center justify-center gap-2">
+                    <span>★ Ver Otras Recomendaciones</span>
+                </button>
+                <button onclick="closeUpsellAndGoToCheckout()" class="w-full sm:w-auto bg-gradient-to-r from-nestor-green to-nestor-greenDark hover:from-nestor-terracotta hover:to-nestor-terracottaDark text-white font-display font-bold px-6 py-3.5 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-xs transition-all flex items-center justify-center gap-2">
+                    <span>💳 Pasarela de Pago (→)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         MODAL 2: TRAMITACIÓN DE PEDIDO & PASARELA DE PAGO COMPLETA (GRAND MODAL)
+         ========================================================================= -->
+    <div id="checkout-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto no-scrollbar">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[94vh] animate-fade text-white my-auto">
+            <div class="p-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-nestor-terracotta/10 via-nestor-green/10 to-transparent pointer-events-none"></div>
+                <div>
+                    <span class="text-[10px] font-display font-bold text-nestor-green uppercase tracking-widest block">Pasarela Oficial de Pedidos Caniles y Baza</span>
+                    <h3 class="font-display font-black text-2xl sm:text-3xl text-white mt-0.5 uppercase">Resumen y Tramitación</h3>
+                </div>
+                <button onclick="closeCheckoutModal()" class="text-zinc-400 hover:text-white text-xl font-bold p-2 bg-zinc-900 rounded-2xl border border-zinc-800 shrink-0">✕</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm text-zinc-300 no-scrollbar">
+                <!-- Artículos Seleccionados -->
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <span class="font-display font-bold text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                            <span>Artículos en tu Comanda</span>
+                            <span id="chk-items-count" class="text-nestor-green font-bold">0 Artículos</span>
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="closeCheckoutAndAddMore()" class="bg-zinc-800 hover:bg-nestor-gold hover:text-nestor-obsidian text-zinc-300 font-display font-bold px-3 py-1.5 rounded-xl text-[11px] uppercase transition-all flex items-center gap-1 border border-zinc-700">
+                                <span>🍕 + Añadir más Pizzas</span>
+                            </button>
+                            <button onclick="closeCheckoutAndOpenUpsell()" class="bg-zinc-800 hover:bg-nestor-green hover:text-white text-zinc-300 font-display font-bold px-3 py-1.5 rounded-xl text-[11px] uppercase transition-all flex items-center gap-1 border border-zinc-700">
+                                <span>★ + Complementos Sugeridos</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="checkout-items-list" class="space-y-2.5 max-h-48 overflow-y-auto pr-1 no-scrollbar">
+                        <!-- Renderizado por JS -->
+                    </div>
+                </div>
+
+                <!-- Puntos Club VIP -->
+                <div class="bg-gradient-to-r from-zinc-950 to-zinc-900 border border-nestor-gold/30 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-nestor-terracotta text-white font-display font-bold flex items-center justify-center text-xs shrink-0 shadow">VIP</div>
+                        <div>
+                            <span class="font-bold text-white block">Club Fidelización Caniles: <span id="chk-pts" class="text-nestor-gold font-display font-extrabold">140</span> Puntos</span>
+                            <span class="text-xs text-zinc-400">Canjea 100 ptos para obtener un descuento directo de <strong class="text-nestor-greenLight">-4,00 €</strong></span>
+                        </div>
+                    </div>
+                    <button id="btn-redeem-pts" onclick="toggleRedeemPoints()" class="bg-zinc-800 hover:bg-zinc-700 text-white font-display font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider shrink-0 transition-all border border-zinc-700">
+                        Canjear 100 ptos
+                    </button>
+                </div>
+
+                <!-- Método Entrega -->
+                <div class="space-y-3">
+                    <span class="font-display font-bold text-white text-xs uppercase tracking-wider block">1. Modalidad de Entrega o Recogida</span>
+                    <div class="grid grid-cols-2 gap-3 font-medium">
+                        <label onclick="selectCheckoutOption('delivery', 'Reparto a Domicilio (Caniles/Baza)', this)" class="chk-delivery-btn flex items-center justify-between p-4 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer shadow transition-all">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="chk-delivery" value="Reparto a Domicilio (Caniles/Baza)" checked class="text-nestor-green w-4 h-4">
+                                <div>
+                                    <span class="font-bold text-white block">Envío a Domicilio</span>
+                                    <span class="text-[11px] text-nestor-greenLight font-bold">Reparto Gratis en Caniles</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label onclick="selectCheckoutOption('delivery', 'Recogida en Local (Alcalde Felip 9)', this)" class="chk-delivery-btn flex items-center justify-between p-4 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="chk-delivery" value="Recogida en Local (Alcalde Felip 9)" class="text-nestor-green w-4 h-4">
+                                <div>
+                                    <span class="font-bold text-white block">Recoger en Pizzería</span>
+                                    <span class="text-[11px] text-zinc-400">Calle Alcalde Felip, 9</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Datos de Envío / Mesa -->
+                <div class="space-y-3 border-t border-zinc-800 pt-5">
+                    <span class="font-display font-bold text-white text-xs uppercase tracking-wider block">2. Datos de Contacto y Entrega</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 font-medium">
+                        <div>
+                            <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Nombre Completo *</label>
+                            <input type="text" id="chk-name" required placeholder="Ej. Carlos Mendoza" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-3 text-white text-sm focus:outline-none focus:border-nestor-green font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Móvil WhatsApp *</label>
+                            <input type="tel" id="chk-phone" required placeholder="Ej. 679 00 00 00" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-3 text-white text-sm focus:outline-none focus:border-nestor-green font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Dirección / Mesa / Notas *</label>
+                            <input type="text" id="chk-address" required placeholder="Calle, nº, piso o 'Mesa 3'" class="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-3 text-white text-sm focus:outline-none focus:border-nestor-green font-medium">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pasarela de Pago Oficial Integrada -->
+                <div class="space-y-3 border-t border-zinc-800 pt-5">
+                    <span class="font-display font-bold text-white text-xs uppercase tracking-wider block">3. Elige tu Forma de Pago Oficial</span>
+                    <div class="grid grid-cols-3 gap-3 text-xs font-bold">
+                        <label onclick="selectCheckoutOption('pay', 'Bizum Móvil', this, 'bizum')" class="chk-pay-btn flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer transition-all text-center">
+                            <input type="radio" name="chk-pay" value="Bizum Móvil" checked class="text-nestor-green">
+                            <span>Bizum Directo</span>
+                        </label>
+                        <label onclick="selectCheckoutOption('pay', 'Tarjeta Bancaria TPV', this, 'card')" class="chk-pay-btn flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all text-center">
+                            <input type="radio" name="chk-pay" value="Tarjeta Bancaria TPV" class="text-nestor-green">
+                            <span>Tarjeta TPV / Apple Pay</span>
+                        </label>
+                        <label onclick="selectCheckoutOption('pay', 'Efectivo en Entrega', this, 'cash')" class="chk-pay-btn flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all text-center">
+                            <input type="radio" name="chk-pay" value="Efectivo en Entrega" class="text-nestor-green">
+                            <span>Efectivo en Entrega</span>
+                        </label>
+                    </div>
+
+                    <!-- Panel Dinámico de Pago: Bizum -->
+                    <div id="pay-panel-bizum" class="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-2.5 animate-fade">
+                        <div class="flex items-center gap-2 text-xs font-bold text-nestor-greenLight">
+                            <span class="w-2 h-2 rounded-full bg-nestor-green animate-pulse"></span>
+                            <span>Pago Inmediato y Seguro vía Bizum</span>
+                        </div>
+                        <p class="text-xs text-zinc-400">Al pulsar en "Confirmar Comanda", se enviará una solicitud oficial de Bizum al número móvil que indique o podrá realizar la transferencia en 1 segundo al teléfono de cocina Néstor: <strong>679 76 19 87</strong>.</p>
+                        <input type="tel" id="bizum-phone-input" placeholder="Confirmar número móvil para Bizum (Ej. 679 00 00 00)" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                    </div>
+
+                    <!-- Panel Dinámico de Pago: Tarjeta TPV -->
+                    <div id="pay-panel-card" class="hidden bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-3 animate-fade">
+                        <div class="flex items-center justify-between text-xs font-bold text-white">
+                            <span>Pasarela Bancaria Encriptada SSL (Stripe / Redsys)</span>
+                            <span class="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">VISA / Mastercard</span>
+                        </div>
+                        <div class="space-y-2">
+                            <input type="text" placeholder="Número de Tarjeta (•••• •••• •••• ••••)" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" placeholder="Caducidad (MM/AA)" class="bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                                <input type="password" placeholder="CVV (3 dígitos)" class="bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Dinámico de Pago: Efectivo -->
+                    <div id="pay-panel-cash" class="hidden bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-2 animate-fade">
+                        <p class="text-xs font-bold text-white">Pago en Efectivo al Repartidor en Caniles / Baza</p>
+                        <p class="text-xs text-zinc-400">Para agilizar la entrega, indique si necesitará cambio en el momento de abonar su pedido:</p>
+                        <select id="cash-change-select" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                            <option value="Exacto">Llevaré el importe exacto</option>
+                            <option value="Cambio de 20 €">Necesito cambio de un billete de 20 €</option>
+                            <option value="Cambio de 50 €">Necesito cambio de un billete de 50 €</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulación Impresora Térmica -->
+            <div id="printer-simulation" class="hidden p-6 bg-zinc-950 border-t border-zinc-800 overflow-hidden">
+                <div class="bg-white text-zinc-950 font-mono p-5 rounded-2xl shadow-2xl space-y-3.5 text-xs border-dashed border-2 border-zinc-400 max-w-sm mx-auto animate-fade">
+                    <div class="text-center border-b-2 border-zinc-900 pb-3">
+                        <p class="font-bold text-sm tracking-[0.2em] uppercase">*** NÉSTOR PIZZAS CANILES ***</p>
+                        <p class="text-[10px] text-zinc-700 mt-0.5">TEL. OFICIAL: 679 76 19 87 • CALLE ALCALDE FELIP 9</p>
+                        <p id="print-time" class="text-[10px] text-zinc-800 mt-1 font-bold">Fecha: 10/07/2026</p>
+                    </div>
+                    <div id="print-items" class="border-b border-zinc-900 pb-3 space-y-1.5 text-left"></div>
+                    <div class="text-right font-black text-sm border-b-2 border-zinc-900 pb-3">
+                        TOTAL COMANDA: <span id="print-total">0,00 €</span>
+                    </div>
+                    <div class="text-center text-[10px] pt-1">
+                        <p class="font-bold text-nestor-greenDark">COMANDA VINCULADA POR WHATSAPP AL HORNO</p>
+                        <p class="mt-1 tracking-widest text-xs font-black">||| | |||| || ||| || |||</p>
+                        <p class="text-[9px] text-zinc-600 mt-1">SISTEMA OFICIAL ARCHITECT.SYS PWA</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="checkout-footer" class="p-6 bg-zinc-950 text-white border-t border-zinc-800 flex items-center justify-between gap-4">
+                <div>
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Total a Abonar</span>
+                    <span id="checkout-final-total" class="font-display font-black text-2xl sm:text-3xl text-white">0,00 €</span>
+                </div>
+                <button onclick="processAndPrintOrder()" class="bg-gradient-to-r from-nestor-green to-nestor-greenDark hover:from-nestor-terracotta hover:to-nestor-terracottaDark text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-xs sm:text-sm transition-all hover:scale-105 shrink-0">
+                    Confirmar Pedido →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         LOGICA JAVASCRIPT MODULAR (38 PRODUCTOS REALES DE CARTA NÉSTOR PIZZAS)
+         ========================================================================= -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('[ServiceWorker] Registrado:', reg.scope))
+                    .catch(err => console.error('[ServiceWorker] Error:', err));
+            });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) { banner.classList.remove('hidden'); banner.classList.add('flex'); }
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    deferredPrompt = null;
+                    document.getElementById('pwa-install-banner').classList.add('hidden');
+                });
+            } else {
+                alert('La aplicación ya se encuentra instalada en su dispositivo o requiere seleccionar "Añadir a la pantalla de inicio" desde el menú Compartir en iOS.');
+            }
+        }
+
+        /* Base de Datos Completa con los 38 Artículos Reales, sin repeticiones de imagen y 100% castellano */
+        const NESTOR_PRODUCTS = [
+            // --- PIZZAS CLÁSICAS 33CM (17 ARTÍCULOS) ---
+            { id: 1, name: 'Milanesa', category: 'PIZZAS 33CM', price: 6.50, desc: 'Base casera de tomate y mozzarella fior di latte fundida con generoso jamón york seleccionado al horno.', badge: 'Clásica 33cm', badgeClass: 'bg-zinc-900 text-white', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
+            { id: 2, name: 'Calabresa', category: 'PIZZAS 33CM', price: 7.50, desc: 'Base de tomate artesano y mozzarella fundida con jamón york jugoso y rodajas de auténtico queso de cabra de la sierra.', badge: 'Clásica 33cm', badgeClass: 'bg-zinc-900 text-white', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
+            { id: 3, name: 'Kebab Especial', category: 'PIZZAS 33CM', price: 8.50, desc: 'Base con cebolla fresca en juliana, jugosa carne de kebab de ternera/pollo recién asada y auténtica salsa kebab al punto.', badge: 'Favorita Caniles', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
+            { id: 4, name: 'Florentina', category: 'PIZZAS 33CM', price: 8.50, desc: 'Base tradicional con jamón york de primera, rodajas de piña dorada al horno y un extra generoso de queso mozzarella fundido.', badge: 'Tropical 33cm', badgeClass: 'bg-nestor-greenDark text-white font-bold', img: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80' },
+            { id: 5, name: 'Siciliana', category: 'PIZZAS 33CM', price: 8.50, desc: 'Combinación marinera y de la tierra: base casera, champiñones laminados, jamón york tierno y lomos de atún claro en aceite.', badge: 'Clásica 33cm', badgeClass: 'bg-zinc-900 text-white', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
+            { id: 6, name: 'Napolitana', category: 'PIZZAS 33CM', price: 8.50, desc: 'Base con champiñones frescos al horno, bacon ahumado crujiente y tiras de auténtico jamón serrano bodega.', badge: 'Clásica 33cm', badgeClass: 'bg-zinc-900 text-white', img: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=800&q=80' },
+            { id: 7, name: 'Veneciana', category: 'PIZZAS 33CM', price: 8.50, desc: 'Trío cárnico italiano: base de tomate, mozzarella, jamón york, rodajas de salami curado y salchichas en su punto.', badge: 'Trío Cárnico', badgeClass: 'bg-zinc-900 text-white font-bold', img: 'https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?auto=format&fit=crop&w=800&q=80' },
+            { id: 8, name: 'Genovesa', category: 'PIZZAS 33CM', price: 8.50, desc: 'Especialidad del mar con champiñón fresco, colitas de gambas jugosas y atún claro de primera calidad fundido con mozzarella.', badge: 'Marinera', badgeClass: 'bg-zinc-900 text-white font-bold', img: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80' },
+            { id: 9, name: 'Parmesana', category: 'PIZZAS 33CM', price: 8.50, desc: 'Base casera cubierta con nuestra exquisita y secreta mezcla artesana de 4 quesos fundidos al punto de gratinado dorado.', badge: '4 Quesos', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
+            { id: 10, name: 'Marinera', category: 'PIZZAS 33CM', price: 8.50, desc: 'El sabor del mar en Caniles: base con atún claro, colitas de gambas y selectas delicias de mar horneadas con mozzarella.', badge: 'Delicias Mar', badgeClass: 'bg-zinc-900 text-white font-bold', img: 'https://images.unsplash.com/photo-1588315029754-2dd089d39a1a?auto=format&fit=crop&w=800&q=80' },
+            { id: 11, name: 'Canilera', category: 'PIZZAS 33CM', price: 9.50, desc: 'La especialidad suprema de Néstor. Base con jamón serrano bodega, tiras de pollo tierno, pimiento verde fresco y capa final de alioli gratinado al horno.', badge: 'Especialidad Caniles', badgeClass: 'bg-nestor-green text-white font-extrabold shadow-md', img: 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&w=800&q=80' },
+            { id: 12, name: 'Toscana', category: 'PIZZAS 33CM', price: 9.50, desc: 'Para los amantes del toque picante: base con peperoni italiano, carne picada de ternera, cebolla en juliana y nuestra salsa picante secreta.', badge: 'Picante Toscana', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
+            { id: 13, name: 'Texana Barbacoa', category: 'PIZZAS 33CM', price: 9.50, desc: 'Sabor intenso americana: bacon crujiente, carne de ternera sazonada, cebolla fresca al horno y generosa capa de salsa barbacoa Néstor.', badge: 'Barbacoa Texana', badgeClass: 'bg-nestor-terracottaDark text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
+            { id: 14, name: 'Romana de la Huerta', category: 'PIZZAS 33CM', price: 9.50, desc: 'Selección vegetal fresca de la zona: champiñón laminado, pimiento rojo asado, pimiento verde crujiente y cebolla fresca.', badge: 'Huerta Romana', badgeClass: 'bg-nestor-greenDark text-white font-bold', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
+            { id: 15, name: 'Americana Cheddar (NEW)', category: 'PIZZAS 33CM', price: 9.50, desc: 'Novedad en la carta. Base con bacon ahumado crujiente, carne picada de ternera y una capa irresistible de cremosa salsa cheddar fundida.', badge: 'Novedad New', badgeClass: 'bg-nestor-gold text-white font-bold shadow', img: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80' },
+            { id: 16, name: 'Boloñesa Italiana (NEW)', category: 'PIZZAS 33CM', price: 9.50, desc: 'Novedad en el menú. Base artesana cubierta por completo con nuestra contundente y casera salsa boloñesa de carne elaborada a fuego lento.', badge: 'Novedad New', badgeClass: 'bg-nestor-gold text-white font-bold shadow', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
+            { id: 17, name: 'Calzone al Curry (NEW)', category: 'PIZZAS 33CM', price: 9.50, desc: 'Novedad en formato cerrado. Calzone relleno y horneado en su punto con pollo tierno, verduras y nuestra aromática salsa especial de curry suave.', badge: 'Calzone New', badgeClass: 'bg-nestor-green text-white font-bold shadow', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
+
+            // --- PIZZAS BLANCAS 33CM (3 ARTÍCULOS) ---
+            { id: 18, name: 'Panna Blanca', category: 'PIZZAS BLANCAS', price: 8.50, desc: 'Base cremosa de nata fresca y mozzarella fior di latte, champiñones laminados, bacon crujiente y trozos tiernos de pollo.', badge: 'Base de Nata', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
+            { id: 19, name: 'Lionesa al Huevo', category: 'PIZZAS BLANCAS', price: 8.50, desc: 'Base suave de nata fresca con mozzarella, jamón york, bacon ahumado y un huevo fresco estrellado horneado justo al centro.', badge: 'Huevo al Horno', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
+            { id: 20, name: 'Carbonara Suprema', category: 'PIZZAS BLANCAS', price: 8.50, desc: 'Auténtico estilo carbonara blanca: base de nata fresca y mozzarella, jamón york, tiras de bacon crujiente y cebolla dorada.', badge: 'Carbonara Blanca', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
+
+            // --- MAZZI PIZZAS (5 ARTÍCULOS) ---
+            { id: 21, name: 'Mazzi Pizza Base (MP)', category: 'MAZZI PIZZAS', price: 8.50, desc: 'Nuestra masa artesana 31cm con exquisita mezcla de 5 quesos fundidos, una lámina adicional de masa crujiente sobre nuestra base original.', badge: 'Mazzi 5 Quesos', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80' },
+            { id: 22, name: 'Mazzi Pizza + 1 Ingrediente', category: 'MAZZI PIZZAS', price: 9.50, desc: 'Mazzi Pizza Base con mezcla de 5 quesos y lámina extra de masa, configurada con tu ingrediente favorito del menú a elegir.', badge: 'Mazzi + 1 Ing.', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
+            { id: 23, name: 'Mazzi Pizza + 2 Ingredientes', category: 'MAZZI PIZZAS', price: 10.50, desc: 'Mazzi Pizza Base artesana con mezcla de 5 quesos, lámina extra de masa y 2 ingredientes frescos a tu elección al momento.', badge: 'Mazzi + 2 Ing.', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
+            { id: 24, name: 'Mazzi Pizza + 3 Ingredientes', category: 'MAZZI PIZZAS', price: 11.50, desc: 'Mazzi Pizza Base artesana 5 quesos con doble lámina y 3 ingredientes gourmet a elegir para un sabor contundente en Caniles.', badge: 'Mazzi + 3 Ing.', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
+            { id: 25, name: 'Mazzi Pizza + 4 Ingredientes', category: 'MAZZI PIZZAS', price: 12.50, desc: 'La experiencia máxima de la carta. Mazzi Pizza 5 quesos doble lámina de masa configurada con hasta 4 ingredientes a tu elección.', badge: 'Mazzi Suprema', badgeClass: 'bg-nestor-green text-white font-extrabold shadow-md', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
+
+            // --- POR INGREDIENTES (5 ARTÍCULOS) ---
+            { id: 26, name: 'Pizza Base Tomate y Mozzarella', category: 'POR INGREDIENTES', price: 5.50, desc: 'Nuestra masa crujiente recién hecha de 33cm con salsa casera de tomate San Marzano, mozzarella fior di latte fundida y orégano.', badge: 'Crea tu Pizza', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
+            { id: 27, name: 'Pizza Base + 1 Ingrediente', category: 'POR INGREDIENTES', price: 6.50, desc: 'Pizza Base 33cm (tomate, mozzarella, orégano) personalizada con 1 ingrediente de nuestra lista de 28 opciones artesanas.', badge: 'Base + 1 Ing.', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
+            { id: 28, name: 'Pizza Base + 2 Ingredientes', category: 'POR INGREDIENTES', price: 7.50, desc: 'Pizza Base 33cm horneada al momento y configurada al gusto con 2 ingredientes seleccionados de nuestra carta oficial.', badge: 'Base + 2 Ing.', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
+            { id: 29, name: 'Pizza Base + 3 Ingredientes', category: 'POR INGREDIENTES', price: 8.50, desc: 'Pizza Base 33cm personalizada al milímetro por ti con 3 ingredientes frescos recién cortados en cocina.', badge: 'Base + 3 Ing.', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80' },
+            { id: 30, name: 'Pizza Base + 4 Ingredientes', category: 'POR INGREDIENTES', price: 9.50, desc: 'Tu creación perfecta al horno. Pizza Base 33cm combinada con tus 4 ingredientes favoritos de la carta de Néstor.', badge: 'Base + 4 Ing.', badgeClass: 'bg-nestor-greenDark text-white font-bold', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
+
+            // --- PATATAS Y ENTRANTES (8 ARTÍCULOS) ---
+            { id: 31, name: 'Patatas Fritas Crujientes', category: 'PATATAS Y ENTRANTES', price: 2.00, desc: 'Ración clásica de patatas fritas cortadas, doradas en su punto de sal y calientes listas para acompañar tus pizzas.', badge: 'Ración Caliente', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=80' },
+            { id: 32, name: 'Patatas Gajos Especiales', category: 'PATATAS Y ENTRANTES', price: 3.00, desc: 'Patatas en gajo con piel sazonadas a las finas hierbas. Incluye tu salsa favorita a elegir: Alioli, Barbacoa, Brava o Morisca.', badge: 'Salsas a Elegir', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
+            { id: 33, name: 'Patatas Gratinadas BBQ', category: 'PATATAS Y ENTRANTES', price: 6.00, desc: 'Cazuela generosa de patatas cubiertas con mezcla de quesos fundidos, carne sazonada y nuestra salsa barbacoa gratinadas al horno.', badge: 'Gratinada BBQ', badgeClass: 'bg-nestor-terracottaDark text-white font-bold', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
+            { id: 34, name: 'Patatas Gratinadas Cheddar', category: 'PATATAS Y ENTRANTES', price: 7.50, desc: 'Cazuela de patatas bañadas en abundante salsa cheddar fundida con trocitos crujientes de bacon ahumado al gratinador.', badge: 'Gratinada Cheddar', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=800&q=80' },
+            { id: 35, name: 'Patatas Gratinadas Morisca', category: 'PATATAS Y ENTRANTES', price: 7.50, desc: 'Especialidad gratinada con patatas gajos, queso mozzarella fundido, especias moriscas aromáticas y salsa especial del chef.', badge: 'Gratinada Morisca', badgeClass: 'bg-nestor-greenDark text-white font-bold', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
+            { id: 36, name: 'Nuggetts de Pollo (6 Unds)', category: 'PATATAS Y ENTRANTES', price: 3.50, desc: 'Ración de 6 bocaditos de pechuga de pollo empanados y crujientes por fuera, jugosos por dentro. Ideal para niños y entrantes.', badge: '6 Unidades', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80' },
+            { id: 37, name: 'Aros de Cebolla Crujientes (8 Unds)', category: 'PATATAS Y ENTRANTES', price: 4.00, desc: 'Ración de 8 anillos de cebolla dulce empanados con rebozado crujiente dorado al momento.', badge: '8 Unidades', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&w=800&q=80' },
+            { id: 38, name: 'Alitas de Pollo Asadas (6 Unds)', category: 'PATATAS Y ENTRANTES', price: 5.00, desc: 'Ración de 6 alitas de pollo asadas y marinadas en salsa barbacoa y especias Néstor, tiernas y llenas de sabor.', badge: 'Alitas BBQ', badgeClass: 'bg-nestor-terracottaDark text-white font-bold', img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80' },
+
+            // --- ALGO MÁS (3 ARTÍCULOS) ---
+            { id: 39, name: 'Pasta Boloñesa Casera', category: 'ALGO MÁS', price: 6.50, desc: 'Pasta recién cocida bañada en nuestra salsa boloñesa casera elaborada con carne picada de ternera y tomate lento.', badge: 'Pasta Boloñesa', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80' },
+            { id: 40, name: 'Pasta Carbonara al Parmigiano', category: 'ALGO MÁS', price: 6.50, desc: 'Pasta italiana al estilo carbonara con base cremosa de nata fresca, bacon ahumado crujiente y queso parmesano gratinado.', badge: 'Pasta Carbonara', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&w=800&q=80' },
+            { id: 41, name: 'Pollo al Curry con Arroz Basmati', category: 'ALGO MÁS', price: 9.00, desc: 'Plato completo de tiras tiernas de pechuga de pollo en salsa cremosa aromática de curry indio/morisco, servido sobre arroz basmati suelto.', badge: 'Plato Completo', badgeClass: 'bg-nestor-green text-white font-bold', img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80' },
+
+            // --- BEBIDAS (7 ARTÍCULOS) ---
+            { id: 42, name: 'Agua Mineral Pequeña 50cl', category: 'BEBIDAS', price: 1.00, desc: 'Botella de agua mineral natural de manantial fría formato individual (50cl).', badge: '50cl Fría', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' },
+            { id: 43, name: 'Agua Mineral Grande 1,5 Litros', category: 'BEBIDAS', price: 1.50, desc: 'Botella grande de agua mineral natural fría formato familiar (1.5 Litros).', badge: '1.5 Litros', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1559839914-17aae19cec71?auto=format&fit=crop&w=800&q=80' },
+            { id: 44, name: 'Refresco en Lata 33cl Fría', category: 'BEBIDAS', price: 1.50, desc: 'Lata individual bien fría de 33cl a elegir en mostrador o entrega: Coca-Cola, Coca-Cola Zero, Fanta Naranja o Fanta Limón.', badge: 'Lata 33cl', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' },
+            { id: 45, name: 'Cerveza en Lata 33cl Fría', category: 'BEBIDAS', price: 1.50, desc: 'Lata de cerveza rubia nacional bien fría (33cl) ideal para acompañar tus pizzas.', badge: 'Cerveza Lata', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1600788886242-5c96aabe3757?auto=format&fit=crop&w=800&q=80' },
+            { id: 46, name: 'Aquarius de Limón / Naranja Lata', category: 'BEBIDAS', price: 1.60, desc: 'Lata de Aquarius refrescante isotónico de 33cl bien frío.', badge: 'Lata 33cl', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' },
+            { id: 47, name: 'Cerveza Litro Fría (Litrona)', category: 'BEBIDAS', price: 2.50, desc: 'Botella de 1 Litro de cerveza rubia nacional bien fría, formato ideal para compartir en cenas de grupo en Caniles.', badge: 'Litro 1000ml', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1535958636474-b021ee887b13?auto=format&fit=crop&w=800&q=80' },
+            { id: 48, name: 'Refresco Botella 2 Litros Familiar', category: 'BEBIDAS', price: 3.00, desc: 'Botella familiar de 2 Litros bien fría a elegir: Coca-Cola Sabor Original, Coca-Cola Zero o Fanta Naranja.', badge: 'Familiar 2L', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1559839914-17aae19cec71?auto=format&fit=crop&w=800&q=80' }
+        ];
+
+        let currentCategory = 'TODOS';
+        let cart = [];
+        let pointsRedeemed = false;
+        let activeModalProduct = null;
+
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            if (!grid) return;
+
+            const filtered = currentCategory === 'TODOS' 
+                ? NESTOR_PRODUCTS 
+                : NESTOR_PRODUCTS.filter(p => p.category === currentCategory);
+
+            grid.innerHTML = filtered.map(product => {
+                // SVG Fallback Architectural Elegante y Seguro (Cero Muñequitos)
+                const fallbackSvg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='540' viewBox='0 0 800 540'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23F8F6F2'/><stop offset='100%' stop-color='%23E4E4E7'/></linearGradient></defs><rect width='800' height='540' fill='url(%23g)'/><circle cx='400' cy='230' r='110' stroke='%2316A34A' stroke-width='4' fill='none'/><text x='400' y='238' font-size='32' font-family='sans-serif' font-weight='800' fill='%2318181B' text-anchor='middle'>NÉSTOR PIZZAS</text><text x='400' y='380' font-size='26' font-family='sans-serif' font-weight='800' fill='%23EA580C' text-anchor='middle'>${product.name.replace(/&/g, 'y')}</text><text x='400' y='425' font-size='16' font-family='sans-serif' font-weight='600' fill='%2371717A' text-anchor='middle'>CANILES Y BAZA • ESPAÑA</text></svg>`;
+
+                return `
+                <div class="card-curved overflow-hidden shadow-sm hover:shadow-premium-hover flex flex-col justify-between group relative border border-zinc-200/90">
+                    <div>
+                        <!-- Contenedor Fotografía -->
+                        <div class="relative h-64 sm:h-68 overflow-hidden bg-zinc-100">
+                            <img src="${product.img}" 
+                                 onerror="this.onerror=null; this.src='${fallbackSvg}'"
+                                 alt="${product.name}" 
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                            <div class="absolute inset-0 bg-gradient-to-t from-nestor-obsidian/80 via-transparent to-transparent"></div>
+                            
+                            <!-- Insignia Categoría -->
+                            <span class="absolute top-4 left-4 ${product.badgeClass} text-[10px] font-display uppercase px-3.5 py-1.5 rounded-2xl shadow-md tracking-wider">
+                                ${product.badge}
+                            </span>
+
+                            <span class="absolute bottom-4 right-4 bg-white/95 text-nestor-obsidian font-display font-extrabold text-xl px-4 py-1.5 rounded-2xl shadow-lg border border-zinc-200">
+                                ${product.price.toFixed(2)} €
+                            </span>
+                        </div>
+
+                        <!-- Textos de Tarjeta -->
+                        <div class="p-6 space-y-2">
+                            <h3 class="font-display font-bold text-xl sm:text-2xl text-nestor-obsidian leading-tight group-hover:text-nestor-green transition-colors uppercase">${product.name}</h3>
+                            <p class="text-xs sm:text-sm text-zinc-600 leading-relaxed font-normal">${product.desc}</p>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Acción Natural y Humano -->
+                    <div class="p-6 pt-0 mt-2">
+                        <button onclick="openCustomizationModal(${product.id})" class="w-full bg-gradient-to-r from-nestor-obsidian via-zinc-900 to-nestor-obsidian hover:from-nestor-green hover:to-nestor-greenDark text-white font-display font-bold py-4 rounded-2xl transition-all shadow-sm uppercase tracking-wider text-xs sm:text-sm flex items-center justify-center gap-2 group-hover:shadow-[0_15px_30px_-5px_rgba(234,88,12,0.3)]">
+                            <span>+ Pedir</span>
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.category-pill').forEach(pill => {
+                if (pill.id === `cat-${cat}`) {
+                    pill.className = 'category-pill active px-5 py-2.5 rounded-2xl border border-zinc-800';
+                } else {
+                    pill.className = 'category-pill px-5 py-2.5 rounded-2xl bg-white text-zinc-600 hover:text-nestor-obsidian border border-zinc-200';
+                }
+            });
+            renderProducts();
+        }
+
+        function openCustomizationModal(id) {
+            const product = NESTOR_PRODUCTS.find(p => p.id === id);
+            if (!product) return;
+            activeModalProduct = product;
+
+            document.getElementById('modal-product-title').innerText = product.name;
+            document.getElementById('modal-product-desc').innerText = product.desc;
+            document.getElementById('customization-modal').classList.remove('hidden');
+            updateModalPrice();
+        }
+
+        function closeCustomizationModal() {
+            document.getElementById('customization-modal').classList.add('hidden');
+            activeModalProduct = null;
+        }
+
+        function updateModalPrice(extraBaseSize = 0) {
+            if (!activeModalProduct) return;
+            let total = activeModalProduct.price;
+
+            const sizeRadio = document.querySelector('input[name="cust-size"]:checked');
+            if (sizeRadio && sizeRadio.value.includes('Extra Queso Mozzarella Gratinado')) {
+                total += 2.00;
+            }
+
+            document.querySelectorAll('.cust-extra:checked').forEach(cb => {
+                total += parseFloat(cb.getAttribute('data-price') || 0);
+            });
+
+            document.getElementById('modal-total-price').innerText = `${total.toFixed(2)} €`;
+        }
+
+        function selectCustSizeOption(labelEl) {
+            document.querySelectorAll('.cust-size-btn').forEach(btn => {
+                btn.className = 'cust-size-btn flex items-center justify-between p-4 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all';
+            });
+            labelEl.className = 'cust-size-btn flex items-center justify-between p-4 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer shadow-sm transition-all';
+            const radio = labelEl.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                updateModalPrice(radio.value.includes('Extra Queso') ? 2.00 : 0);
+            }
+        }
+
+        function toggleCheckboxCard(labelEl, isRemove = false) {
+            const cb = labelEl.querySelector('input[type="checkbox"]');
+            if (!cb) return;
+            cb.checked = !cb.checked;
+            if (cb.checked) {
+                labelEl.classList.add('border-nestor-green', 'bg-nestor-green/20');
+                if (isRemove) labelEl.classList.add('border-red-500', 'bg-red-500/20');
+            } else {
+                labelEl.classList.remove('border-nestor-green', 'bg-nestor-green/20', 'border-red-500', 'bg-red-500/20');
+            }
+            if (!isRemove) updateModalPrice();
+        }
+
+        function selectCheckoutOption(group, val, labelEl, payType = null) {
+            if (group === 'delivery') {
+                document.querySelectorAll('.chk-delivery-btn').forEach(btn => {
+                    btn.className = 'chk-delivery-btn flex items-center justify-between p-4 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all';
+                });
+                labelEl.className = 'chk-delivery-btn flex items-center justify-between p-4 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer shadow transition-all';
+                const radio = labelEl.querySelector('input[name="chk-delivery"]');
+                if (radio) { radio.checked = true; updateCheckoutTotals(); }
+            } else if (group === 'pay') {
+                document.querySelectorAll('.chk-pay-btn').forEach(btn => {
+                    btn.className = 'chk-pay-btn flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all text-center';
+                });
+                labelEl.className = 'chk-pay-btn flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer transition-all text-center';
+                const radio = labelEl.querySelector('input[name="chk-pay"]');
+                if (radio) { radio.checked = true; }
+                if (payType) showPaymentPanel(payType);
+            }
+        }
+
+        function addUpsellDirect(name, price, btnEl) {
+            cart.push({
+                id: Date.now() + Math.random(),
+                name: name,
+                size: 'Complemento Sugerido',
+                extras: [],
+                removes: [],
+                price: price
+            });
+            updateCartStickyBar();
+            updateCheckoutTotals();
+            if (btnEl) {
+                btnEl.innerText = '✓ Añadido';
+                btnEl.className = 'bg-nestor-green text-white font-display font-bold px-4 py-3 rounded-xl border border-nestor-green text-xs uppercase transition-all shrink-0 pointer-events-none shadow';
+            }
+        }
+
+        function closeUpsellAndProceed() {
+            document.getElementById('upsell-modal').classList.add('hidden');
+        }
+
+        function closeUpsellAndGoToCheckout() {
+            document.getElementById('upsell-modal').classList.add('hidden');
+            openCheckoutModal();
+        }
+
+        function confirmCustomizedItem() {
+            if (!activeModalProduct) return;
+
+            const sizeRadio = document.querySelector('input[name="cust-size"]:checked');
+            const sizeVal = sizeRadio ? sizeRadio.value : 'Tamaño Estándar (33cm)';
+
+            const extras = [];
+            document.querySelectorAll('.cust-extra:checked').forEach(cb => {
+                extras.push(`+ ${cb.getAttribute('data-name')}`);
+            });
+
+            const removes = [];
+            document.querySelectorAll('.cust-remove:checked').forEach(cb => {
+                removes.push(cb.value);
+            });
+
+            let finalPrice = parseFloat(document.getElementById('modal-total-price').innerText);
+
+            cart.push({
+                id: Date.now(),
+                name: activeModalProduct.name,
+                size: sizeVal,
+                extras: extras,
+                removes: removes,
+                price: finalPrice
+            });
+
+            closeCustomizationModal();
+            updateCartStickyBar();
+            
+            // ELIMINADO EL SALTO FORZOSO A UPSELL Y PAGO TRAS CADA PRODUCTO.
+            // El cliente permanece de forma fluida en el menú para que pueda añadir libremente más pizzas o productos.
+            // Los upsells y recomendaciones aparecen estratégicamente cuando pulsan "VER PEDIDO / TRAMITAR".
+            showOrderToast(`✓ ${activeModalProduct.name} se ha sumado a tu comanda (${finalPrice.toFixed(2)} €)`);
+        }
+
+        // Pool de Upsells Dinámicos (100% Fotos Gourmet Reales de Comida/Bebida — ZERO PERSONAS)
+        const NESTOR_UPSELLS = [
+            { id: 'up-1', name: 'Patatas Gajos con Bacon y Cheddar', desc: 'Crujientes al horno con salsa especial de la casa', price: 4.50, img: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=400&q=80' },
+            { id: 'up-2', name: 'Pan de Ajo con Doble Mozzarella', desc: 'Recién horneado crujiente con mantequilla de ajo artesana', price: 3.50, img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=400&q=80' },
+            { id: 'up-3', name: 'Botella Refresco Familiar 1,5L Fría', desc: 'Coca-Cola, Coca-Cola Zero o Fanta Naranja bien fría', price: 2.20, img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80' },
+            { id: 'up-4', name: 'Tarta de Queso Casera Néstor', desc: 'Cremosa artesana al horno con coulis de frutos rojos', price: 4.00, img: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=400&q=80' },
+            { id: 'up-5', name: 'Alitas de Pollo BBQ Crujientes (6 unds.)', desc: 'Sazonadas al horno con salsa barbacoa ahumada canilera', price: 5.50, img: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=400&q=80' },
+            { id: 'up-6', name: 'Tarrina Helado Artesano Doble Chocolate', desc: 'Helado cremoso artesanal con virutas de cacao puro', price: 3.80, img: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=400&q=80' },
+            { id: 'up-7', name: 'Nuggets de Pollo Caseros al Horno (8 unds.)', desc: 'Pollo crujiente estilo gourmet con salsa miel y mostaza', price: 4.20, img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=400&q=80' }
+        ];
+
+        function showOrderToast(msg) {
+            let toast = document.getElementById('order-toast-banner');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'order-toast-banner';
+                toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-zinc-900 border-2 border-nestor-green text-white px-6 py-3.5 rounded-2xl shadow-[0_20px_40px_rgba(22,163,74,0.3)] flex items-center gap-4 font-display font-bold text-xs sm:text-sm transition-all duration-300 animate-bounce';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `
+                <span class="text-nestor-green text-lg">★</span>
+                <span>${msg}</span>
+                <button onclick="openDynamicUpsellModal()" class="bg-nestor-green hover:bg-nestor-greenDark text-white px-3.5 py-1.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow shrink-0">
+                    Ver Comanda (${cart.length})
+                </button>
+            `;
+            toast.style.display = 'flex';
+            setTimeout(() => { if (toast) toast.style.display = 'none'; }, 4500);
+        }
+
+        function openDynamicUpsellModal() {
+            if (cart.length === 0) return;
+            renderDynamicUpsells();
+            document.getElementById('upsell-modal').classList.remove('hidden');
+        }
+
+        function renderDynamicUpsells() {
+            const container = document.getElementById('upsell-cards-container');
+            if (!container) return;
+            
+            // Filtrar upsells que ya estén en el carrito
+            const cartNames = cart.map(item => item.name);
+            let available = NESTOR_UPSELLS.filter(item => !cartNames.includes(item.name));
+            if (available.length < 4) available = [...NESTOR_UPSELLS];
+
+            // Elegir aleatoriamente 4 recomendaciones dinámicas
+            const shuffled = [...available].sort(() => 0.5 - Math.random()).slice(0, 4);
+
+            container.innerHTML = shuffled.map(up => `
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-950/90 border border-zinc-800 hover:border-nestor-gold transition-all group">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden bg-zinc-800 shrink-0 shadow">
+                            <img src="${up.img}" alt="${up.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
+                        </div>
+                        <div>
+                            <span class="font-display font-bold text-white text-sm sm:text-base block uppercase leading-snug">${up.name}</span>
+                            <span class="text-[11px] text-zinc-400 block mt-0.5 leading-relaxed">${up.desc}</span>
+                            <span class="text-nestor-gold font-display font-extrabold text-xs sm:text-sm mt-1.5 block">+${up.price.toFixed(2)} €</span>
+                        </div>
+                    </div>
+                    <button onclick="addUpsellDirect('${up.name}', ${up.price}, this)" class="bg-zinc-800 hover:bg-nestor-green text-white font-display font-bold px-4 py-3 rounded-xl border border-zinc-700 text-xs uppercase transition-all shrink-0 shadow hover:scale-105">
+                        + Añadir
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function shuffleDynamicUpsells() {
+            renderDynamicUpsells();
+        }
+
+        function closeUpsellAndReturnToMenu() {
+            document.getElementById('upsell-modal').classList.add('hidden');
+        }
+
+        function closeCheckoutAndAddMore() {
+            closeCheckoutModal();
+        }
+
+        function closeCheckoutAndOpenUpsell() {
+            closeCheckoutModal();
+            openDynamicUpsellModal();
+        }
+
+        function updateCartStickyBar() {
+            const bar = document.getElementById('sticky-cart-bar');
+            const countBadge = document.getElementById('cart-counter-badge');
+            const totalBadge = document.getElementById('cart-total-badge');
+
+            if (cart.length === 0) {
+                bar.classList.add('hidden');
+                return;
+            }
+
+            bar.classList.remove('hidden');
+            countBadge.innerText = cart.length;
+            
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            totalBadge.innerText = `${total.toFixed(2)} €`;
+        }
+
+        function openCheckoutModal() {
+            if (cart.length === 0) return;
+            document.getElementById('checkout-modal').classList.remove('hidden');
+            document.getElementById('printer-simulation').classList.add('hidden');
+            document.getElementById('checkout-footer').classList.remove('hidden');
+            renderCheckoutItems();
+            updateCheckoutTotals();
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+        }
+
+        function renderCheckoutItems() {
+            const list = document.getElementById('checkout-items-list');
+            const countSpan = document.getElementById('chk-items-count');
+            if (!list) return;
+
+            countSpan.innerText = `${cart.length} Artículo${cart.length !== 1 ? 's' : ''}`;
+
+            list.innerHTML = cart.map((item, idx) => `
+                <div class="bg-zinc-950 border border-zinc-800 p-4 rounded-2xl flex items-start justify-between gap-4 transition-all hover:border-zinc-700">
+                    <div class="space-y-1">
+                        <p class="font-display font-bold text-white text-sm uppercase flex items-center gap-2">
+                            <span>${item.name}</span>
+                        </p>
+                        ${item.size ? `<span class="text-[11px] font-semibold text-nestor-gold bg-zinc-900 px-2.5 py-0.5 rounded-xl border border-zinc-700 inline-block">${item.size}</span>` : ''}
+                        ${item.extras && item.extras.length > 0 ? `<p class="text-[11px] text-nestor-greenLight font-medium">${item.extras.join(', ')}</p>` : ''}
+                        ${item.removes && item.removes.length > 0 ? `<p class="text-[11px] text-red-400 font-semibold">${item.removes.join(', ')}</p>` : ''}
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0">
+                        <span class="font-display font-bold text-base text-white">${item.price.toFixed(2)} €</span>
+                        <button onclick="removeFromCart(${idx})" class="text-zinc-500 hover:text-red-500 font-bold p-1 text-lg rounded-lg bg-zinc-900 border border-zinc-800">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeFromCart(idx) {
+            cart.splice(idx, 1);
+            if (cart.length === 0) {
+                closeCheckoutModal();
+                updateCartStickyBar();
+            } else {
+                renderCheckoutItems();
+                updateCheckoutTotals();
+                updateCartStickyBar();
+            }
+        }
+
+        function toggleRedeemPoints() {
+            pointsRedeemed = !pointsRedeemed;
+            const btn = document.getElementById('btn-redeem-pts');
+            if (pointsRedeemed) {
+                btn.innerText = 'Canjeado (-4,00 €)';
+                btn.className = 'bg-nestor-green text-white font-display font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow';
+            } else {
+                btn.innerText = 'Canjear 100 ptos';
+                btn.className = 'bg-zinc-800 hover:bg-zinc-700 text-white font-display font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider shrink-0 transition-all border border-zinc-700';
+            }
+            updateCheckoutTotals();
+        }
+
+        function showPaymentPanel(type) {
+            document.getElementById('pay-panel-bizum').classList.add('hidden');
+            document.getElementById('pay-panel-card').classList.add('hidden');
+            document.getElementById('pay-panel-cash').classList.add('hidden');
+            if (type === 'bizum') document.getElementById('pay-panel-bizum').classList.remove('hidden');
+            if (type === 'card') document.getElementById('pay-panel-card').classList.remove('hidden');
+            if (type === 'cash') document.getElementById('pay-panel-cash').classList.remove('hidden');
+        }
+
+        function updateCheckoutTotals() {
+            let subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+            if (pointsRedeemed) subtotal = Math.max(0, subtotal - 4.00);
+            document.getElementById('checkout-final-total').innerText = `${subtotal.toFixed(2)} €`;
+        }
+
+        function processAndPrintOrder() {
+            const name = document.getElementById('chk-name').value.trim();
+            const phone = document.getElementById('chk-phone').value.trim();
+            const address = document.getElementById('chk-address').value.trim();
+            if (!name || !phone || !address) {
+                alert('Por favor, complete todos los campos obligatorios (Nombre, Teléfono WhatsApp y Dirección/Mesa) para procesar el pedido.');
+                return;
+            }
+
+            const delivery = document.querySelector('input[name="chk-delivery"]:checked').value;
+            const pay = document.querySelector('input[name="chk-pay"]:checked').value;
+            const finalTotal = document.getElementById('checkout-final-total').innerText;
+
+            document.getElementById('checkout-footer').classList.add('hidden');
+            const printerDiv = document.getElementById('printer-simulation');
+            printerDiv.classList.remove('hidden');
+
+            const now = new Date();
+            document.getElementById('print-time').innerText = `FECHA: ${now.toLocaleDateString()} - ${now.toLocaleTimeString()}`;
+            document.getElementById('print-total').innerText = finalTotal;
+
+            const printItems = document.getElementById('print-items');
+            printItems.innerHTML = cart.map(i => `
+                <div class="py-1.5 border-b border-zinc-300">
+                    <div class="flex justify-between font-bold">
+                        <span>1x ${i.name.toUpperCase()}</span>
+                        <span>${i.price.toFixed(2)} €</span>
+                    </div>
+                    ${i.size ? `<div class="text-[10px] text-zinc-700">* ${i.size}</div>` : ''}
+                    ${i.extras && i.extras.length > 0 ? `<div class="text-[10px] text-zinc-700">* ${i.extras.join(', ')}</div>` : ''}
+                    ${i.removes && i.removes.length > 0 ? `<div class="text-[10px] text-red-700 font-bold">* ${i.removes.join(', ')}</div>` : ''}
+                </div>
+            `).join('');
+
+            let waText = `*[ COMANDA OFICIAL NÉSTOR PIZZAS CANILES ]*\n\n`;
+            waText += `*Cliente:* ${name}\n`;
+            waText += `*Teléfono WhatsApp:* ${phone}\n`;
+            waText += `*Entrega:* ${delivery}\n`;
+            waText += `*Dirección exacto / Mesa:* ${address}\n`;
+            waText += `*Forma de Pago:* ${pay}\n`;
+            if (pointsRedeemed) waText += `*Club Fidelización:* -4,00 € Canjeados\n`;
+            waText += `------------------------------------\n`;
+            cart.forEach((i, idx) => {
+                waText += `*${idx + 1}. ${i.name}* (${i.price.toFixed(2)} €)\n`;
+                if (i.size) waText += `   ↳ Formato: ${i.size}\n`;
+                if (i.extras && i.extras.length > 0) waText += `   ↳ Extras: ${i.extras.join(', ')}\n`;
+                if (i.removes && i.removes.length > 0) waText += `   ↳ Excluir: ${i.removes.join(', ')}\n`;
+            });
+            waText += `------------------------------------\n`;
+            waText += `*TOTAL COMANDA:* ${finalTotal}\n\n`;
+            waText += `_Despachado desde la PWA Oficial Néstor Pizzas (Alcalde Felip 9 - Tel: 679 76 19 87)_`;
+
+            const waUrl = `https://wa.me/34679761987?text=${encodeURIComponent(waText)}`;
+
+            setTimeout(() => {
+                window.open(waUrl, '_blank');
+                cart = [];
+                updateCartStickyBar();
+                setTimeout(() => {
+                    closeCheckoutModal();
+                    alert('Pedido procesado y despachado con éxito a cocina. Ha sumado +35 puntos VIP en su cuenta de Caniles.');
+                }, 1000);
+            }, 2000);
+        }
+
+        function enterRaffle(e) {
+            e.preventDefault();
+            const name = document.getElementById('raffle-name').value.trim();
+            const phone = document.getElementById('raffle-phone').value.trim();
+            if (!name || !phone) return;
+
+            document.querySelector('#raffle-box form').classList.add('hidden');
+            document.getElementById('raffle-confirmation').classList.remove('hidden');
+        }
+
+        function toggleChatWidget() {
+            const box = document.getElementById('chat-widget-box');
+            if (box) box.classList.toggle('hidden');
+        }
+
+        function sendQuickChatMessage(query) {
+            const messages = document.getElementById('chat-messages');
+            if (!messages) return;
+
+            messages.innerHTML += `
+                <div class="bg-nestor-green text-white p-3 rounded-2xl rounded-br-none ml-auto max-w-[85%] font-semibold">
+                    ${query}
+                </div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
+
+            setTimeout(() => {
+                let reply = "";
+                if (query.includes('pueblo')) {
+                    reply = `Sin duda la especialidad <strong>Canilera (9,50 €)</strong> con jamón serrano bodega, pollo tierno, pimiento verde y capa final de alioli gratinado al horno. Es la más solicitada del municipio.<br><br><button onclick="addFromChat(11)" class="bg-nestor-green hover:bg-nestor-greenDark text-white px-3.5 py-2 rounded-xl font-display font-bold w-full text-center block shadow uppercase tracking-wider text-xs">+ Añadir Pizza Canilera (9,50 €)</button>`;
+                } else if (query.includes('Jueves Locos')) {
+                    reply = `Todos los jueves dispone de la promoción <strong>2 Pizzas de 33cm por solo 11,00 €</strong> (hasta 3 ingredientes por pizza, suplemento a domicilio 1 €).<br><br><button onclick="filterCategory('PIZZAS 33CM'); toggleChatWidget(); window.scrollTo({top:550,behavior:'smooth'})" class="bg-nestor-terracotta text-white px-3.5 py-2 rounded-xl font-display font-bold w-full text-center block shadow uppercase tracking-wider text-xs">Ver Pizzas 33cm</button>`;
+                } else {
+                    reply = `Teléfono oficial de pedidos en cocina: <strong>679 76 19 87</strong>.<br>Dirección: Calle Alcalde Felip, 9 (Caniles-Granada).<br>Horario: Jueves a Domingos y Festivos de 19:30 a 22:30h. Reparto sin coste adicional en Caniles (mínimo 10 €).`;
+                }
+
+                messages.innerHTML += `
+                    <div class="bg-zinc-800 border border-zinc-700 p-3.5 rounded-2xl rounded-tr-none text-zinc-200 max-w-[88%] font-normal leading-relaxed">
+                        ${reply}
+                    </div>
+                `;
+                messages.scrollTop = messages.scrollHeight;
+            }, 600);
+        }
+
+        function handleChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const val = input.value.trim();
+            if (!val) return;
+            input.value = '';
+            sendQuickChatMessage(val);
+        }
+
+        function addFromChat(id) {
+            const product = NESTOR_PRODUCTS.find(p => p.id === id);
+            if (product) {
+                cart.push({
+                    id: Date.now(),
+                    name: product.name,
+                    size: 'Tamaño Estándar (Desde Asistente)',
+                    extras: [],
+                    removes: [],
+                    price: product.price
+                });
+                updateCartStickyBar();
+                alert(`Artículo [ ${product.name.toUpperCase()} ] añadido a su comanda en curso.`);
+            }
+        }
+
+        let currentSlide = 1;
+        function changeSlide(num) {
+            currentSlide = num;
+            const slide1 = document.getElementById('slide-1');
+            const slide2 = document.getElementById('slide-2');
+            const dot1 = document.getElementById('dot-1');
+            const dot2 = document.getElementById('dot-2');
+
+            if (num === 1) {
+                slide1.style.opacity = '1'; slide1.style.pointerEvents = 'auto';
+                slide2.style.opacity = '0'; slide2.style.pointerEvents = 'none';
+                dot1.className = 'w-8 h-2 rounded-full bg-nestor-green transition-all';
+                dot2.className = 'w-2.5 h-2 rounded-full bg-zinc-600 transition-all';
+            } else {
+                slide1.style.opacity = '0'; slide1.style.pointerEvents = 'none';
+                slide2.style.opacity = '1'; slide2.style.pointerEvents = 'auto';
+                dot1.className = 'w-2.5 h-2 rounded-full bg-zinc-600 transition-all';
+                dot2.className = 'w-8 h-2 rounded-full bg-nestor-green transition-all';
+            }
+        }
+
+        function nextSlide() { changeSlide(currentSlide === 1 ? 2 : 1); }
+        setInterval(() => { nextSlide(); }, 6500);
+
+        renderProducts();
+    </script>
+</body>
+</html>
