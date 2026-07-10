@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carta Imprimible Doble Cara (Plastificable A4) | Néstor Pizzas Caniles & Baza</title>
+    <title>Carta y Menú Imprimible Doble Cara (Plastificable A4) | Néstor Pizzas Caniles & Baza</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRious Librería de Generación QR Real y Precisa -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Tipografía Oficial de la PWA: Plus Jakarta Sans y Outfit -->
@@ -22,13 +24,14 @@
                             greenLight: '#22C55E',
                             terracotta: '#EA580C',
                             terracottaDark: '#C2410C',
-                            gold: '#F59E0B',
-                            goldLight: '#FBBF24',
-                            obsidian: '#18181B',
-                            charcoal: '#27272A',
-                            cream: '#F8F6F2',
-                            warm: '#F2EFE9',
-                            white: '#FFFFFF'
+                            gold: '#D97706',
+                            goldLight: '#F59E0B',
+                            obsidian: '#0F172A',
+                            slate: '#1E293B',
+                            charcoal: '#334155',
+                            cream: '#FDFCF8',
+                            warm: '#F7F5EE',
+                            border: '#E2E8F0'
                         }
                     },
                     fontFamily: {
@@ -75,6 +78,7 @@
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: space-between !important;
+                background: #FDFCF8 !important;
             }
 
             .page-sheet:last-of-type {
@@ -82,7 +86,7 @@
             }
         }
 
-        /* Estilo visual en pantalla (Simulación de 2 Folios A4 Reales con Sombra) */
+        /* Estilo visual en pantalla (Simulación de 2 Folios A4 Reales con Sombra y Fondo Elegante) */
         @media screen {
             body {
                 background: #0F172A;
@@ -97,9 +101,9 @@
             .page-sheet {
                 width: 210mm;
                 height: 297mm;
-                background: #F8F6F2;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
-                border-radius: 12px;
+                background: #FDFCF8;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15);
+                border-radius: 8px;
                 padding: 10mm;
                 box-sizing: border-box;
                 display: flex;
@@ -115,9 +119,18 @@
             page-break-inside: avoid;
             break-inside: avoid;
         }
+
+        /* Líneas punteadas elegantes entre nombre y precio */
+        .dots-leader {
+            flex-grow: 1;
+            border-bottom: 2px dotted #CBD5E1;
+            margin: 0 8px;
+            position: relative;
+            top: -4px;
+        }
     </style>
 </head>
-<body class="font-sans antialiased text-nestor-obsidian selection:bg-nestor-green selection:text-white">
+<body class="font-sans antialiased text-nestor-slate selection:bg-nestor-green selection:text-white">
 
     <!-- =========================================================================
          BARRA FLOTANTE DE CONTROL EN PANTALLA (OCULTA EN IMPRESIÓN/PDF)
@@ -126,13 +139,13 @@
         <div class="flex items-center gap-3 text-center sm:text-left">
             <div class="bg-nestor-green p-2 rounded-xl text-white font-bold text-lg shadow">📄</div>
             <div>
-                <h1 class="font-display font-black text-sm sm:text-base uppercase tracking-wider text-white">Carta Oficial Doble Cara (A4 Plastificable)</h1>
-                <p class="text-[11px] text-zinc-400">Diseñada al milímetro con la paleta y tipografía oficial de la PWA para impresión directa</p>
+                <h1 class="font-display font-black text-sm sm:text-base uppercase tracking-wider text-white">Menú Físico Oficial Doble Cara (DIN A4 Plastificable)</h1>
+                <p class="text-[11px] text-zinc-400">Alta legibilidad, 2 columnas optimizadas y QR real enlazado a <span class="text-nestor-green font-mono font-bold">nestor-pizzas-pwa</span></p>
             </div>
         </div>
         <div class="flex items-center gap-3 w-full sm:w-auto justify-center">
             <a href="index.html" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-display font-bold px-4 py-2.5 rounded-xl text-xs uppercase transition-all border border-zinc-700 flex items-center gap-2 shrink-0">
-                <span>🍕 Volver a PWA</span>
+                <span>🍕 Volver a la PWA</span>
             </a>
             <button onclick="window.print()" class="bg-gradient-to-r from-nestor-green to-nestor-greenDark hover:from-nestor-terracotta hover:to-nestor-terracottaDark text-white font-display font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider shadow-[0_10px_20px_rgba(22,163,74,0.4)] transition-all hover:scale-105 flex items-center gap-2 shrink-0">
                 <span>🖨️ Imprimir / Guardar PDF (Doble Cara)</span>
@@ -141,276 +154,251 @@
     </div>
 
     <!-- =========================================================================
-         CARA A (PÁGINA 1): CABECERA OFERTAS VIP, PIZZAS CLÁSICAS, BLANCAS Y MAZZI
+         CARA A (PÁGINA 1): CABECERA OFERTAS VIP & 17 PIZZAS CLÁSICAS ARTESANAS
          ========================================================================= -->
     <div class="page-sheet">
         
-        <!-- CABECERA DE MARCA & PROMOCIONES ESTRELLA -->
+        <!-- CABECERA DE MARCA & PROMOCIÓN ESTRELLA CON QR REAL -->
         <header class="border-b-2 border-nestor-green pb-2 mb-2">
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center justify-between gap-4">
                 <!-- Identidad Néstor -->
                 <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="bg-nestor-obsidian text-white font-display font-black text-[10px] uppercase px-2 py-0.5 rounded tracking-widest">Est. 2012</span>
-                        <span class="text-nestor-terracotta font-display font-bold text-[10px] uppercase tracking-wider">Horno Artesano • Caniles & Baza</span>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="bg-nestor-obsidian text-white font-display font-black text-[10px] uppercase px-2.5 py-0.5 rounded tracking-widest shadow-xs">EST. 2012</span>
+                        <span class="text-nestor-terracotta font-display font-extrabold text-[11px] uppercase tracking-wider">Horno Artesano • Caniles & Baza</span>
+                        <span class="text-nestor-greenDark font-bold text-[10px] bg-nestor-green/10 px-2 py-0.5 rounded">⚡ Reparto a Domicilio Gratuito (Caniles)</span>
                     </div>
-                    <h2 class="font-display font-black text-3xl text-nestor-obsidian tracking-tight mt-0.5 leading-none">
+                    <h2 class="font-display font-black text-4xl text-nestor-obsidian tracking-tight leading-none">
                         NÉSTOR <span class="text-nestor-green">PIZZAS</span>
                     </h2>
-                    <p class="text-[10px] text-zinc-600 font-medium mt-0.5 leading-tight">
-                        Masa fresca estirada a diario con ingredientes naturales horneados a la piedra.
+                    <p class="text-[10.5px] text-zinc-600 font-medium mt-1 leading-snug">
+                        Masa fresca estirada y amasada a diario con ingredientes 100% naturales, horneada a la piedra para un crujiente perfecto.
                     </p>
                 </div>
 
-                <!-- Banner Promocional 2x1 y PWA VIP -->
-                <div class="bg-nestor-obsidian text-white p-2.5 rounded-xl flex items-center gap-2.5 border border-nestor-gold shadow-md shrink-0 max-w-[195mm]">
-                    <!-- Código QR PWA Oficial -->
-                    <div class="bg-white p-1 rounded-lg shrink-0 shadow flex flex-col items-center">
-                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FFFFFF'/><path d='M10,10 h30 v30 h-30 z M18,18 v14 h14 v-14 z M60,10 h30 v30 h-30 z M68,18 v14 h14 v-14 z M10,60 h30 v30 h-30 z M18,68 v14 h14 v-14 z M48,48 h8 v8 h-8 z M64,48 h10 v10 h-10 z M80,48 h10 v18 h-10 z M48,64 h16 v16 h-16 z M72,68 h18 v22 h-18 z M48,86 h18 v4 h-18 z' fill='%2318181B'/><rect x='44' y='10' width='8' height='30' fill='%2316A34A'/><rect x='10' y='44' width='30' height='8' fill='%23EA580C'/></svg>" alt="QR PWA Oficial" class="w-14 h-14">
-                        <span class="text-[6.5px] font-display font-extrabold text-nestor-obsidian mt-0.5 uppercase tracking-tighter">PIDE ONLINE</span>
+                <!-- Bloque Promocional VIP y QR Real Hacia GitHub Pages -->
+                <div class="bg-gradient-to-br from-nestor-warm to-white border-2 border-nestor-gold/60 p-2 rounded-2xl flex items-center gap-2.5 shadow-md shrink-0 max-w-[95mm]">
+                    <!-- Código QR Real Generado con QRious / API -->
+                    <div class="bg-white p-1 rounded-xl shrink-0 shadow-sm border border-zinc-200 flex flex-col items-center">
+                        <!-- Canvas donde se pinta el QR real -->
+                        <canvas id="qr-canvas-cara-a" class="w-14 h-14"></canvas>
+                        <!-- Fallback de imagen QR real desde API para asegurar visualización en cualquier entorno -->
+                        <img id="qr-fallback-cara-a" src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https%3A%2F%2Fdkitchencorporate-tech.github.io%2Fnestor-pizzas-pwa%2F&color=0F172A&bgcolor=FFFFFF" alt="QR PWA Oficial" class="w-14 h-14 hidden">
+                        <span class="text-[7px] font-display font-black text-nestor-obsidian mt-1 uppercase tracking-tighter bg-nestor-goldLight/20 px-1 py-0.2 rounded w-full text-center">PIDE ONLINE</span>
                     </div>
                     <div>
-                        <div class="inline-block bg-nestor-terracotta text-white text-[8px] font-display font-black uppercase px-2 py-0.5 rounded tracking-wider">
-                            ⚡ OFERTA JUEVES LOCOS
+                        <div class="inline-block bg-nestor-terracotta text-white text-[8.5px] font-display font-black uppercase px-2 py-0.5 rounded tracking-wider shadow-xs">
+                            🔥 OFERTA JUEVES LOCOS
                         </div>
-                        <h4 class="font-display font-black text-xs text-nestor-gold uppercase mt-0.5 leading-tight">
-                            2 PIZZAS MEDIANAS POR SOLO 11€
+                        <h4 class="font-display font-black text-[11.5px] text-nestor-obsidian uppercase mt-1 leading-tight">
+                            2 PIZZAS MEDIANAS POR <span class="text-nestor-terracottaDark font-black text-sm">11,00 €</span>
                         </h4>
-                        <p class="text-[8.5px] text-zinc-300 leading-snug mt-0.5">
-                            👑 <strong class="text-white">Club Pizza VIP:</strong> Escanea para pedir al instante sin esperas, acumular puntos y canjear premios.
+                        <p class="text-[8px] text-zinc-600 leading-snug mt-0.5 font-medium">
+                            👑 <strong class="text-nestor-obsidian font-bold">Club Pizza VIP:</strong> Escanea para ver la carta digital, pedir sin esperas y ganar puntos de fidelidad.
                         </p>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- CONTENIDO CARA A: CUADRÍCULA DE PIZZAS CLÁSICAS, BLANCAS Y MAZZI -->
+        <!-- SECCIÓN CENTRAL CARA A: 17 PIZZAS CLÁSICAS EN 2 COLUMNAS DE ALTA LEGIBILIDAD -->
         <div class="flex-1 flex flex-col justify-between">
-            
-            <!-- SECCIÓN 1: PIZZAS CLÁSICAS 33CM (17 ARTÍCULOS) -->
             <div>
-                <div class="flex items-center justify-between border-b border-nestor-obsidian pb-1 mb-1.5">
-                    <h3 class="font-display font-black text-sm uppercase tracking-wider text-nestor-obsidian flex items-center gap-1.5">
-                        <span class="text-nestor-green">■</span> PIZZAS CLÁSICAS ARTESANAS (33 CM)
+                <!-- Título de Sección Banner -->
+                <div class="flex items-center justify-between border-b-2 border-nestor-green pb-1.5 mb-2 bg-nestor-green/10 px-3 py-1 rounded-t-lg">
+                    <h3 class="font-display font-black text-xs sm:text-sm uppercase tracking-wider text-nestor-obsidian flex items-center gap-2">
+                        <span class="bg-nestor-green text-white px-1.5 py-0.5 rounded text-[10px]">33 CM</span>
+                        PIZZAS CLÁSICAS ARTESANAS • NUESTRAS ESPECIALIDADES
                     </h3>
-                    <span class="text-[9px] font-bold text-nestor-terracotta bg-nestor-terracotta/10 px-2 py-0.5 rounded-full border border-nestor-terracotta/30 uppercase">
-                        Masa Clásica Recién Horneada • Mozzarella Fior di Latte
+                    <span class="text-[9.5px] font-bold text-nestor-greenDark uppercase tracking-wide">
+                        100% Mozzarella Fior di Latte & Salsa Tomate San Marzano
                     </span>
                 </div>
 
-                <div class="grid grid-cols-3 gap-x-3 gap-y-1.5 text-[8.5pt]">
+                <!-- Grid en 2 Columnas exactas, con espaciado amplio y tipografía legible -->
+                <div class="grid grid-cols-2 gap-x-8 gap-y-1 text-[9.8pt]">
+                    
                     <!-- 1. Milanesa -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">1. Milanesa</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">6,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>1. MILANESA</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">6,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Base casera de tomate, mozzarella fundida y jamón york seleccionado.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Base casera de tomate, mozzarella fundida y generoso jamón york seleccionado al horno.</p>
                     </div>
+
                     <!-- 2. Calabresa -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">2. Calabresa</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">7,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>2. CALABRESA</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">7,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Tomate artesano, mozzarella, jamón york y rodajas de queso de cabra.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Tomate artesano, mozzarella fundida, jamón york jugoso y rodajas de auténtico queso de cabra.</p>
                     </div>
+
                     <!-- 3. Kebab Especial -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1 bg-nestor-terracotta/5 px-1 rounded border border-nestor-terracotta/20">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-terracottaDark">
-                            <span class="uppercase">★ 3. Kebab Especial</span>
-                            <span class="text-[9.5pt]">8,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-nestor-terracotta/30 bg-nestor-terracotta/5 px-2 py-1 rounded">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-terracottaDark text-[10.5pt]">
+                            <span>★ 3. KEBAB ESPECIAL <span class="text-[8.5px] bg-nestor-terracotta text-white px-1.5 py-0.2 rounded uppercase ml-1">Favorita</span></span>
+                            <div class="dots-leader !border-nestor-terracotta/40"></div>
+                            <span class="font-black text-[11pt] bg-white px-2 py-0.5 rounded border border-nestor-terracotta/40">8,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-700 leading-tight">Cebolla fresca en juliana, carne de kebab asada y salsa kebab al punto.</p>
+                        <p class="text-[8.8pt] text-zinc-700 leading-snug mt-0.5 font-medium">Cebolla fresca en juliana, jugosa carne de kebab de ternera/pollo recién asada y salsa kebab al punto.</p>
                     </div>
+
                     <!-- 4. Florentina -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">4. Florentina</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">8,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>4. FLORENTINA (TROPICAL)</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">8,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Base tradicional, jamón york de primera, rodajas de piña dorada y mozzarella.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Base tradicional con jamón york de primera, rodajas de piña dorada al horno y extra mozzarella.</p>
                     </div>
+
                     <!-- 5. Siciliana -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">5. Siciliana</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">8,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>5. SICILIANA</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">8,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Base casera, champiñones laminados, jamón york tierno y lomos de atún claro.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Base casera de tomate, champiñones laminados, jamón york tierno y lomos de atún claro en aceite.</p>
                     </div>
+
                     <!-- 6. Napolitana -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">6. Napolitana</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">8,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>6. NAPOLITANA</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">8,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Champiñones frescos al horno, bacon ahumado y jamón serrano bodega.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Champiñones frescos horneados al punto, bacon ahumado crujiente y tiras de jamón serrano bodega.</p>
                     </div>
+
                     <!-- 7. Veneciana -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">7. Veneciana</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">8,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>7. VENECIANA (TRÍO CÁRNICO)</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">8,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Trío cárnico: base tomate, mozzarella, jamón york, salami y salchichas.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Trío cárnico italiano: base tomate, mozzarella, jamón york, rodajas de salami curado y salchichas.</p>
                     </div>
+
                     <!-- 8. Genovesa -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">8. Genovesa</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">8,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>8. GENOVESA</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">8,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Especialidad del mar con champiñón, gambas jugosas y atún claro primera.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Especialidad del mar con champiñón fresco laminado, colitas de gambas jugosas y atún claro primera.</p>
                     </div>
-                    <!-- 9. Parmesana -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1 bg-nestor-gold/10 px-1 rounded border border-nestor-gold/30">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase text-nestor-terracottaDark">★ 9. Parmesana (4 Quesos)</span>
-                            <span class="text-[9.5pt]">8,50 €</span>
+
+                    <!-- 9. Parmesana (4 Quesos) -->
+                    <div class="avoid-break pb-1 border-b border-nestor-gold/40 bg-nestor-gold/10 px-2 py-1 rounded">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>★ 9. PARMESANA (4 QUESOS) <span class="text-[8.5px] bg-nestor-gold text-white px-1.5 py-0.2 rounded uppercase ml-1 font-black">Top Ventas</span></span>
+                            <div class="dots-leader !border-nestor-gold/60"></div>
+                            <span class="text-nestor-terracottaDark font-black text-[11pt] bg-white px-2 py-0.5 rounded border border-nestor-gold/50">8,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-700 leading-tight">Exquisita mezcla artesana de 4 quesos fundidos al punto de gratinado.</p>
+                        <p class="text-[8.8pt] text-zinc-700 leading-snug mt-0.5 font-medium">Nuestra exquisita y secreta mezcla artesana de 4 quesos fundidos al punto de gratinado dorado perfecto.</p>
                     </div>
+
                     <!-- 10. Marinera -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">10. Marinera</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">8,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>10. MARINERA</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">8,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Sabor del mar: base con atún claro, colitas de gambas y selectas delicias.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">El sabor del mar en Caniles: base con atún claro, colitas de gambas y selectas delicias de mar al horno.</p>
                     </div>
+
                     <!-- 11. Canilera -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1 bg-nestor-green/10 px-1 rounded border border-nestor-green">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-greenDark">
-                            <span class="uppercase">👑 11. Canilera (Especialidad)</span>
-                            <span class="text-[9.5pt]">9,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-nestor-green bg-nestor-green/15 px-2 py-1.5 rounded-lg border-2 shadow-xs">
+                        <div class="flex items-center justify-between font-display font-black text-nestor-greenDark text-[10.8pt]">
+                            <span>👑 11. CANILERA (ESPECIALIDAD SUPREMA)</span>
+                            <div class="dots-leader !border-nestor-green"></div>
+                            <span class="text-white font-black text-[11.5pt] bg-nestor-greenDark px-2.5 py-0.5 rounded shadow-xs">9,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-800 font-medium leading-tight">Jamón serrano bodega, pollo tierno, pimiento verde y alioli gratinado.</p>
+                        <p class="text-[8.8pt] text-zinc-800 leading-snug mt-0.5 font-bold">Auténtica especialidad de la casa: Jamón serrano bodega, tiras de pollo tierno, pimiento verde fresco y capa final de alioli gratinado.</p>
                     </div>
+
                     <!-- 12. Toscana -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">12. Picante Toscana</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">9,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>12. PICANTE TOSCANA</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">9,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Toque picante: peperoni italiano, carne picada ternera, cebolla y salsa picante.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Para amantes del picante: peperoni italiano, carne picada de ternera, cebolla en juliana y salsa picante.</p>
                     </div>
+
                     <!-- 13. Texana Barbacoa -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1 bg-nestor-terracotta/5 px-1 rounded border border-nestor-terracotta/20">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-terracottaDark">
-                            <span class="uppercase">★ 13. Texana Barbacoa</span>
-                            <span class="text-[9.5pt]">9,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-nestor-terracotta/30 bg-nestor-terracotta/5 px-2 py-1 rounded">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-terracottaDark text-[10.5pt]">
+                            <span>★ 13. TEXANA BARBACOA</span>
+                            <div class="dots-leader !border-nestor-terracotta/40"></div>
+                            <span class="font-black text-[11pt] bg-white px-2 py-0.5 rounded border border-nestor-terracotta/40">9,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-700 leading-tight">Bacon crujiente, ternera sazonada, cebolla fresca y capa de salsa barbacoa.</p>
+                        <p class="text-[8.8pt] text-zinc-700 leading-snug mt-0.5 font-medium">Bacon ahumado crujiente, carne de ternera sazonada, cebolla fresca y generosa capa de salsa barbacoa.</p>
                     </div>
+
                     <!-- 14. Romana de la Huerta -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase">14. Romana Huerta</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">9,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span>14. ROMANA DE LA HUERTA (VEGETAL)</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">9,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Selección vegetal: champiñón laminado, pimiento rojo, pimiento verde y cebolla.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Selección vegetal fresca: champiñón laminado, pimiento rojo asado, pimiento verde crujiente y cebolla.</p>
                     </div>
+
                     <!-- 15. Americana Cheddar -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase text-nestor-terracotta">NEW 15. Americana Cheddar</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">9,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span><span class="text-nestor-terracotta font-black mr-1">NEW</span> 15. AMERICANA CHEDDAR</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">9,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Bacon ahumado crujiente, carne picada de ternera y cremosa salsa cheddar.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Novedad con bacon ahumado crujiente, carne picada de ternera y capa irresistible de salsa cheddar.</p>
                     </div>
+
                     <!-- 16. Boloñesa Italiana -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase text-nestor-terracotta">NEW 16. Boloñesa Italiana</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">9,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span><span class="text-nestor-terracotta font-black mr-1">NEW</span> 16. BOLOÑESA ITALIANA</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">9,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Cubierta completa con contundente salsa boloñesa casera elaborada a fuego lento.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Cubierta por completo con nuestra contundente y casera salsa boloñesa elaborada a fuego lento.</p>
                     </div>
+
                     <!-- 17. Calzone al Curry -->
-                    <div class="avoid-break border-b border-zinc-200/80 pb-1">
-                        <div class="flex justify-between items-baseline font-display font-black text-nestor-obsidian">
-                            <span class="uppercase text-nestor-green">NEW 17. Calzone al Curry</span>
-                            <span class="text-nestor-greenDark text-[9.5pt]">9,50 €</span>
+                    <div class="avoid-break pb-1 border-b border-zinc-200 col-span-2 sm:col-span-1">
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian text-[10.5pt]">
+                            <span><span class="text-nestor-green font-black mr-1">NEW</span> 17. CALZONE AL CURRY (CERRADO)</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black text-[11pt] bg-nestor-green/10 px-2 py-0.5 rounded">9,50 €</span>
                         </div>
-                        <p class="text-[7.2pt] text-zinc-600 leading-tight">Calzone horneado con pollo tierno, verduras y salsa especial de curry suave.</p>
+                        <p class="text-[8.8pt] text-zinc-600 leading-snug mt-0.5">Calzone relleno y horneado en su punto con pollo tierno, verduras y nuestra aromática salsa especial de curry.</p>
                     </div>
+
                 </div>
             </div>
 
-            <!-- SECCIÓN 2: PIZZAS BLANCAS Y MAZZI PIZZAS (EN 2 COLUMNAS) -->
-            <div class="grid grid-cols-2 gap-4 mt-2">
-                <!-- PIZZAS BLANCAS -->
-                <div>
-                    <div class="flex items-center justify-between border-b border-nestor-obsidian pb-1 mb-1">
-                        <h3 class="font-display font-black text-xs uppercase tracking-wider text-nestor-obsidian flex items-center gap-1">
-                            <span class="text-nestor-gold">★</span> PIZZAS BLANCAS (BASE DE NATA)
-                        </h3>
-                    </div>
-                    <div class="space-y-1.5 text-[8pt]">
-                        <div class="avoid-break border-b border-zinc-200 pb-0.5">
-                            <div class="flex justify-between font-display font-bold text-nestor-obsidian">
-                                <span>18. PANNA BLANCA</span>
-                                <span class="text-nestor-greenDark">8,50 €</span>
-                            </div>
-                            <p class="text-[7pt] text-zinc-600 leading-tight">Base de nata y mozzarella, champiñones, bacon y pollo tierno.</p>
-                        </div>
-                        <div class="avoid-break border-b border-zinc-200 pb-0.5">
-                            <div class="flex justify-between font-display font-bold text-nestor-obsidian">
-                                <span>19. LIONESA AL HUEVO</span>
-                                <span class="text-nestor-greenDark">8,50 €</span>
-                            </div>
-                            <p class="text-[7pt] text-zinc-600 leading-tight">Base nata, mozzarella, jamón york, bacon y huevo fresco estrellado.</p>
-                        </div>
-                        <div class="avoid-break pb-0.5">
-                            <div class="flex justify-between font-display font-bold text-nestor-obsidian">
-                                <span>20. CARBONARA SUPREMA</span>
-                                <span class="text-nestor-greenDark">8,50 €</span>
-                            </div>
-                            <p class="text-[7pt] text-zinc-600 leading-tight">Estilo carbonara blanca: nata fresca, mozzarella, jamón york, bacon y cebolla.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MAZZI PIZZAS -->
-                <div>
-                    <div class="flex items-center justify-between border-b border-nestor-obsidian pb-1 mb-1">
-                        <h3 class="font-display font-black text-xs uppercase tracking-wider text-nestor-obsidian flex items-center gap-1">
-                            <span class="text-nestor-terracotta">👑</span> MAZZI PIZZAS (DOBLE MASA & 5 QUESOS)
-                        </h3>
-                    </div>
-                    <div class="space-y-1 text-[8pt]">
-                        <div class="avoid-break flex justify-between border-b border-zinc-200 pb-0.5 font-display">
-                            <span class="font-bold text-nestor-obsidian">21. MAZZI PIZZA BASE (5 Quesos + Doble Masa)</span>
-                            <span class="font-black text-nestor-greenDark">8,50 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between border-b border-zinc-200 pb-0.5 font-display">
-                            <span class="font-bold text-nestor-obsidian">22. MAZZI PIZZA + 1 INGREDIENTE A ELEGIR</span>
-                            <span class="font-black text-nestor-greenDark">9,50 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between border-b border-zinc-200 pb-0.5 font-display">
-                            <span class="font-bold text-nestor-obsidian">23. MAZZI PIZZA + 2 INGREDIENTES A ELEGIR</span>
-                            <span class="font-black text-nestor-greenDark">10,50 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between border-b border-zinc-200 pb-0.5 font-display">
-                            <span class="font-bold text-nestor-obsidian">24. MAZZI PIZZA + 3 INGREDIENTES A ELEGIR</span>
-                            <span class="font-black text-nestor-greenDark">11,50 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between pb-0.5 font-display bg-nestor-terracotta/10 px-1.5 py-0.5 rounded border border-nestor-terracotta/30">
-                            <span class="font-black text-nestor-terracottaDark">25. MAZZI SUPREMA (+ 4 INGREDIENTES GOURMET)</span>
-                            <span class="font-black text-nestor-terracottaDark">12,50 €</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PIE CARA A: GARANTÍA & RECORDATORIO DE REVERSO -->
-            <div class="bg-zinc-900 text-white rounded-lg p-2 flex items-center justify-between text-[8pt] font-medium border-t border-nestor-gold mt-1.5">
-                <span class="flex items-center gap-1.5">
-                    <strong class="text-nestor-green uppercase">✔ HORNO ARTESANO CANILES:</strong> Extra queso mozzarella gratinado en cualquier pizza por <strong class="text-nestor-gold">+2,00 €</strong>.
+            <!-- PIE CARA A: RECORDATORIO DE REVERSO Y GARANTÍA -->
+            <div class="bg-nestor-obsidian text-white rounded-xl p-3 flex items-center justify-between text-[9pt] font-medium border-t-2 border-nestor-gold mt-3 shadow-md">
+                <span class="flex items-center gap-2">
+                    <span class="bg-nestor-green text-white px-2 py-0.5 rounded font-bold uppercase text-[8.5pt]">✔ Horno de Piedra:</span> 
+                    <span>Extra queso mozzarella gratinado en cualquier pizza por <strong class="text-nestor-goldLight font-bold">+2,00 €</strong>.</span>
                 </span>
-                <span class="bg-nestor-gold text-nestor-obsidian font-display font-black px-2.5 py-0.5 rounded uppercase tracking-wider text-[7.5pt]">
-                    ➔ GIRA LA CARTA: CREA TU PIZZA, ENTRANTES, PASTAS Y BEBIDAS
+                <span class="bg-gradient-to-r from-nestor-gold to-nestor-goldLight text-nestor-obsidian font-display font-black px-3.5 py-1 rounded-lg uppercase tracking-wider text-[8.5pt] shadow">
+                    ➔ GIRA LA CARTA: PIZZAS BLANCAS, MAZZI, ENTRANTES & BEBIDAS
                 </span>
             </div>
 
@@ -418,243 +406,315 @@
     </div>
 
     <!-- =========================================================================
-         CARA B (PÁGINA 2): CREA TU PIZZA, ENTRANTES, ALGO MÁS, BEBIDAS & HORARIO
+         CARA B (PÁGINA 2): PIZZAS BLANCAS, MAZZI, CREA TU PIZZA, ENTRANTES & BEBIDAS
          ========================================================================= -->
     <div class="page-sheet">
         
-        <!-- CABECERA CARA B -->
-        <header class="border-b-2 border-nestor-obsidian pb-2 mb-3 flex items-center justify-between">
+        <!-- CABECERA CARA B CON INFORMACIÓN TELEFÓNICA Y DE REPARTO DE ALTO IMPACTO -->
+        <header class="border-b-2 border-nestor-obsidian pb-2.5 mb-3 flex items-center justify-between gap-4">
             <div>
-                <span class="text-[9px] font-display font-black uppercase text-nestor-terracotta tracking-widest block">Carta Especialidades y Acompañantes</span>
-                <h2 class="font-display font-black text-2xl text-nestor-obsidian uppercase tracking-tight">
-                    ENTRANTES CRUJIENTES, PASTAS GOURMET & BEBIDAS
+                <span class="text-[9.5px] font-display font-black uppercase text-nestor-terracotta tracking-widest block mb-0.5">Menú Físico • Cara Reverso</span>
+                <h2 class="font-display font-black text-2xl sm:text-3xl text-nestor-obsidian uppercase tracking-tight leading-none">
+                    PIZZAS GOURMET, ENTRANTES CRUJIENTES & BEBIDAS
                 </h2>
             </div>
-            <div class="bg-nestor-green/15 border border-nestor-green text-nestor-greenDark px-3 py-1 rounded-xl text-right">
-                <span class="block text-[8px] font-display font-bold uppercase">Pedidos Telefónicos y Reparto</span>
-                <strong class="font-display font-black text-sm">600 000 000 • CANILES Y BAZA</strong>
+            <div class="bg-nestor-green text-white px-4 py-1.5 rounded-xl shadow text-right shrink-0 border-2 border-nestor-greenDark">
+                <span class="block text-[8.5px] font-display font-extrabold uppercase tracking-wider text-green-100">Pedidos Telefónicos al Horno</span>
+                <strong class="font-display font-black text-base sm:text-lg tracking-tight">📞 600 000 000 • CANILES</strong>
             </div>
         </header>
 
-        <!-- CONTENIDO CARA B: CUADRÍCULA EN 2 COLUMNAS ALTO RENDER -->
-        <div class="flex-1 grid grid-cols-2 gap-6">
+        <!-- CONTENIDO CARA B: CUADRÍCULA 2 COLUMNAS PERFECTAMENTE EQUILIBRADAS -->
+        <div class="flex-1 grid grid-cols-2 gap-x-8 gap-y-3">
             
-            <!-- COLUMNA IZQUIERDA: CREA TU PIZZA & ENTRANTES -->
-            <div class="flex flex-col justify-between">
+            <!-- ================= COLUMNA IZQUIERDA CARA B ================= -->
+            <div class="flex flex-col justify-between space-y-3">
                 
-                <!-- CREA TU PIZZA POR INGREDIENTES -->
+                <!-- SECCIÓN 2: PIZZAS BLANCAS (BASE DE NATA FRESCA) -->
                 <div>
-                    <div class="flex items-center justify-between border-b-2 border-nestor-obsidian pb-1 mb-2">
-                        <h3 class="font-display font-black text-sm uppercase tracking-wider text-nestor-obsidian flex items-center gap-1.5">
-                            <span class="text-nestor-terracotta">★</span> CREA TU PIZZA AL GUSTO (BASE 33 CM)
+                    <div class="flex items-center justify-between border-b-2 border-nestor-gold pb-1 mb-1.5 bg-nestor-gold/10 px-2.5 py-1 rounded-t-lg">
+                        <h3 class="font-display font-black text-xs uppercase tracking-wider text-nestor-obsidian flex items-center gap-1.5">
+                            <span class="text-nestor-gold text-sm">★</span> PIZZAS BLANCAS (BASE CREMOSA DE NATA)
                         </h3>
                     </div>
-                    <p class="text-[7.5pt] text-zinc-600 mb-2">Base de tomate San Marzano, mozzarella fior di latte fundida y orégano recién horneada:</p>
-                    
-                    <div class="space-y-1.5 text-[9pt] bg-white p-2.5 rounded-xl border border-zinc-200 shadow-xs">
-                        <div class="flex justify-between font-display font-bold text-nestor-obsidian">
-                            <span>26. PIZZA BASE TOMATE Y MOZZARELLA</span>
+                    <div class="space-y-1.5 text-[9.2pt]">
+                        <div class="avoid-break pb-1 border-b border-zinc-200">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>18. PANNA BLANCA</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">8,50 €</span>
+                            </div>
+                            <p class="text-[8.2pt] text-zinc-600 leading-tight">Base cremosa de nata fresca y mozzarella, champiñones laminados, bacon y pollo tierno.</p>
+                        </div>
+                        <div class="avoid-break pb-1 border-b border-zinc-200">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>19. LIONESA AL HUEVO</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">8,50 €</span>
+                            </div>
+                            <p class="text-[8.2pt] text-zinc-600 leading-tight">Base suave de nata con mozzarella, jamón york, bacon ahumado y huevo fresco estrellado.</p>
+                        </div>
+                        <div class="avoid-break pb-1 border-b border-zinc-200">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>20. CARBONARA SUPREMA</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">8,50 €</span>
+                            </div>
+                            <p class="text-[8.2pt] text-zinc-600 leading-tight">Estilo carbonara blanca: nata fresca, mozzarella, jamón york, tiras de bacon y cebolla dorada.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 3: MAZZI PIZZAS (DOBLE MASA & 5 QUESOS) -->
+                <div>
+                    <div class="flex items-center justify-between border-b-2 border-nestor-terracotta pb-1 mb-1.5 bg-nestor-terracotta/10 px-2.5 py-1 rounded-t-lg">
+                        <h3 class="font-display font-black text-xs uppercase tracking-wider text-nestor-obsidian flex items-center gap-1.5">
+                            <span class="text-nestor-terracotta text-sm">👑</span> MAZZI PIZZAS (DOBLE MASA & 5 QUESOS)
+                        </h3>
+                    </div>
+                    <div class="space-y-1 text-[9.2pt]">
+                        <div class="avoid-break flex items-center justify-between pb-1 border-b border-zinc-200 font-display font-bold">
+                            <span>21. MAZZI PIZZA BASE (5 Quesos + Doble Masa)</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">8,50 €</span>
+                        </div>
+                        <div class="avoid-break flex items-center justify-between pb-1 border-b border-zinc-200 font-display font-bold">
+                            <span>22. MAZZI PIZZA + 1 INGREDIENTE A ELEGIR</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">9,50 €</span>
+                        </div>
+                        <div class="avoid-break flex items-center justify-between pb-1 border-b border-zinc-200 font-display font-bold">
+                            <span>23. MAZZI PIZZA + 2 INGREDIENTES A ELEGIR</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">10,50 €</span>
+                        </div>
+                        <div class="avoid-break flex items-center justify-between pb-1 border-b border-zinc-200 font-display font-bold">
+                            <span>24. MAZZI PIZZA + 3 INGREDIENTES A ELEGIR</span>
+                            <div class="dots-leader"></div>
+                            <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">11,50 €</span>
+                        </div>
+                        <div class="avoid-break flex items-center justify-between py-1 px-2 rounded bg-nestor-terracotta/15 border border-nestor-terracotta/30 font-display font-black text-nestor-terracottaDark">
+                            <span>25. MAZZI SUPREMA (+ 4 INGREDIENTES GOURMET)</span>
+                            <div class="dots-leader !border-nestor-terracotta/40"></div>
+                            <span class="bg-white px-2 py-0.2 rounded border border-nestor-terracotta/40">12,50 €</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 4: CREA TU PIZZA POR INGREDIENTES -->
+                <div>
+                    <div class="flex items-center justify-between border-b-2 border-nestor-obsidian pb-1 mb-1 bg-zinc-100 px-2.5 py-1 rounded-t-lg">
+                        <h3 class="font-display font-black text-xs uppercase tracking-wider text-nestor-obsidian flex items-center gap-1.5">
+                            <span>🛠️ CREA TU PIZZA AL GUSTO (BASE 33 CM)</span>
+                        </h3>
+                    </div>
+                    <div class="space-y-1 text-[9pt] bg-white p-2 rounded-lg border border-zinc-200 shadow-xs">
+                        <div class="flex items-center justify-between font-display font-bold text-nestor-obsidian">
+                            <span>26. PIZZA BASE TOMATE Y MOZZARELLA FIOR DI LATTE</span>
+                            <div class="dots-leader"></div>
                             <span class="text-nestor-greenDark font-black">5,50 €</span>
                         </div>
-                        <div class="flex justify-between font-display font-bold text-nestor-obsidian border-t border-zinc-100 pt-1">
-                            <span>27. PIZZA BASE + 1 INGREDIENTE</span>
+                        <div class="flex items-center justify-between font-display font-bold text-nestor-obsidian border-t border-zinc-100 pt-0.5">
+                            <span>27. PIZZA BASE + 1 INGREDIENTE GOURMET</span>
+                            <div class="dots-leader"></div>
                             <span class="text-nestor-greenDark font-black">6,50 €</span>
                         </div>
-                        <div class="flex justify-between font-display font-bold text-nestor-obsidian border-t border-zinc-100 pt-1">
-                            <span>28. PIZZA BASE + 2 INGREDIENTES</span>
+                        <div class="flex items-center justify-between font-display font-bold text-nestor-obsidian border-t border-zinc-100 pt-0.5">
+                            <span>28. PIZZA BASE + 2 INGREDIENTES GOURMET</span>
+                            <div class="dots-leader"></div>
                             <span class="text-nestor-greenDark font-black">7,50 €</span>
                         </div>
-                        <div class="flex justify-between font-display font-bold text-nestor-obsidian border-t border-zinc-100 pt-1">
-                            <span>29. PIZZA BASE + 3 INGREDIENTES</span>
+                        <div class="flex items-center justify-between font-display font-bold text-nestor-obsidian border-t border-zinc-100 pt-0.5">
+                            <span>29. PIZZA BASE + 3 INGREDIENTES GOURMET</span>
+                            <div class="dots-leader"></div>
                             <span class="text-nestor-greenDark font-black">8,50 €</span>
                         </div>
-                        <div class="flex justify-between font-display font-bold text-nestor-terracottaDark bg-nestor-terracotta/10 p-1 rounded border-t border-zinc-100 pt-1">
-                            <span>30. PIZZA BASE + 4 INGREDIENTES</span>
+                        <div class="flex items-center justify-between font-display font-extrabold text-nestor-terracottaDark border-t border-zinc-100 pt-0.5">
+                            <span>30. PIZZA BASE + 4 INGREDIENTES GOURMET</span>
+                            <div class="dots-leader"></div>
                             <span class="font-black">9,50 €</span>
                         </div>
                     </div>
 
-                    <!-- Lista de 28 Ingredientes disponibles -->
-                    <div class="mt-2 bg-zinc-900 text-white p-2.5 rounded-xl text-[7.5pt] leading-tight">
-                        <span class="text-nestor-gold font-display font-bold uppercase block mb-1">■ LISTA DE INGREDIENTES EXTRA (+1,00 € / UND):</span>
-                        <p class="text-zinc-300">
+                    <!-- Cuadro Lista de 28 Ingredientes Extra de Alta Legibilidad -->
+                    <div class="mt-1.5 bg-nestor-warm border border-zinc-300/80 p-2 rounded-lg text-[8pt] leading-tight text-zinc-700 shadow-2xs">
+                        <span class="font-display font-extrabold text-nestor-obsidian uppercase block mb-0.5">■ 28 INGREDIENTES GOURMET DISPONIBLES (+1,00 € / UND):</span>
+                        <p class="font-medium text-zinc-600">
                             Mozzarella, Queso de Cabra, Roquefort, Queso Cheddar, Jamón York, Jamón Serrano Bodega, Bacon Ahumado, Peperoni Italiano, Carne Kebab, Pollo Tierno, Salami, Salchichas, Atún Claro, Gambas, Anchoas, Champiñón Laminado, Cebolla, Pimiento Verde, Pimiento Rojo, Aceitunas, Alcaparras, Piña Tropical, Huevo Fresco, Salsa Barbacoa, Salsa Alioli, Salsa Cheddar, Salsa Curry, Salsa Picante.
                         </p>
                     </div>
                 </div>
 
-                <!-- PATATAS Y ENTRANTES CRUJIENTES (8 ARTÍCULOS) -->
-                <div class="mt-4">
-                    <div class="flex items-center justify-between border-b-2 border-nestor-obsidian pb-1 mb-2">
-                        <h3 class="font-display font-black text-sm uppercase tracking-wider text-nestor-obsidian flex items-center gap-1.5">
-                            <span class="text-nestor-green">■</span> PATATAS Y ENTRANTES CRUJIENTES
-                        </h3>
-                    </div>
-                    <div class="space-y-2 text-[8.5pt]">
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200 pb-1">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">31. Patatas Fritas Crujientes</strong>
-                                <p class="text-[7.5pt] text-zinc-500">Ración clásica cortada, doradas en su punto de sal y calientes.</p>
-                            </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">2,00 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200 pb-1">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">32. Patatas Gajos Especiales</strong>
-                                <p class="text-[7.5pt] text-zinc-500">Con piel a las finas hierbas. Incluye salsa a elegir: Alioli, BBQ o Brava.</p>
-                            </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">3,00 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200 pb-1 bg-nestor-terracotta/5 p-1 rounded">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-terracottaDark uppercase">★ 33. Patatas Gratinadas BBQ</strong>
-                                <p class="text-[7.5pt] text-zinc-600">Cazuela con quesos fundidos, carne sazonada y barbacoa al horno.</p>
-                            </div>
-                            <span class="font-display font-black text-nestor-terracottaDark text-[9.5pt] shrink-0 ml-2">6,00 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200 pb-1">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">34. Patatas Gratinadas Cheddar</strong>
-                                <p class="text-[7.5pt] text-zinc-500">Cazuela de patatas bañadas en abundante salsa cheddar y bacon ahumado.</p>
-                            </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">7,50 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200 pb-1">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">35. Patatas Gratinadas Morisca</strong>
-                                <p class="text-[7.5pt] text-zinc-500">Patatas gajos, queso mozzarella, especias moriscas aromáticas y salsa chef.</p>
-                            </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">7,50 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200 pb-1">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">36. Nuggets de Pollo (6 Unds)</strong>
-                                <p class="text-[7.5pt] text-zinc-500">Bocaditos de pechuga de pollo empanados crujientes por fuera y jugosos.</p>
-                            </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">3,50 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200 pb-1">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">37. Aros de Cebolla Crujientes (8 Unds)</strong>
-                                <p class="text-[7.5pt] text-zinc-500">Anillos de cebolla dulce empanados con rebozado crujiente dorado.</p>
-                            </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">4,00 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">38. Alitas de Pollo Asadas (6 Unds)</strong>
-                                <p class="text-[7.5pt] text-zinc-500">Asadas y marinadas en salsa barbacoa y especias Néstor, tiernas al punto.</p>
-                            </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">5,00 €</span>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
-            <!-- COLUMNA DERECHA: PASTAS GOURMET, BEBIDAS & HORARIO -->
-            <div class="flex flex-col justify-between">
+            <!-- ================= COLUMNA DERECHA CARA B ================= -->
+            <div class="flex flex-col justify-between space-y-3">
                 
-                <!-- ALGO MÁS (PASTAS GOURMET Y PLATOS) -->
+                <!-- SECCIÓN 5: PATATAS Y ENTRANTES CRUJIENTES -->
                 <div>
-                    <div class="flex items-center justify-between border-b-2 border-nestor-obsidian pb-1 mb-2">
-                        <h3 class="font-display font-black text-sm uppercase tracking-wider text-nestor-obsidian flex items-center gap-1.5">
-                            <span class="text-nestor-gold">★</span> ALGO MÁS (PASTAS CASERAS & CURRY)
+                    <div class="flex items-center justify-between border-b-2 border-nestor-green pb-1 mb-1.5 bg-nestor-green/10 px-2.5 py-1 rounded-t-lg">
+                        <h3 class="font-display font-black text-xs uppercase tracking-wider text-nestor-obsidian flex items-center gap-1.5">
+                            <span class="text-nestor-green text-sm">■</span> PATATAS Y ENTRANTES CRUJIENTES (8 ARTÍCULOS)
                         </h3>
                     </div>
-                    <div class="space-y-2 text-[8.5pt]">
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200 pb-1">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">39. Pasta Boloñesa Casera</strong>
-                                <p class="text-[7.5pt] text-zinc-500">Pasta recién cocida bañada en nuestra salsa boloñesa casera de ternera.</p>
+                    <div class="space-y-1.5 text-[9.2pt]">
+                        <div class="avoid-break pb-1 border-b border-zinc-200">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>31. PATATAS FRITAS CRUJIENTES</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">2,00 €</span>
                             </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">6,50 €</span>
+                            <p class="text-[8pt] text-zinc-600 leading-tight">Ración clásica cortada, doradas al punto exacto de sal y servidas bien calientes.</p>
                         </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200 pb-1">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">40. Pasta Carbonara al Parmigiano</strong>
-                                <p class="text-[7.5pt] text-zinc-500">Base cremosa de nata fresca, bacon ahumado crujiente y parmesano gratinado.</p>
+                        <div class="avoid-break pb-1 border-b border-zinc-200">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>32. PATATAS GAJOS ESPECIALES</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">3,00 €</span>
                             </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">6,50 €</span>
+                            <p class="text-[8pt] text-zinc-600 leading-tight">Con piel a las finas hierbas. Incluye salsa casera a elegir: Alioli, BBQ o Brava.</p>
                         </div>
-                        <div class="avoid-break flex justify-between items-baseline bg-nestor-green/5 p-1.5 rounded border border-nestor-green/20">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-greenDark uppercase">👑 41. Pollo al Curry con Arroz Basmati</strong>
-                                <p class="text-[7.5pt] text-zinc-600">Tiras tiernas de pechuga en salsa cremosa aromática servido sobre arroz basmati.</p>
+                        <div class="avoid-break pb-1 border-b border-nestor-terracotta/30 bg-nestor-terracotta/5 px-2 py-1 rounded">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-terracottaDark">
+                                <span>★ 33. PATATAS GRATINADAS BBQ</span>
+                                <div class="dots-leader !border-nestor-terracotta/40"></div>
+                                <span class="font-black bg-white px-2 py-0.2 rounded border border-nestor-terracotta/40">6,00 €</span>
                             </div>
-                            <span class="font-display font-black text-nestor-greenDark text-[9.5pt] shrink-0 ml-2">9,00 €</span>
+                            <p class="text-[8pt] text-zinc-700 leading-tight font-medium">Cazuela con quesos fundidos al horno, carne sazonada y abundante salsa barbacoa.</p>
+                        </div>
+                        <div class="avoid-break pb-1 border-b border-zinc-200">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>34. PATATAS GRATINADAS CHEDDAR</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">7,50 €</span>
+                            </div>
+                            <p class="text-[8pt] text-zinc-600 leading-tight">Cazuela de patatas doradas bañadas en cremoso queso cheddar y tiras de bacon ahumado.</p>
+                        </div>
+                        <div class="avoid-break pb-1 border-b border-zinc-200">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>35. PATATAS GRATINADAS MORISCA</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">7,50 €</span>
+                            </div>
+                            <p class="text-[8pt] text-zinc-600 leading-tight">Patatas gajos, queso mozzarella fior di latte, especias moriscas aromáticas y salsa chef.</p>
+                        </div>
+                        <div class="avoid-break pb-1 border-b border-zinc-200">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>36. NUGGETS DE POLLO (6 UNDS)</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">3,50 €</span>
+                            </div>
+                            <p class="text-[8pt] text-zinc-600 leading-tight">Bocaditos de pechuga de pollo tiernos y jugosos con empanado crujiente dorado.</p>
+                        </div>
+                        <div class="avoid-break pb-1 border-b border-zinc-200">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>37. AROS DE CEBOLLA CRUJIENTES (8 UNDS)</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">4,00 €</span>
+                            </div>
+                            <p class="text-[8pt] text-zinc-600 leading-tight">Anillos enteros de cebolla dulce seleccionada con rebozado crujiente dorado al horno.</p>
+                        </div>
+                        <div class="avoid-break pb-0.5">
+                            <div class="flex items-center justify-between font-display font-extrabold text-nestor-obsidian">
+                                <span>38. ALITAS DE POLLO ASADAS (6 UNDS)</span>
+                                <div class="dots-leader"></div>
+                                <span class="text-nestor-greenDark font-black bg-nestor-green/10 px-2 py-0.2 rounded">5,00 €</span>
+                            </div>
+                            <p class="text-[8pt] text-zinc-600 leading-tight">Asadas y marinadas a fuego lento en salsa barbacoa y especias Néstor, tiernas al hueso.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- BEBIDAS FRÍAS Y LITRONAS -->
-                <div class="mt-4">
-                    <div class="flex items-center justify-between border-b-2 border-nestor-obsidian pb-1 mb-2">
-                        <h3 class="font-display font-black text-sm uppercase tracking-wider text-nestor-obsidian flex items-center gap-1.5">
-                            <span class="text-nestor-terracotta">■</span> BEBIDAS FRÍAS & LITRONAS
-                        </h3>
-                    </div>
-                    <div class="space-y-1.5 text-[8.5pt]">
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200/80 pb-1">
-                            <span>42. Agua Mineral Pequeña (50cl Fría)</span>
-                            <span class="font-display font-black text-nestor-greenDark">1,00 €</span>
+                <!-- SECCIÓN 6: PASTAS CASERAS & CURRY + BEBIDAS FRÍAS -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- PASTAS GOURMET -->
+                    <div>
+                        <div class="flex items-center justify-between border-b-2 border-nestor-gold pb-1 mb-1 bg-nestor-gold/10 px-2 py-0.5 rounded-t-md">
+                            <h3 class="font-display font-black text-[10.5px] uppercase tracking-wider text-nestor-obsidian">
+                                ★ PASTAS & CURRY
+                            </h3>
                         </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200/80 pb-1">
-                            <span>43. Agua Mineral Grande (1,5 Litros Fría)</span>
-                            <span class="font-display font-black text-nestor-greenDark">1,50 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200/80 pb-1">
-                            <div>
-                                <strong class="font-display font-bold text-nestor-obsidian uppercase">44. Refresco en Lata 33cl Bien Frío</strong>
-                                <span class="block text-[7pt] text-zinc-400">Coca-Cola, Coca-Cola Zero, Fanta Naranja o Fanta Limón</span>
+                        <div class="space-y-1 text-[8.5pt]">
+                            <div class="avoid-break pb-0.5 border-b border-zinc-200">
+                                <div class="flex justify-between font-display font-bold text-nestor-obsidian">
+                                    <span>39. BOLOÑESA CASERA</span>
+                                    <span class="text-nestor-greenDark font-black">6,50 €</span>
+                                </div>
+                                <p class="text-[7.2pt] text-zinc-600 leading-tight">Salsa de ternera cocinada a fuego lento.</p>
                             </div>
-                            <span class="font-display font-black text-nestor-greenDark">1,50 €</span>
+                            <div class="avoid-break pb-0.5 border-b border-zinc-200">
+                                <div class="flex justify-between font-display font-bold text-nestor-obsidian">
+                                    <span>40. CARBONARA PARMESANO</span>
+                                    <span class="text-nestor-greenDark font-black">6,50 €</span>
+                                </div>
+                                <p class="text-[7.2pt] text-zinc-600 leading-tight">Nata fresca, bacon ahumado y queso.</p>
+                            </div>
+                            <div class="avoid-break pb-0.5 bg-nestor-green/10 px-1 py-0.5 rounded border border-nestor-green/30">
+                                <div class="flex justify-between font-display font-bold text-nestor-greenDark">
+                                    <span>👑 41. POLLO CURRY ARROZ</span>
+                                    <span class="font-black">9,00 €</span>
+                                </div>
+                                <p class="text-[7.2pt] text-zinc-700 leading-tight">Pollo en salsa curry y arroz basmati.</p>
+                            </div>
                         </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200/80 pb-1">
-                            <span>45. Cerveza Rubia en Lata 33cl Fría</span>
-                            <span class="font-display font-black text-nestor-greenDark">1,50 €</span>
+                    </div>
+
+                    <!-- BEBIDAS FRÍAS -->
+                    <div>
+                        <div class="flex items-center justify-between border-b-2 border-nestor-terracotta pb-1 mb-1 bg-nestor-terracotta/10 px-2 py-0.5 rounded-t-md">
+                            <h3 class="font-display font-black text-[10.5px] uppercase tracking-wider text-nestor-obsidian">
+                                ■ BEBIDAS & LITRONAS
+                            </h3>
                         </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200/80 pb-1">
-                            <span>46. Aquarius de Limón / Naranja Lata 33cl</span>
-                            <span class="font-display font-black text-nestor-greenDark">1,60 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline border-b border-zinc-200/80 pb-1 bg-nestor-gold/10 p-1 rounded font-display font-bold">
-                            <span class="text-nestor-obsidian">★ 47. Cerveza Litro Fría (Litrona 1000ml)</span>
-                            <span class="font-black text-nestor-terracottaDark">2,50 €</span>
-                        </div>
-                        <div class="avoid-break flex justify-between items-baseline font-display font-bold">
-                            <span class="text-nestor-obsidian">48. Refresco Botella 2 Litros Familiar Fría</span>
-                            <span class="font-black text-nestor-greenDark">3,00 €</span>
+                        <div class="space-y-1 text-[8.5pt]">
+                            <div class="avoid-break flex justify-between border-b border-zinc-200 pb-0.5">
+                                <span>42. Agua Pequeña 50cl</span>
+                                <span class="font-display font-bold text-nestor-greenDark">1,00 €</span>
+                            </div>
+                            <div class="avoid-break flex justify-between border-b border-zinc-200 pb-0.5">
+                                <span>43. Agua Grande 1,5L</span>
+                                <span class="font-display font-bold text-nestor-greenDark">1,50 €</span>
+                            </div>
+                            <div class="avoid-break flex justify-between border-b border-zinc-200 pb-0.5">
+                                <span>44. Refresco Lata 33cl</span>
+                                <span class="font-display font-bold text-nestor-greenDark">1,50 €</span>
+                            </div>
+                            <div class="avoid-break flex justify-between border-b border-zinc-200 pb-0.5">
+                                <span>45. Cerveza Rubia Lata</span>
+                                <span class="font-display font-bold text-nestor-greenDark">1,50 €</span>
+                            </div>
+                            <div class="avoid-break flex justify-between border-b border-zinc-200 pb-0.5">
+                                <span>46. Aquarius Limón/Nar.</span>
+                                <span class="font-display font-bold text-nestor-greenDark">1,60 €</span>
+                            </div>
+                            <div class="avoid-break flex justify-between bg-nestor-gold/15 px-1 py-0.2 rounded font-display font-bold text-nestor-terracottaDark">
+                                <span>★ 47. Cerveza Litrona 1L</span>
+                                <span class="font-black">2,50 €</span>
+                            </div>
+                            <div class="avoid-break flex justify-between font-display font-bold text-nestor-obsidian">
+                                <span>48. Refresco Botella 2L</span>
+                                <span class="font-black text-nestor-greenDark">3,00 €</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- HORARIO, REPARTO & PEDIDOS -->
-                <div class="mt-4 bg-nestor-obsidian text-white p-4 rounded-2xl border-2 border-nestor-green shadow-lg">
-                    <div class="flex items-center justify-between border-b border-zinc-800 pb-2 mb-2">
+                <!-- SECCIÓN 7: HORARIO Y GARANTÍA EN RECUADRO ELEGANTE OSCURO -->
+                <div class="bg-nestor-obsidian text-white p-3 rounded-xl border-2 border-nestor-green shadow-lg">
+                    <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5 mb-1.5">
                         <div>
-                            <span class="text-nestor-green font-display font-black text-xs uppercase tracking-widest">ZONAS DE REPARTO Y PEDIDOS</span>
-                            <h4 class="font-display font-bold text-base text-white">REPARTO A DOMICILIO & RECOGIDA</h4>
+                            <span class="text-nestor-green font-display font-black text-[10px] uppercase tracking-widest">HORARIO DE APERTURA DEL HORNO</span>
+                            <h4 class="font-display font-bold text-sm text-white">MARTES A DOMINGO: <span class="text-nestor-gold font-black">19:30 A 24:00 H</span></h4>
                         </div>
-                        <div class="text-right font-display font-black text-nestor-gold text-sm">
-                            CANILES GRATIIS • BAZA
+                        <div class="text-right">
+                            <span class="bg-nestor-terracotta text-white font-display font-black text-[9px] uppercase px-2 py-0.5 rounded block">Reparto a Domicilio</span>
+                            <span class="text-[8.5px] text-zinc-300">Lunes cerrado por descanso</span>
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-3 text-[8pt] text-zinc-300">
-                        <div>
-                            <span class="text-white font-bold block mb-0.5">🕒 HORARIO DEL HORNO:</span>
-                            <p class="leading-snug">De Martes a Domingo de <strong class="text-nestor-gold">19:30 a 24:00h</strong>.<br><span class="text-zinc-400 text-[7.5pt]">(Lunes cerrado por descanso del personal)</span></p>
-                        </div>
-                        <div>
-                            <span class="text-white font-bold block mb-0.5">📞 TELÉFONOS DE PEDIDOS:</span>
-                            <p class="leading-snug">Caniles: <strong class="text-white font-mono">600 000 000</strong><br>Baza: <strong class="text-white font-mono">958 000 000</strong></p>
-                        </div>
-                    </div>
-
-                    <div class="mt-2 pt-2 border-t border-zinc-800 flex items-center justify-between text-[7.5pt] text-zinc-400">
-                        <span>💳 Aceptamos Efectivo en Entrega, Tarjeta TPV y Bizum</span>
-                        <span class="text-nestor-green font-bold">★ Néstor Pizzas Caniles & Baza</span>
+                    <div class="flex items-center justify-between text-[8.5pt] text-zinc-300 pt-0.5">
+                        <span>💳 Aceptamos <strong class="text-white">Efectivo en Entrega, Tarjeta TPV y Bizum</strong>.</span>
+                        <span class="text-nestor-greenLight font-bold">★ Caniles (Gratis) y Baza</span>
                     </div>
                 </div>
 
@@ -662,13 +722,40 @@
 
         </div>
 
-        <!-- PIE FINAL CARA B -->
-        <footer class="border-t border-zinc-300 pt-2 mt-2 flex items-center justify-between text-[7.5pt] text-zinc-500">
-            <span>Carta Imprimible y Plastificable v2.0 • Diseñada por <strong>Architect.Sys × D'Kitchen Corporate Tech</strong></span>
-            <span class="font-mono text-zinc-600">https://dkitchencorporate-tech.github.io/nestor-pizzas-pwa/</span>
+        <!-- PIE FINAL REVERSO -->
+        <footer class="border-t border-zinc-300 pt-1.5 mt-2 flex items-center justify-between text-[8pt] text-zinc-500 font-medium">
+            <span>Carta Imprimible & Plastificable v3.0 • Diseño Profesional por <strong class="text-nestor-obsidian">Architect.Sys × D'Kitchen Corporate Tech</strong></span>
+            <span class="font-mono text-nestor-greenDark font-bold">https://dkitchencorporate-tech.github.io/nestor-pizzas-pwa/</span>
         </footer>
 
     </div>
+
+    <!-- SCRIPT DE GENERACIÓN AUTOMÁTICA DEL CÓDIGO QR REAL CON QRIOUS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                if (typeof QRious !== 'undefined') {
+                    new QRious({
+                        element: document.getElementById('qr-canvas-cara-a'),
+                        value: 'https://dkitchencorporate-tech.github.io/nestor-pizzas-pwa/',
+                        size: 150,
+                        level: 'H',
+                        foreground: '#0F172A',
+                        background: '#FFFFFF'
+                    });
+                } else {
+                    document.getElementById('qr-canvas-cara-a').style.display = 'none';
+                    document.getElementById('qr-fallback-cara-a').classList.remove('hidden');
+                }
+            } catch(e) {
+                console.error("Error inicializando QRious, mostrando fallback de API", e);
+                const c = document.getElementById('qr-canvas-cara-a');
+                if(c) c.style.display = 'none';
+                const f = document.getElementById('qr-fallback-cara-a');
+                if(f) f.classList.remove('hidden');
+            }
+        });
+    </script>
 
 </body>
 </html>
