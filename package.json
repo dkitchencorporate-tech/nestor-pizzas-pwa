@@ -1,0 +1,30 @@
+{
+  "name": "nestor-pizzas-pwa",
+  "version": "1.0.0",
+  "description": "App Oficial de Pedidos, Carta Digital Interactiva y PWA de Néstor Pizzas (Caniles & Baza) por Architect.Sys",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_urls.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dkitchencorporate-tech/nestor-pizzas-pwa.git"
+  },
+  "keywords": [
+    "pwa",
+    "pizzeria",
+    "nestor-pizzas",
+    "caniles",
+    "baza",
+    "architect-sys",
+    "food-ordering",
+    "sumup"
+  ],
+  "author": "Architect.Sys <devops@dkitchencorporate.tech>",
+  "license": "Proprietary",
+  "bugs": {
+    "url": "https://github.com/dkitchencorporate-tech/nestor-pizzas-pwa/issues"
+  },
+  "homepage": "https://github.com/dkitchencorporate-tech/nestor-pizzas-pwa#readme"
+}

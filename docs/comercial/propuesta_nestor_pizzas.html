@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dossier de Digitalización & Crecimiento | Néstor Pizzas × Architect.Sys</title>
+    <!-- Tailwind CSS & Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0F172A',
+                            slate: '#1E293B',
+                            orange: '#FF4500',
+                            orangeHover: '#E03E00',
+                            green: '#10B981',
+                            greenDark: '#059669',
+                            cream: '#FDFCF8',
+                            warm: '#F7F5EF',
+                            border: '#E2E8F0'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ==========================================================================
+           CONFIGURACIÓN A4 EXACTA & ELIMINACIÓN DE ESPACIOS BLANCOS ETERNOS
+           ========================================================================== */
+        @page {
+            size: A4 portrait;
+            margin: 14mm 15mm 14mm 15mm;
+        }
+
+        @media print {
+            html, body {
+                width: 210mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #FFFFFF !important;
+                color: #111827 !important;
+                font-size: 11.5pt !important;
+                line-height: 1.5 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .page-a4 {
+                width: 100% !important;
+                max-width: 100% !important;
+                /* Aseguramos que ocupe exactamente la altura imprimible A4 para no dejar vacíos */
+                height: 269mm !important;
+                min-height: 269mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                background: #FFFFFF !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+            }
+
+            .page-a4:last-of-type {
+                page-break-after: auto !important;
+                break-after: auto !important;
+            }
+
+            .no-break, table, tr, th, td, .bonus-box, .stat-card {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-border {
+                border: 1px solid #CBD5E1 !important;
+            }
+        }
+
+        @media screen {
+            body {
+                background-color: #F0F2F5;
+                padding: 2rem 1rem;
+            }
+
+            .page-a4 {
+                width: 100%;
+                max-width: 210mm;
+                min-height: 297mm;
+                margin: 0 auto 2.5rem auto;
+                background: #FFFFFF;
+                border-radius: 1.5rem;
+                box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.08);
+                border: 1px solid #E2E8F0;
+                padding: 14mm 15mm;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                position: relative;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-800 antialiased selection:bg-brand-orange selection:text-white">
+
+    <!-- BARRA FLOTANTE EN PANTALLA -->
+    <div class="no-print fixed top-4 right-4 z-50 flex items-center gap-3 bg-brand-dark text-white px-5 py-3 rounded-2xl shadow-2xl border border-white/10">
+        <div class="flex items-center gap-2 pr-3 border-r border-white/20">
+            <span class="w-2.5 h-2.5 rounded-full bg-brand-green animate-pulse"></span>
+            <span class="text-xs font-bold uppercase tracking-wider">Dossier A4 • 4 Páginas Exactas</span>
+        </div>
+        <button onclick="window.print()" class="bg-brand-orange hover:bg-brand-orangeHover text-white font-display font-black px-4 py-2 rounded-xl text-xs shadow-lg transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            <span>Descargar PDF A4</span>
+        </button>
+    </div>
+
+    <!-- =========================================================================
+         PÁGINA A4 #1: DIAGNÓSTICO OPERATIVO & ENFOQUE DIRECTO (DE TÚ A TÚ)
+         ========================================================================= -->
+    <article class="page-a4">
+        <div class="flex-1 flex flex-col justify-between">
+            <!-- Cabecera -->
+            <header class="bg-brand-dark text-white rounded-2xl p-6 mb-6 shadow-md print-border relative overflow-hidden">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+                    <div>
+                        <span class="inline-block bg-brand-orange text-white text-[11px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full mb-2">Propuesta Personalizada de Digitalización</span>
+                        <h1 class="font-display font-black text-3xl sm:text-4xl tracking-tight leading-none">
+                            NÉSTOR PIZZAS <span class="text-brand-orange">×</span> ARCHITECT.SYS
+                        </h1>
+                        <p class="text-xs sm:text-sm text-gray-300 font-medium mt-1">Ingeniería de Pedidos y Ecosistema PWA Oficial en Caniles</p>
+                    </div>
+                    <div class="text-left md:text-right text-xs text-gray-300 font-mono bg-white/10 px-3.5 py-2 rounded-xl border border-white/10 shrink-0">
+                        <p class="font-bold text-white">REF: AST-NP-2026</p>
+                        <p>A la atención de: Néstor</p>
+                        <p class="text-brand-green font-bold">Estado: Propuesta de Trabajo</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Nuestro Enfoque Personalizado de Tú a Tú -->
+            <section class="mb-6 flex-1 flex flex-col justify-center">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="w-1.5 h-6 bg-brand-orange rounded-full"></span>
+                    <h2 class="font-display font-black text-xl sm:text-2xl text-gray-900 tracking-tight uppercase">Néstor, hablemos claro de tu negocio en Caniles</h2>
+                </div>
+                
+                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-6 text-sm sm:text-base text-gray-700 leading-relaxed space-y-3.5 print-border font-medium shadow-sm">
+                    <p>
+                        Tras la conversación que mantuvimos ayer contigo, entendemos perfectamente la visión que tienes para Néstor Pizzas y el momento operativo exacto en el que os encontráis. Cuando haces una pizza de calidad y la demanda se dispara los fines de semana por la noche en Caniles, el teléfono se convierte en tu mayor cuello de botella.
+                    </p>
+                    <p>
+                        <strong>La realidad del teléfono en hora punta:</strong> Alguien de tu equipo tiene que dejar lo que está haciendo para atender cada llamada, tomar nota, preguntar direcciones y repetir precios (perdiendo entre 3 y 5 minutos por cliente). Si el teléfono comunica porque hay otra llamada en curso, ese cliente no espera y pides ventas directas.
+                    </p>
+                    <p>
+                        Por otro lado, depender de apps de terceros para gestionar tus envíos o pedidos te quita hasta un 30% de tu margen de beneficio y se quedan con los datos de tus propios vecinos.
+                    </p>
+                    <p class="text-gray-900 font-bold border-t border-gray-200 pt-3.5">
+                        En Architect.Sys somos tu Socio de Crecimiento (*Growth Partner*). No venimos a venderte una web decorativa; nuestro compromiso es construir e instalar en tu local un ecosistema digital propio para que tus clientes pidan en segundos desde el móvil, el ticket medio crezca y tú tengas el control del 100% de tus ventas y de tus datos.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Resumen Rápido del Impacto -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-red-50 border border-red-200 rounded-2xl p-5 no-break print-border">
+                    <span class="font-display font-black text-sm sm:text-base text-red-700 block mb-2">❌ EL SISTEMA ACTUAL</span>
+                    <ul class="text-xs sm:text-sm text-gray-700 space-y-2 font-medium">
+                        <li>• Teléfono saturado en horas críticas de fin de semana.</li>
+                        <li>• Tiempo perdido tomando comandas a mano bajo presión en cocina.</li>
+                        <li>• Cero *upselling* (el cliente no ve fotos de entrantes, patatas o bebidas).</li>
+                        <li>• Comisiones abusivas o clientes perdidos por líneas comunicando.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 no-break print-border">
+                    <span class="font-display font-black text-sm sm:text-base text-brand-greenDark block mb-2">⚡ EL ECOSISTEMA ARCHITECT.SYS</span>
+                    <ul class="text-xs sm:text-sm text-gray-700 space-y-2 font-medium">
+                        <li>• <strong>App PWA Oficial de Néstor Pizzas:</strong> Pedidos en dos clics sin instalar nada.</li>
+                        <li>• <strong>Carta Digital Interactiva:</strong> Fotos reales que abren el apetito y elevan el ticket.</li>
+                        <li>• <strong>Impresora Térmica Conectada:</strong> El ticket sale directo y claro en cocina.</li>
+                        <li>• <strong>Base de Datos Propia:</strong> Te quedas con cada teléfono para fidelizar.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <!-- Pie de Página #1 -->
+        <footer class="pt-4 mt-6 border-t border-gray-200 flex items-center justify-between text-xs text-gray-400 font-medium shrink-0">
+            <span>Dossier Comercial de Digitalización • Néstor Pizzas (Caniles)</span>
+            <span>Página 1 de 4</span>
+        </footer>
+    </article>
+
+
+    <!-- =========================================================================
+         PÁGINA A4 #2: CAPACIDAD OPERATIVA & ESCALAMIENTO DE PEDIDOS (OPTIMIZADA)
+         ========================================================================= -->
+    <article class="page-a4">
+        <div class="flex-1 flex flex-col justify-between">
+            <!-- Cabecera Sección -->
+            <div>
+                <div class="flex items-center gap-2 mb-4 border-b border-gray-200 pb-3">
+                    <span class="w-1.5 h-6 bg-brand-green rounded-full"></span>
+                    <h2 class="font-display font-black text-xl sm:text-2xl text-gray-900 tracking-tight uppercase">Capacidad Operativa & Optimización de Tiempos</h2>
+                </div>
+
+                <p class="text-sm sm:text-base text-gray-700 leading-relaxed mb-6 font-medium">
+                    La tecnología debe funcionar como tu empleado más veloz y preciso. Al automatizar la entrada de comandas mediante un entorno interactivo propio, eliminamos el tiempo muerto de atención telefónica y multiplicamos de forma real vuestra capacidad de cocina por hora en el local.
+                </p>
+            </div>
+
+            <!-- Comparativa Técnica Expandida para llenar la hoja perfectamente -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6 flex-1 items-stretch">
+                <div class="border border-gray-200 rounded-2xl p-6 bg-gray-50 flex flex-col justify-between no-break print-border shadow-sm">
+                    <div>
+                        <div class="border-b border-gray-200 pb-3 mb-4">
+                            <span class="font-display font-black text-base text-gray-900 block">RECEPCIÓN TELEFÓNICA MANUAL</span>
+                            <span class="text-xs text-gray-500 font-medium">Proceso tradicional en hora punta</span>
+                        </div>
+                        <div class="space-y-4 text-xs sm:text-sm text-gray-700 font-medium">
+                            <div class="flex justify-between border-b border-gray-200/60 pb-2"><span>Tiempo medio por llamada:</span><strong class="text-gray-900">3 a 5 minutos</strong></div>
+                            <div class="flex justify-between border-b border-gray-200/60 pb-2"><span>Atención simultánea:</span><strong class="text-gray-900">Solo 1 cliente cada vez</strong></div>
+                            <div class="flex justify-between border-b border-gray-200/60 pb-2"><span>Saturación de líneas:</span><strong class="text-red-600">Alta pérdida de llamadas</strong></div>
+                            <div class="flex justify-between border-b border-gray-200/60 pb-2"><span>Carga para tu personal:</span><strong class="text-gray-900">Apuntar, cobrar y repetir</strong></div>
+                            <div class="flex justify-between"><span>Margen de error al anotar:</span><strong class="text-red-600">Elevado por prisa/ruido</strong></div>
+                        </div>
+                    </div>
+                    <div class="pt-5 mt-4 border-t border-gray-200 text-center bg-white p-4 rounded-xl border border-gray-200/80">
+                        <span class="text-xs text-gray-500 uppercase font-bold block mb-1">Capacidad Máxima por Persona</span>
+                        <span class="font-display font-black text-2xl sm:text-3xl text-gray-800">12 - 15 <span class="text-sm font-normal">pedidos / hora</span></span>
+                    </div>
+                </div>
+
+                <div class="border-2 border-brand-green bg-emerald-50/40 rounded-2xl p-6 flex flex-col justify-between no-break print-border shadow-md">
+                    <div>
+                        <div class="border-b border-emerald-200 pb-3 mb-4">
+                            <span class="font-display font-black text-base text-brand-greenDark block">BASE OPERATIVA ARCHITECT.SYS</span>
+                            <span class="text-xs text-brand-greenDark font-bold">App PWA + Impresora Térmica en Cocina</span>
+                        </div>
+                        <div class="space-y-4 text-xs sm:text-sm text-gray-700 font-medium">
+                            <div class="flex justify-between border-b border-emerald-200/60 pb-2"><span>Tiempo de pedido en App:</span><strong class="text-brand-greenDark font-bold">30 a 45 segundos</strong></div>
+                            <div class="flex justify-between border-b border-emerald-200/60 pb-2"><span>Atención simultánea:</span><strong class="text-brand-greenDark font-bold">Ilimitada (sin esperas)</strong></div>
+                            <div class="flex justify-between border-b border-emerald-200/60 pb-2"><span>Saturación de líneas:</span><strong class="text-brand-greenDark font-bold">Cero llamadas perdidas</strong></div>
+                            <div class="flex justify-between border-b border-emerald-200/60 pb-2"><span>Carga para tu personal:</span><strong class="text-brand-greenDark font-bold">Solo cocinar y hornear</strong></div>
+                            <div class="flex justify-between"><span>Margen de error al anotar:</span><strong class="text-brand-greenDark font-bold">0% (El cliente escribe todo)</strong></div>
+                        </div>
+                    </div>
+                    <div class="pt-5 mt-4 border-t border-emerald-200 text-center bg-white p-4 rounded-xl border border-emerald-300 shadow-sm">
+                        <span class="text-xs text-emerald-800 uppercase font-bold block mb-1">Capacidad Máxima del Sistema</span>
+                        <span class="font-display font-black text-2xl sm:text-3xl text-brand-greenDark">+60 <span class="text-sm font-normal">pedidos / hora</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Los 3 Pilares del Retorno (Expandido para balance estético) -->
+            <div>
+                <h3 class="font-display font-black text-base sm:text-lg text-gray-900 uppercase tracking-wide mb-4">El impacto directo y medible en tu caja diaria</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm font-medium">
+                    <div class="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm no-break print-border flex flex-col justify-between">
+                        <div>
+                            <span class="text-2xl mb-2.5 block">⏳</span>
+                            <h4 class="font-display font-black text-base text-gray-900 mb-2">Elimina Tiempos Muertos</h4>
+                            <p class="text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">Al derivar el flujo de pedidos hacia tu App interactiva, tu teléfono deja de comunicar en los momentos más críticos del viernes o sábado, capturando todas las ventas.</p>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm no-break print-border flex flex-col justify-between">
+                        <div>
+                            <span class="text-2xl mb-2.5 block">💶</span>
+                            <h4 class="font-display font-black text-base text-gray-900 mb-2">Ticket Medio +15%</h4>
+                            <p class="text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">Cuando un cliente pide por el móvil con fotos atractivas y sugerencias automáticas de entrantes, bebidas y extras, el importe final de cada pedido aumenta sin esfuerzo.</p>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm no-break print-border flex flex-col justify-between">
+                        <div>
+                            <span class="text-2xl mb-2.5 block">⭐</span>
+                            <h4 class="font-display font-black text-base text-gray-900 mb-2">Marca Libre de Comisiones</h4>
+                            <p class="text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">Tu negocio refuerza su autoridad en Caniles con una imagen digital impecable, sin regalar tu beneficio a plataformas externas y creando una comunidad de clientes leales.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie de Página #2 -->
+        <footer class="pt-4 mt-6 border-t border-gray-200 flex items-center justify-between text-xs text-gray-400 font-medium shrink-0">
+            <span>Dossier Comercial de Digitalización • Néstor Pizzas (Caniles)</span>
+            <span>Página 2 de 4</span>
+        </footer>
+    </article>
+
+
+    <!-- =========================================================================
+         PÁGINA A4 #3: BASE OPERATIVA DIGITAL & BONOS CONSULTIVOS (OPTIMIZADA)
+         ========================================================================= -->
+    <article class="page-a4">
+        <div class="flex-1 flex flex-col justify-between">
+            <!-- Cabecera Sección -->
+            <div>
+                <div class="flex items-center justify-between gap-2 mb-4 border-b border-gray-200 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-brand-orange rounded-full"></span>
+                        <h2 class="font-display font-black text-xl sm:text-2xl text-gray-900 tracking-tight uppercase">Base Operativa Digital & Bonos Consultivos</h2>
+                    </div>
+                    <span class="text-xs font-bold bg-orange-100 text-brand-orange px-3 py-1 rounded-full uppercase shrink-0">100% Llave en Mano</span>
+                </div>
+
+                <p class="text-sm sm:text-base text-gray-700 leading-relaxed mb-6 font-medium">
+                    En nuestra agencia no entregamos un software vacío. Al activar tu <strong>Base Operativa Digital</strong>, te incluimos los 4 activos consultivos de nuestro plan base que te aseguran dominar tu zona desde el primer minuto, sin ningún tipo de sobrecoste.
+                </p>
+            </div>
+
+            <!-- Grid de los 4 Bonos Reales (Estructurado con altura ideal para llenar la página) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 font-medium flex-1 items-stretch">
+                <!-- Bono 1 -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-5 no-break print-border shadow-sm flex flex-col justify-between hover:border-orange-200 transition-all">
+                    <div>
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="font-display font-black text-sm sm:text-base text-gray-900 flex items-center gap-2"><span>📍</span> Auditoría Google Maps</span>
+                            <span class="text-xs font-bold text-brand-orange bg-orange-50 px-2 py-0.5 rounded border border-orange-100">INCLUIDO</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">
+                            Analizamos los factores técnicos de tu ficha de Google Maps para blindar las búsquedas locales. Cuando alguien busque "pizzería cerca de mí" o "dónde cenar en Caniles", tu negocio destaque en las primeras posiciones por delante de competidores.
+                        </p>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3.5 mt-4 flex items-center justify-between text-xs">
+                        <span class="text-gray-400 font-bold uppercase tracking-wider">Precio habitual agencia:</span>
+                        <div class="flex items-center gap-2.5">
+                            <span class="line-through text-gray-400 font-bold">180 €</span>
+                            <span class="text-brand-orange font-black text-sm bg-orange-50 px-2.5 py-0.5 rounded">GRATIS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bono 2 -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-5 no-break print-border shadow-sm flex flex-col justify-between hover:border-orange-200 transition-all">
+                    <div>
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="font-display font-black text-sm sm:text-base text-gray-900 flex items-center gap-2"><span>📄</span> Carta Neuromarketing</span>
+                            <span class="text-xs font-bold text-brand-orange bg-orange-50 px-2 py-0.5 rounded border border-orange-100">INCLUIDO</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">
+                            Estructuración estratégica de tu menú en formato digital y físico para posicionar visualmente tus pizzas e ingredientes de mayor rotación y margen de ganancia en los puntos exactos donde la vista del cliente va por instinto en los primeros segundos.
+                        </p>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3.5 mt-4 flex items-center justify-between text-xs">
+                        <span class="text-gray-400 font-bold uppercase tracking-wider">Valor diseño estratégico:</span>
+                        <div class="flex items-center gap-2.5">
+                            <span class="line-through text-gray-400 font-bold">250 €</span>
+                            <span class="text-brand-orange font-black text-sm bg-orange-50 px-2.5 py-0.5 rounded">GRATIS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bono 3 -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-5 no-break print-border shadow-sm flex flex-col justify-between hover:border-orange-200 transition-all">
+                    <div>
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="font-display font-black text-sm sm:text-base text-gray-900 flex items-center gap-2"><span>🔥</span> Inyección de Tráfico</span>
+                            <span class="text-xs font-bold text-brand-orange bg-orange-50 px-2 py-0.5 rounded border border-orange-100">INCLUIDO</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">
+                            Diseñamos contigo la táctica de promoción hiperlocal (por ejemplo, combos especiales, promociones interactivas o tardeo de pizzas) pensada para activar y reactivar ventas en los días más tranquilos de la semana (martes a jueves), manteniendo el horno activo.
+                        </p>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3.5 mt-4 flex items-center justify-between text-xs">
+                        <span class="text-gray-400 font-bold uppercase tracking-wider">Consultoría de negocio:</span>
+                        <div class="flex items-center gap-2.5">
+                            <span class="line-through text-gray-400 font-bold">300 €</span>
+                            <span class="text-brand-orange font-black text-sm bg-orange-50 px-2.5 py-0.5 rounded">GRATIS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bono 4 -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-5 no-break print-border shadow-sm flex flex-col justify-between hover:border-orange-200 transition-all">
+                    <div>
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="font-display font-black text-sm sm:text-base text-gray-900 flex items-center gap-2"><span>📱</span> Kit Contenidos & Redes</span>
+                            <span class="text-xs font-bold text-brand-orange bg-orange-50 px-2 py-0.5 rounded border border-orange-100">INCLUIDO</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">
+                            Te quitamos el problema del "qué publicar" entregándote un paquete inicial con 12 publicaciones, gráficos profesionales y textos redactados con IA altamente persuasivos para comunicar en Instagram y Facebook el lanzamiento de vuestra nueva App.
+                        </p>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3.5 mt-4 flex items-center justify-between text-xs">
+                        <span class="text-gray-400 font-bold uppercase tracking-wider">Valor agencia contenidos:</span>
+                        <div class="flex items-center gap-2.5">
+                            <span class="line-through text-gray-400 font-bold">250 €</span>
+                            <span class="text-brand-orange font-black text-sm bg-orange-50 px-2.5 py-0.5 rounded">GRATIS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Caja de Resumen de los Bonos -->
+            <div class="bg-brand-slate text-white rounded-2xl p-5 text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-between gap-4 no-break print-border shadow-md">
+                <div class="space-y-1 text-center sm:text-left font-medium">
+                    <span class="text-brand-orange font-black uppercase text-xs flex items-center justify-center sm:justify-start gap-1.5"><span class="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span> Paquete Consultivo Integral • Base Operativa</span>
+                    <p class="text-gray-200 font-normal">Al activar el sistema, recibes los <strong class="text-white font-bold">980 € en valor real de los 4 bonos estratégicos</strong> 100% bonificados.</p>
+                </div>
+                <div class="text-center sm:text-right shrink-0 bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                    <span class="line-through text-gray-400 text-xs block font-bold">980 € valor</span>
+                    <span class="font-display font-black text-lg sm:text-xl text-brand-green">INCLUIDOS • 0 €</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie de Página #3 -->
+        <footer class="pt-4 mt-6 border-t border-gray-200 flex items-center justify-between text-xs text-gray-400 font-medium shrink-0">
+            <span>Dossier Comercial de Digitalización • Néstor Pizzas (Caniles)</span>
+            <span>Página 3 de 4</span>
+        </footer>
+    </article>
+
+
+    <!-- =========================================================================
+         PÁGINA A4 #4: INVERSIÓN, ACUERDO DE VISIÓN & LAS 4 FASES DE PUESTA EN MARCHA
+         ========================================================================= -->
+    <article class="page-a4">
+        <div class="flex-1 flex flex-col justify-between">
+            <!-- Cabecera Sección -->
+            <div>
+                <div class="flex items-center gap-2 mb-4 border-b border-gray-200 pb-3">
+                    <span class="w-1.5 h-6 bg-brand-orange rounded-full"></span>
+                    <h2 class="font-display font-black text-xl sm:text-2xl text-gray-900 tracking-tight uppercase">Inversión & Aplazamiento Especial (Acuerdo de Visión)</h2>
+                </div>
+
+                <p class="text-sm sm:text-base text-gray-700 leading-relaxed mb-5 font-medium">
+                    Entregamos un sistema <strong class="text-gray-900 font-bold">100% Llave en Mano y en Propiedad</strong>. Nosotros diseñamos, programamos, subimos a servidores y conectamos todo el ecosistema con tu cocina para que tú y tu equipo solo tengáis que centraros en hacer pizzas y atender al cliente.
+                </p>
+            </div>
+
+            <!-- Caja Principal de Inversión y Aplazamiento Especial (250 + 250 + 200) -->
+            <div class="border-2 border-brand-dark bg-white rounded-3xl p-6 mb-5 no-break print-border shadow-md">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 pb-4 mb-4">
+                    <div>
+                        <span class="text-xs uppercase font-black tracking-wider text-brand-orange block mb-1">Inversión Plan Base Oficial</span>
+                        <h3 class="font-display font-black text-2xl sm:text-3xl text-gray-900">Base Operativa Digital</h3>
+                        <p class="text-xs sm:text-sm text-gray-500 font-medium mt-0.5">Ecosistema PWA + Impresora + 4 Bonos (Valorados en 980€)</p>
+                    </div>
+                    <div class="text-left sm:text-right shrink-0">
+                        <span class="font-display font-black text-3xl sm:text-4xl text-gray-900">700 €</span>
+                        <span class="block text-xs font-bold text-gray-500 mt-0.5">Pago de desarrollo en propiedad</span>
+                    </div>
+                </div>
+
+                <!-- Aplazamiento Especial Personalizado para Néstor (De tú a tú) -->
+                <div class="bg-orange-50/70 border border-orange-200 rounded-2xl p-4 mb-4 font-medium">
+                    <div class="flex items-start gap-3">
+                        <span class="w-8 h-8 rounded-xl bg-brand-orange text-white font-black flex items-center justify-center text-sm shrink-0 mt-0.5">🤝</span>
+                        <div class="space-y-1 text-xs sm:text-sm text-gray-700">
+                            <span class="font-display font-black text-gray-900 block text-sm sm:text-base">Aplazamiento Especial Personalizado para Néstor</span>
+                            <p class="font-normal leading-relaxed">
+                                El formato estándar de nuestra agencia es de 2 cuotas de 350 €. Sin embargo, <strong class="text-gray-900 font-bold">en vista de la visión común que nos comunicaste ayer</strong> y dado que no tienes la urgencia de que el sistema esté operativo en menos de 15 días, hemos estructurado un acuerdo especial cómodo dividido en <strong class="text-brand-orange font-bold">3 fases sin ningún interés (250 € + 250 € + 200 €)</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Términos de Mantenimiento y Servidores -->
+                <div class="border-t border-gray-200 pt-3.5 space-y-2.5 font-medium text-xs sm:text-sm">
+                    <div class="flex items-start gap-2.5">
+                        <span class="text-brand-green font-bold text-base leading-none mt-0.5">✓</span>
+                        <p class="text-gray-700 font-normal">
+                            <strong class="font-bold text-gray-900">🎁 2 Meses de Mantenimiento GRATIS:</strong> Alojamiento en servidores ultrarrápidos y soporte a coste cero durante los dos primeros meses para rodar el sistema con total tranquilidad en tu cocina.
+                        </p>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="text-brand-green font-bold text-base leading-none mt-0.5">✓</span>
+                        <p class="text-gray-700 font-normal">
+                            <strong class="font-bold text-gray-900">Soporte Premium (Tras el 2º mes):</strong> Solo <strong class="text-gray-900 font-bold">69 € / mes</strong> por alojamiento, anti-caídas, copias y actualizaciones. <span class="underline font-bold text-gray-900">Sin ningún tipo de permanencia</span>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Las 4 Fases de Puesta en Marcha (Suavizado, Profesional y Colaborativo) -->
+            <div class="bg-brand-dark text-white rounded-3xl p-6 no-break print-border shadow-md space-y-4 font-medium flex-1 flex flex-col justify-between">
+                <div class="flex items-center justify-between border-b border-white/15 pb-2.5">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-brand-orange block">Proceso Suave y Colaborativo</span>
+                        <h3 class="font-display font-black text-base sm:text-lg text-white uppercase tracking-wide">Las 4 Fases del Plan de Activación</h3>
+                    </div>
+                    <span class="text-xs font-mono bg-white/10 px-3 py-1 rounded-lg border border-white/10 text-brand-orange font-bold shrink-0">RITMO A TUS TIEMPOS</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs text-gray-300">
+                    <!-- Fase 1 -->
+                    <div class="bg-white/10 border border-white/10 p-3.5 rounded-2xl space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-display font-bold text-brand-orange text-sm">Fase 1: Inicio y Estructura</span>
+                            <span class="text-[10px] font-bold bg-brand-orange/20 text-brand-orange px-2 py-0.5 rounded">1er Abono: 250 €</span>
+                        </div>
+                        <p class="font-normal text-gray-300 leading-relaxed">Confirmación de arranque y primer abono para levantar el servidor exclusivo, la arquitectura de carta digital y la configuración inicial de tu marca.</p>
+                    </div>
+
+                    <!-- Fase 2 -->
+                    <div class="bg-white/10 border border-white/10 p-3.5 rounded-2xl space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-display font-bold text-amber-400 text-sm">Fase 2: Avance y App PWA</span>
+                            <span class="text-[10px] font-bold bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded">2º Abono: 250 €</span>
+                        </div>
+                        <p class="font-normal text-gray-300 leading-relaxed">Programación y diseño completo de la interfaz de pedidos, carrito interactivo, opciones de pago e integración del menú optimizado con fotos.</p>
+                    </div>
+
+                    <!-- Fase 3 -->
+                    <div class="bg-white/10 border border-white/10 p-3.5 rounded-2xl space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-display font-bold text-brand-green text-sm">Fase 3: Pruebas y Cocina</span>
+                            <span class="text-[10px] font-bold bg-brand-green/20 text-brand-green px-2 py-0.5 rounded">3er Abono: 200 €</span>
+                        </div>
+                        <p class="font-normal text-gray-300 leading-relaxed">Conexión de la impresora térmica en el local, capacitación rápida de tu equipo y simulación de pedidos reales para asegurar una operativa perfecta.</p>
+                    </div>
+
+                    <!-- Fase 4 -->
+                    <div class="bg-white/10 border border-white/10 p-3.5 rounded-2xl space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-display font-bold text-cyan-400 text-sm">Fase 4: Despliegue y Ventas</span>
+                            <span class="text-[10px] font-bold bg-cyan-400/20 text-cyan-300 px-2 py-0.5 rounded">Lanzamiento Oficial</span>
+                        </div>
+                        <p class="font-normal text-gray-300 leading-relaxed">Puesta en producción en tiempo real, publicación de las campañas en redes y seguimiento directo durante los 2 meses de mantenimiento gratuito.</p>
+                    </div>
+                </div>
+
+                <!-- Contacto Correcto y Exacto de Alex (Cero alucinaciones) -->
+                <div class="pt-3 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-300 gap-2 font-medium">
+                    <div class="text-center sm:text-left">
+                        <span class="font-bold text-white block text-sm">Dirección de Proyecto • Architect.Sys Hostelería</span>
+                        <span>Alex • Consultoría y Crecimiento Digital: <strong class="text-brand-orange font-mono font-bold text-sm">+34 622 65 26 59</strong></span>
+                    </div>
+                    <a href="https://wa.me/34622652659?text=Hola%20Alex,%20tengo%20lista%20la%20confirmaci%C3%B3n%20para%20iniciar%20la%20Fase%201%20de%20N%C3%A9stor%20Pizzas." class="bg-brand-orange hover:bg-brand-orangeHover text-white font-black px-4 py-2 rounded-xl text-xs transition-all no-print shrink-0 shadow-lg">
+                        Confirmar por WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie de Página #4 -->
+        <footer class="pt-4 mt-6 border-t border-gray-200 flex items-center justify-between text-xs text-gray-400 font-medium shrink-0">
+            <span>Dossier Comercial de Digitalización • Néstor Pizzas (Caniles)</span>
+            <span>Página 4 de 4 • Fin de Propuesta</span>
+        </footer>
+    </article>
+
+</body>
+</html>
