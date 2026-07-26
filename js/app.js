@@ -1,5 +1,5 @@
 /* =========================================================================
-   NÉSTOR PIZZAS PWA - LÓGICA PRINCIPAL DE APLICACIÓN Y RENDERIZADO
+   NÉSTOR PIZZAS PWA - LÓGICA DE APLICACIÓN COMPLETA (ESTRUCTURA MODULAR)
    ========================================================================= */
 
 let currentCategory = 'TODOS';
@@ -136,6 +136,34 @@ function updateModalPrice() {
     if (priceEl) priceEl.innerText = `${total.toFixed(2)} €`;
 }
 
+function selectCustSizeOption(labelEl) {
+    document.querySelectorAll('.cust-size-btn').forEach(btn => {
+        btn.className = 'cust-size-btn flex items-center justify-between p-4 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all';
+    });
+    labelEl.className = 'cust-size-btn flex items-center justify-between p-4 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer shadow-sm transition-all';
+    const radio = labelEl.querySelector('input[type="radio"]');
+    if (radio) {
+        radio.checked = true;
+        updateModalPrice(radio.value.includes('Extra Queso') ? 2.00 : 0);
+    }
+}
+
+function toggleCheckboxCard(labelEl, isRemove = false) {
+    const cb = labelEl.querySelector('input[type="checkbox"]');
+    if (!cb) return;
+    cb.checked = !cb.checked;
+    if (isRemove) {
+        labelEl.className = cb.checked 
+            ? 'bg-red-500/20 text-red-400 px-3.5 py-2 rounded-xl border border-red-500 flex items-center gap-2 cursor-pointer font-bold shadow-sm transition-all'
+            : 'bg-zinc-800/80 px-3.5 py-2 rounded-xl border border-zinc-700 flex items-center gap-2 cursor-pointer hover:border-red-500 transition-all';
+    } else {
+        labelEl.className = cb.checked 
+            ? 'flex items-center justify-between p-3 rounded-xl bg-nestor-green/20 border-2 border-nestor-green text-white font-bold cursor-pointer transition-all shadow-sm'
+            : 'flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all';
+        updateModalPrice();
+    }
+}
+
 function confirmCustomizedItem() {
     if (!activeModalProduct) return;
 
@@ -168,7 +196,121 @@ function confirmCustomizedItem() {
     showOrderToast(`✓ ${activeModalProduct.name} se ha sumado a tu comanda (${finalPrice.toFixed(2)} €)`);
 }
 
-// 4. Barra Flotante de Carrito
+// 4. Upsell Dinámico y Recomendador Pre-Checkout
+function openDynamicUpsellModal() {
+    renderDynamicUpsells();
+    const modal = document.getElementById('upsell-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeUpsellAndReturnToMenu() {
+    const modal = document.getElementById('upsell-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function closeUpsellAndGoToCheckout() {
+    closeUpsellAndReturnToMenu();
+    openCheckoutModal();
+}
+
+function renderDynamicUpsells() {
+    const container = document.getElementById('upsell-cards-container');
+    if (!container) return;
+
+    const shuffled = [...NESTOR_UPSELLS].sort(() => 0.5 - Math.random()).slice(0, 3);
+    container.innerHTML = shuffled.map(up => `
+        <div class="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-nestor-gold transition-all group">
+            <div class="flex items-center gap-3">
+                <img src="${up.img}" alt="${up.name}" class="w-14 h-14 rounded-xl object-cover shrink-0 border border-zinc-800">
+                <div>
+                    <h4 class="font-display font-bold text-white text-xs sm:text-sm uppercase">${up.name}</h4>
+                    <p class="text-[10px] sm:text-[11px] text-zinc-400 line-clamp-1">${up.desc}</p>
+                    <span class="text-nestor-gold font-display font-black text-xs mt-0.5 inline-block">+${up.price.toFixed(2)} €</span>
+                </div>
+            </div>
+            <button onclick="addUpsellDirectly('${up.name}', ${up.price}, this)" class="bg-zinc-800 hover:bg-nestor-gold hover:text-black text-white font-display font-bold px-3 py-2 rounded-xl text-xs uppercase transition-all shrink-0 border border-zinc-700">
+                + Añadir
+            </button>
+        </div>
+    `).join('');
+}
+
+function addUpsellDirectly(name, price, btnEl) {
+    cart.push({
+        id: Date.now(),
+        name: name,
+        size: 'Complemento Sugerido',
+        extras: [],
+        removes: [],
+        price: price
+    });
+    updateCartStickyBar();
+    if (btnEl) {
+        btnEl.innerText = '✓ Añadido';
+        btnEl.className = 'bg-green-500 text-white font-display font-bold px-3 py-2 rounded-xl text-xs uppercase transition-all shrink-0 border border-green-400 shadow';
+    }
+}
+
+// 5. Checkout & Carrito
+function openCheckoutModal() {
+    renderCheckoutItems();
+    updateCheckoutTotals();
+    const modal = document.getElementById('checkout-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeCheckoutModal() {
+    const modal = document.getElementById('checkout-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function renderCheckoutItems() {
+    const list = document.getElementById('checkout-items-list');
+    if (!list) return;
+
+    if (cart.length === 0) {
+        list.innerHTML = `
+            <div class="text-center py-8 space-y-2">
+                <p class="text-gray-400 font-medium">Tu comanda está vacía actualmente.</p>
+                <button onclick="closeCheckoutModal()" class="text-green-400 text-xs font-bold uppercase underline">Explorar carta de pizzas →</button>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = cart.map((item, idx) => `
+        <div class="p-3 sm:p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-3">
+            <div>
+                <h4 class="font-display font-bold text-white text-xs sm:text-sm uppercase">${item.name}</h4>
+                <p class="text-[10px] text-gray-400">${item.size}</p>
+                ${item.extras.length ? `<p class="text-[10px] text-green-400">${item.extras.join(', ')}</p>` : ''}
+                ${item.removes.length ? `<p class="text-[10px] text-red-400">${item.removes.join(', ')}</p>` : ''}
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <span class="font-display font-black text-white text-sm">${item.price.toFixed(2)} €</span>
+                <button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-white p-1 text-xs font-bold bg-red-950/60 rounded-lg border border-red-800">✕</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function removeFromCart(idx) {
+    cart.splice(idx, 1);
+    renderCheckoutItems();
+    updateCheckoutTotals();
+    updateCartStickyBar();
+}
+
+function updateCheckoutTotals() {
+    const subtotal = cart.reduce((acc, curr) => acc + curr.price, 0);
+    const subtotalEl = document.getElementById('checkout-subtotal');
+    const totalEl = document.getElementById('checkout-total');
+
+    if (subtotalEl) subtotalEl.innerText = `${subtotal.toFixed(2)} €`;
+    if (totalEl) totalEl.innerText = `${subtotal.toFixed(2)} €`;
+}
+
+// 6. Barra Flotante de Carrito
 function updateCartStickyBar() {
     const bar = document.getElementById('sticky-cart-bar');
     const counterBadge = document.getElementById('cart-counter-badge');
@@ -186,7 +328,7 @@ function updateCartStickyBar() {
     }
 }
 
-// 5. Toast Notificación
+// 7. Toast Notificación
 function showOrderToast(msg) {
     let toast = document.getElementById('order-toast-banner');
     if (!toast) {
@@ -207,7 +349,28 @@ function showOrderToast(msg) {
     }, 4500);
 }
 
-// 6. Control de Carrusel Hero
+// 8. VIP & Sorteos
+function openVipModal() {
+    const modal = document.getElementById('vip-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeVipModal() {
+    const modal = document.getElementById('vip-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function enterRaffle(e) {
+    if (e) e.preventDefault();
+    const box = document.getElementById('raffle-box');
+    const confirm = document.getElementById('raffle-confirmation');
+    if (box && confirm) {
+        box.querySelector('form').classList.add('hidden');
+        confirm.classList.remove('hidden');
+    }
+}
+
+// 9. Control de Carrusel Hero
 function changeSlide(num) {
     currentSlide = num;
     const slide1 = document.getElementById('slide-1');
@@ -233,7 +396,9 @@ function nextSlide() {
 }
 setInterval(() => { nextSlide(); }, 6500);
 
-// Inicializar al Cargar
-document.addEventListener('DOMContentLoaded', () => {
+// Inicializar al cargar de forma robusta e inmediata
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderProducts);
+} else {
     renderProducts();
-});
+}
