@@ -25,18 +25,19 @@
                 extend: {
                     colors: {
                         nestor: {
-                            base: '#F8F6F2',
-                            card: '#FFFFFF',
-                            obsidian: '#18181B',
-                            charcoal: '#27272A',
-                            green: '#16A34A',
-                            greenDark: '#15803D',
-                            greenLight: '#DCFCE7',
-                            terracotta: '#EA580C',
-                            terracottaDark: '#C2410C',
-                            terracottaLight: '#FFEDD5',
-                            gold: '#D97706',
-                            border: '#E4E4E7'
+                            base: '#0A0A0E',
+                            card: '#14141C',
+                            cardHover: '#1C1C26',
+                            obsidian: '#09090D',
+                            charcoal: '#1E1E28',
+                            red: '#FF3B00',
+                            redDark: '#D02E00',
+                            redLight: '#FF3B0020',
+                            green: '#22C55E',
+                            greenDark: '#16A34A',
+                            greenLight: '#22C55E20',
+                            gold: '#FACC15',
+                            border: '#262636'
                         }
                     },
                     fontFamily: {
@@ -44,9 +45,9 @@
                         display: ['Outfit', 'sans-serif']
                     },
                     boxShadow: {
-                        'premium': '0 20px 45px -15px rgba(0, 0, 0, 0.07), 0 0 1px 1px rgba(0, 0, 0, 0.04)',
-                        'premium-hover': '0 28px 55px -15px rgba(234, 88, 12, 0.22), 0 12px 25px -10px rgba(22, 163, 74, 0.25)',
-                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.08)'
+                        'premium': '0 20px 45px -15px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.05)',
+                        'premium-hover': '0 28px 55px -15px rgba(255, 59, 0, 0.35), 0 12px 25px -10px rgba(34, 197, 94, 0.3)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.6)'
                     }
                 }
             }
@@ -55,8 +56,8 @@
 
     <style>
         body {
-            background-color: #F8F6F2;
-            color: #18181B;
+            background-color: #0A0A0E;
+            color: #F3F4F6;
             font-family: 'Plus Jakarta Sans', sans-serif;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
@@ -154,21 +155,21 @@
             <!-- Fila superior en móvil: Marca Caniles + Botón VIP compacto en extremo derecho -->
             <div class="flex items-center justify-between w-full md:w-auto gap-3">
                 <div class="flex items-center gap-3 cursor-pointer group" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-                    <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-nestor-obsidian text-white flex items-center justify-center shadow-lg shrink-0 border border-zinc-800 group-hover:border-nestor-green transition-colors relative overflow-hidden">
-                        <img src="./logo.png?v=2" alt="Néstor Pizzas Logo Oficial" class="w-full h-full object-cover">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-nestor-obsidian text-white flex items-center justify-center shadow-lg shrink-0 border border-zinc-700 group-hover:border-nestor-green transition-colors relative overflow-hidden p-1">
+                        <img src="./assets/brand/logo.svg" alt="Néstor Pizzas Logo Oficial" class="w-full h-full object-contain">
                     </div>
                     <div>
                         <div class="flex flex-wrap items-center gap-1.5 sm:gap-3">
-                            <h1 class="font-display font-black text-xl sm:text-3xl tracking-tight text-nestor-obsidian uppercase leading-none group-hover:text-nestor-greenDark transition-colors">
+                            <h1 class="font-display font-black text-xl sm:text-3xl tracking-tight text-white uppercase leading-none group-hover:text-nestor-green transition-colors">
                                 NÉSTOR PIZZAS
                             </h1>
-                            <span class="text-[9px] sm:text-[10px] font-bold bg-nestor-greenLight text-nestor-greenDark px-2 sm:px-2.5 py-0.5 rounded-full uppercase tracking-wider font-display border border-nestor-green/30">
+                            <span class="text-[9px] sm:text-[10px] font-bold bg-nestor-green/20 text-nestor-green px-2 sm:px-2.5 py-0.5 rounded-full uppercase tracking-wider font-display border border-nestor-green/40">
                                 Caniles • Granada
                             </span>
                         </div>
-                        <p class="text-[11px] sm:text-xs text-zinc-500 font-semibold flex items-center gap-1.5 mt-1">
+                        <p class="text-[11px] sm:text-xs text-zinc-400 font-semibold flex items-center gap-1.5 mt-1">
                             <span class="inline-block w-2 h-2 rounded-full bg-nestor-green animate-pulse shrink-0"></span>
-                            <span class="truncate sm:overflow-visible">Tel: <strong class="text-nestor-obsidian font-display font-bold">679 76 19 87</strong> • Alcalde Felip, 9</span>
+                            <span class="truncate sm:overflow-visible">Tel: <strong class="text-white font-display font-bold">679 76 19 87</strong> • Calle Alcalde Felip, 9</span>
                         </p>
                     </div>
                 </div>
@@ -789,68 +790,449 @@
 
         /* Base de Datos Completa con los 38 Artículos Reales, sin repeticiones de imagen y 100% castellano */
         const NESTOR_PRODUCTS = [
-            // --- PIZZAS CLÁSICAS 33CM (17 ARTÍCULOS) ---
-            { id: 1, name: 'Milanesa', category: 'PIZZAS 33CM', price: 6.50, desc: 'Base casera de tomate y mozzarella fior di latte fundida con generoso jamón york seleccionado al horno.', badge: 'Clásica 33cm', badgeClass: 'bg-zinc-900 text-white', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
-            { id: 2, name: 'Calabresa', category: 'PIZZAS 33CM', price: 7.50, desc: 'Base de tomate artesano y mozzarella fundida con jamón york jugoso y rodajas de auténtico queso de cabra de la sierra.', badge: 'Clásica 33cm', badgeClass: 'bg-zinc-900 text-white', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-            { id: 3, name: 'Kebab Especial', category: 'PIZZAS 33CM', price: 8.50, desc: 'Base con cebolla fresca en juliana, jugosa carne de kebab de ternera/pollo recién asada y auténtica salsa kebab al punto.', badge: 'Favorita Caniles', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
-            { id: 4, name: 'Florentina', category: 'PIZZAS 33CM', price: 8.50, desc: 'Base tradicional con jamón york de primera, rodajas de piña dorada al horno y un extra generoso de queso mozzarella fundido.', badge: 'Tropical 33cm', badgeClass: 'bg-nestor-greenDark text-white font-bold', img: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80' },
-            { id: 5, name: 'Siciliana', category: 'PIZZAS 33CM', price: 8.50, desc: 'Combinación marinera y de la tierra: base casera, champiñones laminados, jamón york tierno y lomos de atún claro en aceite.', badge: 'Clásica 33cm', badgeClass: 'bg-zinc-900 text-white', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
-            { id: 6, name: 'Napolitana', category: 'PIZZAS 33CM', price: 8.50, desc: 'Base con champiñones frescos al horno, bacon ahumado crujiente y tiras de auténtico jamón serrano bodega.', badge: 'Clásica 33cm', badgeClass: 'bg-zinc-900 text-white', img: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=800&q=80' },
-            { id: 7, name: 'Veneciana', category: 'PIZZAS 33CM', price: 8.50, desc: 'Trío cárnico italiano: base de tomate, mozzarella, jamón york, rodajas de salami curado y salchichas en su punto.', badge: 'Trío Cárnico', badgeClass: 'bg-zinc-900 text-white font-bold', img: 'https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?auto=format&fit=crop&w=800&q=80' },
-            { id: 8, name: 'Genovesa', category: 'PIZZAS 33CM', price: 8.50, desc: 'Especialidad del mar con champiñón fresco, colitas de gambas jugosas y atún claro de primera calidad fundido con mozzarella.', badge: 'Marinera', badgeClass: 'bg-zinc-900 text-white font-bold', img: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80' },
-            { id: 9, name: 'Parmesana', category: 'PIZZAS 33CM', price: 8.50, desc: 'Base casera cubierta con nuestra exquisita y secreta mezcla artesana de 4 quesos fundidos al punto de gratinado dorado.', badge: '4 Quesos', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-            { id: 10, name: 'Marinera', category: 'PIZZAS 33CM', price: 8.50, desc: 'El sabor del mar en Caniles: base con atún claro, colitas de gambas y selectas delicias de mar horneadas con mozzarella.', badge: 'Delicias Mar', badgeClass: 'bg-zinc-900 text-white font-bold', img: 'https://images.unsplash.com/photo-1588315029754-2dd089d39a1a?auto=format&fit=crop&w=800&q=80' },
-            { id: 11, name: 'Canilera', category: 'PIZZAS 33CM', price: 9.50, desc: 'La especialidad suprema de Néstor. Base con jamón serrano bodega, tiras de pollo tierno, pimiento verde fresco y capa final de alioli gratinado al horno.', badge: 'Especialidad Caniles', badgeClass: 'bg-nestor-green text-white font-extrabold shadow-md', img: 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&w=800&q=80' },
-            { id: 12, name: 'Toscana', category: 'PIZZAS 33CM', price: 9.50, desc: 'Para los amantes del toque picante: base con peperoni italiano, carne picada de ternera, cebolla en juliana y nuestra salsa picante secreta.', badge: 'Picante Toscana', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
-            { id: 13, name: 'Texana Barbacoa', category: 'PIZZAS 33CM', price: 9.50, desc: 'Sabor intenso americana: bacon crujiente, carne de ternera sazonada, cebolla fresca al horno y generosa capa de salsa barbacoa Néstor.', badge: 'Barbacoa Texana', badgeClass: 'bg-nestor-terracottaDark text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
-            { id: 14, name: 'Romana de la Huerta', category: 'PIZZAS 33CM', price: 9.50, desc: 'Selección vegetal fresca de la zona: champiñón laminado, pimiento rojo asado, pimiento verde crujiente y cebolla fresca.', badge: 'Huerta Romana', badgeClass: 'bg-nestor-greenDark text-white font-bold', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
-            { id: 15, name: 'Americana Cheddar (NEW)', category: 'PIZZAS 33CM', price: 9.50, desc: 'Novedad en la carta. Base con bacon ahumado crujiente, carne picada de ternera y una capa irresistible de cremosa salsa cheddar fundida.', badge: 'Novedad New', badgeClass: 'bg-nestor-gold text-white font-bold shadow', img: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80' },
-            { id: 16, name: 'Boloñesa Italiana (NEW)', category: 'PIZZAS 33CM', price: 9.50, desc: 'Novedad en el menú. Base artesana cubierta por completo con nuestra contundente y casera salsa boloñesa de carne elaborada a fuego lento.', badge: 'Novedad New', badgeClass: 'bg-nestor-gold text-white font-bold shadow', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-            { id: 17, name: 'Calzone al Curry (NEW)', category: 'PIZZAS 33CM', price: 9.50, desc: 'Novedad en formato cerrado. Calzone relleno y horneado en su punto con pollo tierno, verduras y nuestra aromática salsa especial de curry suave.', badge: 'Calzone New', badgeClass: 'bg-nestor-green text-white font-bold shadow', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
+          {
+                    "id": "p-1",
+                    "cat": "pizzas",
+                    "name": "Milanesa",
+                    "desc": "Base de tomate, mozzarella y jamón york",
+                    "price": 6.5,
+                    "badge": "Popular",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-2",
+                    "cat": "pizzas",
+                    "name": "Calabresa",
+                    "desc": "Base de tomate, mozzarella, jamón york y queso de cabra artesano",
+                    "price": 7.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-3",
+                    "cat": "pizzas",
+                    "name": "Kebab",
+                    "desc": "Base, cebolla morada, jugosa carne kebab y salsa especial kebab",
+                    "price": 8.5,
+                    "badge": "Top Ventas",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-4",
+                    "cat": "pizzas",
+                    "name": "Florentina",
+                    "desc": "Base, jamón york, piña troceada y extra de mozzarella fundida",
+                    "price": 8.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-5",
+                    "cat": "pizzas",
+                    "name": "Siciliana",
+                    "desc": "Base, champiñón fresco laminado, jamón york y atún",
+                    "price": 8.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-6",
+                    "cat": "pizzas",
+                    "name": "Napolitana",
+                    "desc": "Base, champiñones, bacon crujiente y virutas de jamón serrano",
+                    "price": 8.5,
+                    "badge": "Recomendado",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-7",
+                    "cat": "pizzas",
+                    "name": "Veneciana",
+                    "desc": "Base, jamón york, salami spicy y salchichas",
+                    "price": 8.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-8",
+                    "cat": "pizzas",
+                    "name": "Genovesa",
+                    "desc": "Base, champiñón, gambas jugosas y atún",
+                    "price": 8.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-9",
+                    "cat": "pizzas",
+                    "name": "Parmesana",
+                    "desc": "Base con una exquisita selección y mezcla cremosa de 4 quesos",
+                    "price": 8.5,
+                    "badge": "Top 4 Quesos",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-10",
+                    "cat": "pizzas",
+                    "name": "Marinera",
+                    "desc": "Base, atún, gambas salteadas y delicias de mar",
+                    "price": 8.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-11",
+                    "cat": "pizzas",
+                    "name": "Canilera",
+                    "desc": "Base, serrano, pollo, pimiento verde y alioli gratinado al horno",
+                    "price": 9.5,
+                    "badge": "Especial Caniles",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-12",
+                    "cat": "pizzas",
+                    "name": "Toscana",
+                    "desc": "Base, peperoni spicy, ternera sazonada, cebolla y salsa picante",
+                    "price": 9.5,
+                    "badge": "Picante 🌶️",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-13",
+                    "cat": "pizzas",
+                    "name": "Texana",
+                    "desc": "Base, bacon, ternera, cebolla y salsa barbacoa ahumada",
+                    "price": 9.5,
+                    "badge": "Favorita BBQ",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-14",
+                    "cat": "pizzas",
+                    "name": "Romana",
+                    "desc": "Base, champiñón, pimiento rojo, pimiento verde y cebolla",
+                    "price": 9.5,
+                    "badge": "Vegetariana",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-15",
+                    "cat": "pizzas",
+                    "name": "Americana",
+                    "desc": "Base, bacon crujiente, ternera y bañada en salsa cheddar fundida",
+                    "price": 8.5,
+                    "badge": "Top Cheddar",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-16",
+                    "cat": "pizzas",
+                    "name": "Boloñesa",
+                    "desc": "Base tradicional con rica salsa boloñesa casera de carne",
+                    "price": 8.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-17",
+                    "cat": "pizzas",
+                    "name": "Calzone Curry",
+                    "desc": "Pizza doblada horneada, mozzarella fundida y pollo al curry",
+                    "price": 9.5,
+                    "badge": "Calzone",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "p-18",
+                    "cat": "pizzas",
+                    "name": "Calzone Carbonara",
+                    "desc": "Pizza doblada horneada, mozzarella, pollo y salsa carbonara",
+                    "price": 9.5,
+                    "badge": "Novedad ✨",
+                    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pb-19",
+                    "cat": "blancas",
+                    "name": "Panna",
+                    "desc": "Nata suave, mozzarella, champiñón, bacon y pollo",
+                    "price": 8.5,
+                    "badge": "Pizza Blanca",
+                    "img": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pb-20",
+                    "cat": "blancas",
+                    "name": "Lionesa",
+                    "desc": "Nata, mozzarella, jamón york, bacon y huevo fresco al horno",
+                    "price": 8.5,
+                    "badge": "Con Huevo",
+                    "img": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pb-21",
+                    "cat": "blancas",
+                    "name": "Carbonara",
+                    "desc": "Nata cremosa, mozzarella, jamón york, bacon y cebolla",
+                    "price": 8.5,
+                    "badge": "Clásica Nata",
+                    "img": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pi-22",
+                    "cat": "ingredientes",
+                    "name": "Pizza Base (33 cm)",
+                    "desc": "Salsa de tomate casera, mozzarella y orégano",
+                    "price": 5.5,
+                    "badge": "Crea la tuya",
+                    "img": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pi-23",
+                    "cat": "ingredientes",
+                    "name": "Pizza Base + 1 Ingrediente",
+                    "desc": "Base con 1 ingrediente a tu elección",
+                    "price": 6.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pi-24",
+                    "cat": "ingredientes",
+                    "name": "Pizza Base + 2 Ingredientes",
+                    "desc": "Base con 2 ingredientes a tu elección",
+                    "price": 7.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pi-25",
+                    "cat": "ingredientes",
+                    "name": "Pizza Base + 3 Ingredientes",
+                    "desc": "Base con 3 ingredientes a tu elección",
+                    "price": 8.5,
+                    "badge": "Más vendida",
+                    "img": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pi-26",
+                    "cat": "ingredientes",
+                    "name": "Pizza Base + 4 Ingredientes",
+                    "desc": "Base con 4 ingredientes a tu elección",
+                    "price": 9.5,
+                    "badge": "Completa",
+                    "img": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "mp-27",
+                    "cat": "mazzi",
+                    "name": "Mazzi Pizza Base (31 cm)",
+                    "desc": "Masa artesana, mezcla de 5 quesos, lámina de masa y base",
+                    "price": 8.5,
+                    "badge": "Masa 5 Quesos",
+                    "img": "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "mp-28",
+                    "cat": "mazzi",
+                    "name": "Mazzi Pizza + 1 Ingrediente",
+                    "desc": "Base Mazzi 5 quesos con 1 ingrediente a tu elección",
+                    "price": 9.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "mp-29",
+                    "cat": "mazzi",
+                    "name": "Mazzi Pizza + 2 Ingredientes",
+                    "desc": "Base Mazzi 5 quesos con 2 ingredientes a tu elección",
+                    "price": 10.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "mp-30",
+                    "cat": "mazzi",
+                    "name": "Mazzi Pizza + 3 Ingredientes",
+                    "desc": "Base Mazzi 5 quesos con 3 ingredientes a tu elección",
+                    "price": 11.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "mp-31",
+                    "cat": "mazzi",
+                    "name": "Mazzi Pizza + 4 Ingredientes",
+                    "desc": "Base Mazzi 5 quesos con 4 ingredientes a tu elección",
+                    "price": 12.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pa-32",
+                    "cat": "patatas",
+                    "name": "Patatas Fritas",
+                    "desc": "Ración de patatas fritas crujientes doradas recién hechas",
+                    "price": 2,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pa-33",
+                    "cat": "patatas",
+                    "name": "Patatas Gajos",
+                    "desc": "Salsas a elegir: Alioli, Barbacoa, Brava o Morisca",
+                    "price": 3,
+                    "badge": "Con Salsa",
+                    "img": "https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pa-34",
+                    "cat": "patatas",
+                    "name": "Gratinadas Cheddar",
+                    "desc": "Patatas horneadas gratinadas con abundante salsa cheddar y bacon",
+                    "price": 7.5,
+                    "badge": "Top Entrante",
+                    "img": "https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "pa-35",
+                    "cat": "patatas",
+                    "name": "Gratinadas Morisca",
+                    "desc": "Patatas gratinadas con salsa morisca especial de la casa",
+                    "price": 7.5,
+                    "badge": "Especialidad",
+                    "img": "https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "ac-36",
+                    "cat": "acomp",
+                    "name": "Nuggetts de Pollo (6 Unds.)",
+                    "desc": "Bocaditos de pollo crujientes dorados al punto",
+                    "price": 3.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "ac-37",
+                    "cat": "acomp",
+                    "name": "Aros de Cebolla (8 Unds.)",
+                    "desc": "Aros de cebolla empanados crujientes",
+                    "price": 4,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "ac-38",
+                    "cat": "acomp",
+                    "name": "Alitas de Pollo (6 Unds.)",
+                    "desc": "Alitas de pollo sazonadas y doradas",
+                    "price": 5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "am-39",
+                    "cat": "algomas",
+                    "name": "Spaghetti Boloñesa",
+                    "desc": "Spaghetti italianos con rica salsa boloñesa casera",
+                    "price": 6.5,
+                    "badge": "Pasta Casera",
+                    "img": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "am-40",
+                    "cat": "algomas",
+                    "name": "Spaghetti Carbonara",
+                    "desc": "Spaghetti con salsa cremosa carbonara, bacon y queso",
+                    "price": 6.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "am-41",
+                    "cat": "algomas",
+                    "name": "Pollo al Curry con Arroz",
+                    "desc": "Plato completo de tierno pollo en salsa curry con arroz blanco",
+                    "price": 9,
+                    "badge": "Plato Estrella",
+                    "img": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "am-42",
+                    "cat": "algomas",
+                    "name": "Pizza Dulce (Pizza del Mes)",
+                    "desc": "Deliciosa pizza dulce artesana (consultar especial del mes)",
+                    "price": 5,
+                    "badge": "Postre Novedad ✨",
+                    "img": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "be-43",
+                    "cat": "bebidas",
+                    "name": "Agua Pequeña (50cl)",
+                    "desc": "Agua mineral natural fría",
+                    "price": 1,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "be-44",
+                    "cat": "bebidas",
+                    "name": "Agua 1,5 Litros",
+                    "desc": "Botella familiar de agua mineral",
+                    "price": 1.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "be-45",
+                    "cat": "bebidas",
+                    "name": "Refresco Lata (33cl)",
+                    "desc": "Coca-Cola, Coca-Cola Zero, Fanta Naranja, Fanta Limón o Sprite",
+                    "price": 1.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "be-46",
+                    "cat": "bebidas",
+                    "name": "Cerveza Lata (33cl)",
+                    "desc": "Cerveza rubia bien fría",
+                    "price": 1.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "be-47",
+                    "cat": "bebidas",
+                    "name": "Aquarius (33cl)",
+                    "desc": "Aquarius Naranja o Limón frío",
+                    "price": 1.6,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "be-48",
+                    "cat": "bebidas",
+                    "name": "Cerveza Litro (1L)",
+                    "desc": "Botella de litro de cerveza rubia",
+                    "price": 2.5,
+                    "badge": "",
+                    "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80"
+          },
+          {
+                    "id": "be-49",
+                    "cat": "bebidas",
+                    "name": "Refresco 2 Litros",
+                    "desc": "Botella familiar de 2L a elegir",
+                    "price": 3,
+                    "badge": "Familiar",
+                    "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80"
+          }
+];
 
-            // --- PIZZAS BLANCAS 33CM (3 ARTÍCULOS) ---
-            { id: 18, name: 'Panna Blanca', category: 'PIZZAS BLANCAS', price: 8.50, desc: 'Base cremosa de nata fresca y mozzarella fior di latte, champiñones laminados, bacon crujiente y trozos tiernos de pollo.', badge: 'Base de Nata', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
-            { id: 19, name: 'Lionesa al Huevo', category: 'PIZZAS BLANCAS', price: 8.50, desc: 'Base suave de nata fresca con mozzarella, jamón york, bacon ahumado y un huevo fresco estrellado horneado justo al centro.', badge: 'Huevo al Horno', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
-            { id: 20, name: 'Carbonara Suprema', category: 'PIZZAS BLANCAS', price: 8.50, desc: 'Auténtico estilo carbonara blanca: base de nata fresca y mozzarella, jamón york, tiras de bacon crujiente y cebolla dorada.', badge: 'Carbonara Blanca', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-
-            // --- MAZZI PIZZAS (5 ARTÍCULOS) ---
-            { id: 21, name: 'Mazzi Pizza Base (MP)', category: 'MAZZI PIZZAS', price: 8.50, desc: 'Nuestra masa artesana 31cm con exquisita mezcla de 5 quesos fundidos, una lámina adicional de masa crujiente sobre nuestra base original.', badge: 'Mazzi 5 Quesos', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80' },
-            { id: 22, name: 'Mazzi Pizza + 1 Ingrediente', category: 'MAZZI PIZZAS', price: 9.50, desc: 'Mazzi Pizza Base con mezcla de 5 quesos y lámina extra de masa, configurada con tu ingrediente favorito del menú a elegir.', badge: 'Mazzi + 1 Ing.', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-            { id: 23, name: 'Mazzi Pizza + 2 Ingredientes', category: 'MAZZI PIZZAS', price: 10.50, desc: 'Mazzi Pizza Base artesana con mezcla de 5 quesos, lámina extra de masa y 2 ingredientes frescos a tu elección al momento.', badge: 'Mazzi + 2 Ing.', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
-            { id: 24, name: 'Mazzi Pizza + 3 Ingredientes', category: 'MAZZI PIZZAS', price: 11.50, desc: 'Mazzi Pizza Base artesana 5 quesos con doble lámina y 3 ingredientes gourmet a elegir para un sabor contundente en Caniles.', badge: 'Mazzi + 3 Ing.', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
-            { id: 25, name: 'Mazzi Pizza + 4 Ingredientes', category: 'MAZZI PIZZAS', price: 12.50, desc: 'La experiencia máxima de la carta. Mazzi Pizza 5 quesos doble lámina de masa configurada con hasta 4 ingredientes a tu elección.', badge: 'Mazzi Suprema', badgeClass: 'bg-nestor-green text-white font-extrabold shadow-md', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
-
-            // --- POR INGREDIENTES (5 ARTÍCULOS) ---
-            { id: 26, name: 'Pizza Base Tomate y Mozzarella', category: 'POR INGREDIENTES', price: 5.50, desc: 'Nuestra masa crujiente recién hecha de 33cm con salsa casera de tomate San Marzano, mozzarella fior di latte fundida y orégano.', badge: 'Crea tu Pizza', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
-            { id: 27, name: 'Pizza Base + 1 Ingrediente', category: 'POR INGREDIENTES', price: 6.50, desc: 'Pizza Base 33cm (tomate, mozzarella, orégano) personalizada con 1 ingrediente de nuestra lista de 28 opciones artesanas.', badge: 'Base + 1 Ing.', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-            { id: 28, name: 'Pizza Base + 2 Ingredientes', category: 'POR INGREDIENTES', price: 7.50, desc: 'Pizza Base 33cm horneada al momento y configurada al gusto con 2 ingredientes seleccionados de nuestra carta oficial.', badge: 'Base + 2 Ing.', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
-            { id: 29, name: 'Pizza Base + 3 Ingredientes', category: 'POR INGREDIENTES', price: 8.50, desc: 'Pizza Base 33cm personalizada al milímetro por ti con 3 ingredientes frescos recién cortados en cocina.', badge: 'Base + 3 Ing.', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80' },
-            { id: 30, name: 'Pizza Base + 4 Ingredientes', category: 'POR INGREDIENTES', price: 9.50, desc: 'Tu creación perfecta al horno. Pizza Base 33cm combinada con tus 4 ingredientes favoritos de la carta de Néstor.', badge: 'Base + 4 Ing.', badgeClass: 'bg-nestor-greenDark text-white font-bold', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
-
-            // --- PATATAS Y ENTRANTES (8 ARTÍCULOS) ---
-            { id: 31, name: 'Patatas Fritas Crujientes', category: 'PATATAS Y ENTRANTES', price: 2.00, desc: 'Ración clásica de patatas fritas cortadas, doradas en su punto de sal y calientes listas para acompañar tus pizzas.', badge: 'Ración Caliente', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=80' },
-            { id: 32, name: 'Patatas Gajos Especiales', category: 'PATATAS Y ENTRANTES', price: 3.00, desc: 'Patatas en gajo con piel sazonadas a las finas hierbas. Incluye tu salsa favorita a elegir: Alioli, Barbacoa, Brava o Morisca.', badge: 'Salsas a Elegir', badgeClass: 'bg-nestor-terracotta text-white font-bold', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
-            { id: 33, name: 'Patatas Gratinadas BBQ', category: 'PATATAS Y ENTRANTES', price: 6.00, desc: 'Cazuela generosa de patatas cubiertas con mezcla de quesos fundidos, carne sazonada y nuestra salsa barbacoa gratinadas al horno.', badge: 'Gratinada BBQ', badgeClass: 'bg-nestor-terracottaDark text-white font-bold', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
-            { id: 34, name: 'Patatas Gratinadas Cheddar', category: 'PATATAS Y ENTRANTES', price: 7.50, desc: 'Cazuela de patatas bañadas en abundante salsa cheddar fundida con trocitos crujientes de bacon ahumado al gratinador.', badge: 'Gratinada Cheddar', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=800&q=80' },
-            { id: 35, name: 'Patatas Gratinadas Morisca', category: 'PATATAS Y ENTRANTES', price: 7.50, desc: 'Especialidad gratinada con patatas gajos, queso mozzarella fundido, especias moriscas aromáticas y salsa especial del chef.', badge: 'Gratinada Morisca', badgeClass: 'bg-nestor-greenDark text-white font-bold', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
-            { id: 36, name: 'Nuggetts de Pollo (6 Unds)', category: 'PATATAS Y ENTRANTES', price: 3.50, desc: 'Ración de 6 bocaditos de pechuga de pollo empanados y crujientes por fuera, jugosos por dentro. Ideal para niños y entrantes.', badge: '6 Unidades', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80' },
-            { id: 37, name: 'Aros de Cebolla Crujientes (8 Unds)', category: 'PATATAS Y ENTRANTES', price: 4.00, desc: 'Ración de 8 anillos de cebolla dulce empanados con rebozado crujiente dorado al momento.', badge: '8 Unidades', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&w=800&q=80' },
-            { id: 38, name: 'Alitas de Pollo Asadas (6 Unds)', category: 'PATATAS Y ENTRANTES', price: 5.00, desc: 'Ración de 6 alitas de pollo asadas y marinadas en salsa barbacoa y especias Néstor, tiernas y llenas de sabor.', badge: 'Alitas BBQ', badgeClass: 'bg-nestor-terracottaDark text-white font-bold', img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80' },
-
-            // --- ALGO MÁS (3 ARTÍCULOS) ---
-            { id: 39, name: 'Pasta Boloñesa Casera', category: 'ALGO MÁS', price: 6.50, desc: 'Pasta recién cocida bañada en nuestra salsa boloñesa casera elaborada con carne picada de ternera y tomate lento.', badge: 'Pasta Boloñesa', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80' },
-            { id: 40, name: 'Pasta Carbonara al Parmigiano', category: 'ALGO MÁS', price: 6.50, desc: 'Pasta italiana al estilo carbonara con base cremosa de nata fresca, bacon ahumado crujiente y queso parmesano gratinado.', badge: 'Pasta Carbonara', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&w=800&q=80' },
-            { id: 41, name: 'Pollo al Curry con Arroz Basmati', category: 'ALGO MÁS', price: 9.00, desc: 'Plato completo de tiras tiernas de pechuga de pollo en salsa cremosa aromática de curry indio/morisco, servido sobre arroz basmati suelto.', badge: 'Plato Completo', badgeClass: 'bg-nestor-green text-white font-bold', img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=80' },
-
-            // --- BEBIDAS (7 ARTÍCULOS) ---
-            { id: 42, name: 'Agua Mineral Pequeña 50cl', category: 'BEBIDAS', price: 1.00, desc: 'Botella de agua mineral natural de manantial fría formato individual (50cl).', badge: '50cl Fría', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' },
-            { id: 43, name: 'Agua Mineral Grande 1,5 Litros', category: 'BEBIDAS', price: 1.50, desc: 'Botella grande de agua mineral natural fría formato familiar (1.5 Litros).', badge: '1.5 Litros', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1559839914-17aae19cec71?auto=format&fit=crop&w=800&q=80' },
-            { id: 44, name: 'Refresco en Lata 33cl Fría', category: 'BEBIDAS', price: 1.50, desc: 'Lata individual bien fría de 33cl a elegir en mostrador o entrega: Coca-Cola, Coca-Cola Zero, Fanta Naranja o Fanta Limón.', badge: 'Lata 33cl', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' },
-            { id: 45, name: 'Cerveza en Lata 33cl Fría', category: 'BEBIDAS', price: 1.50, desc: 'Lata de cerveza rubia nacional bien fría (33cl) ideal para acompañar tus pizzas.', badge: 'Cerveza Lata', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1600788886242-5c96aabe3757?auto=format&fit=crop&w=800&q=80' },
-            { id: 46, name: 'Aquarius de Limón / Naranja Lata', category: 'BEBIDAS', price: 1.60, desc: 'Lata de Aquarius refrescante isotónico de 33cl bien frío.', badge: 'Lata 33cl', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' },
-            { id: 47, name: 'Cerveza Litro Fría (Litrona)', category: 'BEBIDAS', price: 2.50, desc: 'Botella de 1 Litro de cerveza rubia nacional bien fría, formato ideal para compartir en cenas de grupo en Caniles.', badge: 'Litro 1000ml', badgeClass: 'bg-nestor-gold text-white font-bold', img: 'https://images.unsplash.com/photo-1535958636474-b021ee887b13?auto=format&fit=crop&w=800&q=80' },
-            { id: 48, name: 'Refresco Botella 2 Litros Familiar', category: 'BEBIDAS', price: 3.00, desc: 'Botella familiar de 2 Litros bien fría a elegir: Coca-Cola Sabor Original, Coca-Cola Zero o Fanta Naranja.', badge: 'Familiar 2L', badgeClass: 'bg-zinc-800 text-white font-bold', img: 'https://images.unsplash.com/photo-1559839914-17aae19cec71?auto=format&fit=crop&w=800&q=80' }
-        ];
 
         let currentCategory = 'TODOS';
         let cart = [];
