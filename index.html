@@ -80,34 +80,51 @@
         .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
         
         .glass-nav {
-            background: rgba(255, 255, 255, 0.90);
+            background: rgba(12, 12, 18, 0.96);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(228, 228, 231, 0.8);
+            border-bottom: 1px solid rgba(34, 197, 94, 0.35);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
         }
 
         .glass-floating {
-            background: rgba(24, 24, 27, 0.96);
+            background: rgba(14, 14, 20, 0.96);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
         }
 
         .category-pill {
+            background-color: #14141E;
+            color: #9CA3AF;
+            border: 1px solid #262638;
             transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
         }
-        .category-pill.active {
-            background-color: #18181B;
+        .category-pill:hover {
             color: #FFFFFF;
-            font-weight: 700;
-            box-shadow: 0 8px 25px -5px rgba(24, 24, 27, 0.4), 0 0 0 1px #16A34A;
-            border-color: #18181B;
+            border-color: #22C55E;
+            background-color: #1E1E2C;
+        }
+        .category-pill.active {
+            background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+            color: #FFFFFF;
+            font-weight: 800;
+            box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+            border-color: #4ADE80;
         }
 
         .card-curved {
-            border-radius: 2.2rem;
+            background-color: #14141E;
+            border: 2px solid rgba(34, 197, 94, 0.4);
+            border-radius: 2rem;
             transition: all 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-curved:hover {
+            border-color: #22C55E;
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.35);
+            transform: translateY(-4px);
+        }
             background-color: #FFFFFF;
             border: 1px solid #F4F4F5;
         }
@@ -155,8 +172,8 @@
             <!-- Fila superior en móvil: Marca Caniles + Botón VIP compacto en extremo derecho -->
             <div class="flex items-center justify-between w-full md:w-auto gap-3">
                 <div class="flex items-center gap-3 cursor-pointer group" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-                    <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-nestor-obsidian text-white flex items-center justify-center shadow-lg shrink-0 border border-zinc-700 group-hover:border-nestor-green transition-colors relative overflow-hidden p-1">
-                        <img src="./assets/brand/logo.svg" alt="Néstor Pizzas Logo Oficial" class="w-full h-full object-contain">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-nestor-obsidian text-white flex items-center justify-center shadow-lg shrink-0 border border-zinc-700 group-hover:border-nestor-green transition-colors relative overflow-hidden p-0.5">
+                        <img src="./assets/brand/logo_exact.png" alt="Néstor Pizzas Logo Oficial" class="w-full h-full object-contain drop-shadow-md">
                     </div>
                     <div>
                         <div class="flex flex-wrap items-center gap-1.5 sm:gap-3">
@@ -175,37 +192,46 @@
                 </div>
 
                 <!-- Botón VIP compacto en móvil (visible solo en móvil aquí en la cabecera) -->
-                <div onclick="openVipModal()" class="md:hidden cursor-pointer bg-white hover:bg-zinc-50 border border-zinc-200 rounded-2xl px-2.5 py-2 flex items-center gap-2 transition-all shadow-2xs shrink-0 self-start">
-                    <div class="w-7 h-7 rounded-xl bg-nestor-terracottaLight text-nestor-terracottaDark flex items-center justify-center font-display font-bold text-[10px] shrink-0">VIP</div>
+                <div onclick="openVipModal()" class="md:hidden cursor-pointer bg-[#14141E] hover:bg-[#1E1E2C] border border-green-500/40 rounded-2xl px-2.5 py-2 flex items-center gap-2 transition-all shadow-sm shrink-0 self-start">
+                    <div class="w-7 h-7 rounded-xl bg-green-500/20 text-green-400 border border-green-500/40 flex items-center justify-center font-display font-bold text-[10px] shrink-0">VIP</div>
                     <div class="text-left leading-tight">
                         <span class="text-[9px] font-bold uppercase tracking-widest text-zinc-400 block">Club</span>
-                        <span class="text-xs font-bold text-nestor-obsidian block"><span id="vip-points-count-mobile" class="text-nestor-green font-display font-extrabold">140</span> ptos</span>
+                        <span class="text-xs font-bold text-white block"><span id="vip-points-count-mobile" class="text-green-400 font-display font-extrabold">140</span> ptos</span>
                     </div>
                 </div>
             </div>
 
             <!-- Fila de Botones de Contacto y Módulo VIP/Horario en Tablet y PC -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between md:justify-end gap-2.5 sm:gap-4 w-full md:w-auto border-t md:border-t-0 pt-2.5 md:pt-0 border-zinc-200/60">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between md:justify-end gap-2.5 sm:gap-4 w-full md:w-auto border-t md:border-t-0 pt-2.5 md:pt-0 border-zinc-800">
                 <!-- Botones No Invasivos de Contacto Directo (Llamar vs WhatsApp) adaptativos -->
                 <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <a href="tel:679761987" class="flex-1 sm:flex-initial bg-white hover:bg-zinc-100 text-nestor-obsidian border border-zinc-300 rounded-xl px-3 sm:px-3.5 py-2 sm:py-1.5 text-[11px] sm:text-xs font-display font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-all">
-                        <svg class="w-3.5 h-3.5 text-nestor-green shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    <a href="tel:679761987" class="flex-1 sm:flex-initial bg-[#14141E] hover:bg-[#1C1C28] text-white border border-zinc-700 rounded-xl px-3 sm:px-3.5 py-2 sm:py-1.5 text-[11px] sm:text-xs font-display font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all">
+                        <svg class="w-3.5 h-3.5 text-green-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
                         <span class="truncate">Llamar: 679 76 19 87</span>
                     </a>
-                    <a href="https://wa.me/34679761987?text=Hola%20N%C3%A9stor%20Pizzas,%20quisiera%20hacer%20una%20consulta" target="_blank" class="flex-1 sm:flex-initial bg-nestor-green/10 hover:bg-nestor-green/20 text-nestor-greenDark border border-nestor-green/30 rounded-xl px-3 sm:px-3.5 py-2 sm:py-1.5 text-[11px] sm:text-xs font-display font-bold flex items-center justify-center gap-1.5 shadow-2xs transition-all">
-                        <svg class="w-3.5 h-3.5 text-nestor-green shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.124.557 4.122 1.543 5.864l-1.636 5.988 6.136-1.61c1.688.92 3.633 1.458 5.694 1.458 6.627 0 12-5.373 12-12 0-6.628-5.373-12-11.737-12z"/></svg>
+                    <a href="https://wa.me/34679761987?text=Hola%20N%C3%A9stor%20Pizzas,%20quisiera%20hacer%20una%20consulta" target="_blank" class="flex-1 sm:flex-initial bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/40 rounded-xl px-3 sm:px-3.5 py-2 sm:py-1.5 text-[11px] sm:text-xs font-display font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all">
+                        <svg class="w-3.5 h-3.5 text-green-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.124.557 4.122 1.543 5.864l-1.636 5.988 6.136-1.61c1.688.92 3.633 1.458 5.694 1.458 6.627 0 12-5.373 12-12 0-6.628-5.373-12-11.737-12z"/></svg>
                         <span class="truncate">WhatsApp Directo</span>
                     </a>
                 </div>
 
                 <!-- Módulo VIP & Horario en Desktop / Tablet -->
                 <div class="hidden md:flex items-center gap-3">
-                    <div class="flex flex-col text-right pr-3 border-r border-zinc-200">
+                    <div class="flex flex-col text-right pr-3 border-r border-zinc-800">
                         <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Horario Reparto</span>
-                        <span class="text-xs font-bold text-nestor-obsidian">Jueves a Domingos: 19:30 - 22:30h</span>
+                        <span class="text-xs font-bold text-white">Jueves a Domingos: 19:30 - 22:30h</span>
                     </div>
-                    <div onclick="openVipModal()" class="cursor-pointer bg-white hover:bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-2 flex items-center gap-3 transition-all shadow-sm group">
-                        <div class="w-8 h-8 rounded-xl bg-nestor-terracottaLight text-nestor-terracottaDark flex items-center justify-center font-display font-bold text-xs shrink-0">
+                    <div onclick="openVipModal()" class="cursor-pointer bg-[#14141E] hover:bg-[#1E1E2C] border border-green-500/40 rounded-2xl px-4 py-2 flex items-center gap-3 transition-all shadow-sm group">
+                        <div class="w-8 h-8 rounded-xl bg-green-500/20 text-green-400 border border-green-500/40 flex items-center justify-center font-display font-bold text-xs shrink-0">
+                            VIP
+                        </div>
+                        <div class="text-left">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-zinc-400 leading-none">Club Caniles</p>
+                            <p class="text-xs font-bold text-white mt-0.5"><span id="vip-points-count" class="text-green-400 font-display font-extrabold">140</span> Puntos Acumulados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
                             VIP
                         </div>
                         <div class="text-left">
