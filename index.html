@@ -18,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/custom.css">
 
     <script>
         tailwind.config = {
@@ -314,12 +315,12 @@
     </nav>
 
     <!-- =========================================================================
-         GRID DE CATÁLOGO (EXACTAMENTE 3 TARJETAS POR FILA EN PC, CURVADAS PREMIUM)
+         GRID DE CATÁLOGO (EXACTAMENTE 4 TARJETAS POR FILA EN PC, CURVADAS PREMIUM)
          ========================================================================= -->
     <main class="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
-        <!-- 1 col en móvil, 2 en tablet, exactamente 3 en PC (lg/xl) -->
-        <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Renderizado dinámico en castellano puro con tipografía Outfit -->
+        <!-- 1 col en móvil, 2 en tablet, 3 en laptop, exactamente 4 en PC (xl) -->
+        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Renderizado dinámico por categorías en castellano puro -->
         </div>
     </main>
 
@@ -1777,7 +1778,8 @@
         function nextSlide() { changeSlide(currentSlide === 1 ? 2 : 1); }
         setInterval(() => { nextSlide(); }, 6500);
 
-        renderProducts();
-    </script>
+    <!-- Módulos de Lógica y Datos Separados (Estructura Modular) -->
+    <script src="./js/products.js"></script>
+    <script src="./js/app.js"></script>
 </body>
 </html>
