@@ -61,15 +61,15 @@ function renderCategoryHeader(cat, count) {
     <div class="col-span-full py-10 my-2 text-center space-y-2">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/30 mb-2">
             <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-            <span class="text-green-400 font-mono font-bold text-[11px] uppercase tracking-widest">${count} VARIEDADES</span>
+            <span class="text-green-400 font-mono font-bold text-[11px] uppercase tracking-widest">${count} ${window.app.currentLang === 'en' ? 'VARIETIES' : 'VARIEDADES'}</span>
         </div>
         <div class="flex items-center justify-center gap-3">
             <h2 class="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-white uppercase tracking-tight leading-none">
-                ${cat.name}
+                ${(window.app.t_cat && window.app.t_cat(cat.id, 'name')) || cat.name}
             </h2>
             ${subtitleHtml}
         </div>
-        <p class="text-sm text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed pt-1">${cat.desc}</p>
+        <p class="text-sm text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed pt-1">${(window.app.t_cat && window.app.t_cat(cat.id, 'desc')) || cat.desc}</p>
         <div class="w-16 h-0.5 bg-green-500/50 mx-auto mt-4 rounded-full"></div>
     </div>`;
 }
@@ -121,7 +121,7 @@ function renderProductCard(product) {
                 onclick="openCustomizationModal(${product.id})"
                 class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-green-600 hover:to-green-700 text-white font-display font-black py-3.5 rounded-2xl text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg hover:shadow-[0_10px_25px_-5px_rgba(22,163,74,0.4)] flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                PEDIR AHORA
+                <span data-i18n="product_add_cart">PEDIR AHORA</span>
             </button>
         </div>
     </div>`;
@@ -161,6 +161,10 @@ function renderProducts() {
     });
 
     grid.innerHTML = html;
+    
+    if (window.app && window.app.applyTranslations) {
+        window.app.applyTranslations();
+    }
 }
 
 // -------------------------------------------------------------------------

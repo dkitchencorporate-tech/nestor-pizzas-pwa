@@ -184,8 +184,13 @@
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <!-- Marca y Logo 1:1 -->
             <div class="flex items-center gap-3 cursor-pointer group" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-                <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-black border border-green-500/60 p-1 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-black border border-green-500/60 p-1 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.3)] relative">
                     <img src="./assets/brand/logo_black_exact_2k.png" alt="Néstor Pizzas Logo Oficial 2K Fondo Negro" class="w-full h-full object-contain">
+                    
+                    <!-- Language Switcher (Hover Flag) -->
+                    <button id="lang-switcher-flag" onclick="event.stopPropagation(); window.app.toggleLanguage()" class="absolute -bottom-2 -right-2 text-xl drop-shadow-md hover:scale-110 transition-transform bg-[#0C0C12] rounded-full p-1 border border-zinc-700 z-50">
+                        🇬🇧
+                    </button>
                 </div>
                 <div class="hidden sm:block">
                     <div class="flex items-center gap-2">
@@ -738,15 +743,15 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-sm font-bold">
                         <label onclick="selectCheckoutOption('pay', 'Bizum Móvil', this, 'bizum')" class="chk-pay-btn flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all text-center">
                             <input type="radio" name="chk-pay" value="Bizum Móvil" class="text-nestor-green shrink-0">
-                            <span>Bizum Directo</span>
+                            <span data-i18n="checkout_pay_bizum">Bizum Directo</span>
                         </label>
                         <label onclick="selectCheckoutOption('pay', 'Tarjeta Bancaria TPV', this, 'card')" class="chk-pay-btn flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer transition-all text-center">
                             <input type="radio" name="chk-pay" value="Tarjeta Bancaria TPV" checked class="text-nestor-green shrink-0">
-                            <span>Tarjeta TPV / Apple Pay</span>
+                            <span data-i18n="checkout_pay_card">Tarjeta TPV / Apple Pay</span>
                         </label>
                         <label onclick="selectCheckoutOption('pay', 'Efectivo en Entrega', this, 'cash')" class="chk-pay-btn flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all text-center">
                             <input type="radio" name="chk-pay" value="Efectivo en Entrega" class="text-nestor-green shrink-0">
-                            <span>Efectivo en Entrega</span>
+                            <span data-i18n="checkout_pay_cash">Efectivo en Entrega</span>
                         </label>
                     </div>
 
@@ -842,6 +847,9 @@
     </div>
 
     <!-- Módulos de Lógica y Datos Separados (Estructura Modular) — v20260727f -->
+    <script src="./js/i18n/translations.js?v=20260727f"></script>
+    <script src="./js/i18n/catalog.js?v=20260727f"></script>
+    <script src="./js/i18n/switcher.js?v=20260727f"></script>
     <script src="./js/products.js?v=20260727f"></script>
     <script src="./js/app.js?v=20260727f"></script>
 
@@ -938,7 +946,7 @@
                           <p class="text-sm text-gray-300">Bienvenido al Club VIP de Caniles y Baza</p>
                           
                           <div class="mt-4 flex flex-col items-center justify-center">
-                              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Puntos Acumulados</span>
+                              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest" data-i18n="modal_profile_points">Puntos Acumulados</span>
                               <span class="text-5xl font-display font-black text-nestor-gold drop-shadow-[0_0_15px_rgba(250,204,21,0.3)]" id="profile-points">0</span>
                           </div>
                       </div>

@@ -1,10 +1,13 @@
-const CACHE_NAME = 'nestor-pwa-v10.0.5';
+const CACHE_NAME = 'nestor-pwa-v10.1.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './css/custom.css',
   './js/products.js',
   './js/app.js',
+  './js/i18n/translations.js',
+  './js/i18n/catalog.js',
+  './js/i18n/switcher.js',
   './manifest.json',
   './assets/brand/icon-192x192.png',
   './assets/brand/icon-512x512.png'
