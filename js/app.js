@@ -739,6 +739,7 @@ window.app.updateHeaderAuth = function() {
     if(currentUser) {
         icon.textContent = 'VIP';
         text.innerHTML = `<span class="text-green-400 font-display font-extrabold">${currentUser.points}</span> pts`;
+        text.className = "text-sm font-bold text-white"; // show on mobile when logged in
         
         if(chkPts) chkPts.textContent = currentUser.points;
         if(btnRedeem) {
@@ -751,6 +752,7 @@ window.app.updateHeaderAuth = function() {
     } else {
         icon.textContent = '🔑';
         text.textContent = 'INICIAR SESIÓN';
+        text.className = "hidden sm:inline text-sm font-bold text-white"; // hide text on mobile when logged out
         
         if(chkPts) chkPts.textContent = '0';
         if(btnRedeem) btnRedeem.classList.add('opacity-50', 'pointer-events-none');
