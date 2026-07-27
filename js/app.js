@@ -184,7 +184,7 @@ function filterCategory(cat) {
 // MODAL DE PERSONALIZACIÓN
 // -------------------------------------------------------------------------
 function openCustomizationModal(id) {
-    history.pushState({ modal: true }, '');
+    window.app.pushModalState();
     const product = NESTOR_PRODUCTS.find(p => p.id === id);
     if (!product) return;
     activeModalProduct = product;
@@ -200,6 +200,7 @@ function openCustomizationModal(id) {
 }
 
 function closeCustomizationModal() {
+    if(window.app && window.app.popModalState) window.app.popModalState();
     const modal = document.getElementById('customization-modal');
     if (modal) modal.classList.add('hidden');
     activeModalProduct = null;
@@ -248,7 +249,7 @@ function updateCartStickyBar() {
 }
 
 function openCheckoutModal() {
-    history.pushState({ modal: true }, '');
+    window.app.pushModalState();
     renderCheckoutItems();
     updateCheckoutTotals();
     const modal = document.getElementById('checkout-modal');
@@ -256,6 +257,7 @@ function openCheckoutModal() {
 }
 
 function closeCheckoutModal() {
+    if(window.app && window.app.popModalState) window.app.popModalState();
     const modal = document.getElementById('checkout-modal');
     if (modal) modal.classList.add('hidden');
 }
@@ -322,11 +324,12 @@ function showOrderToast(msg) {
 // VIP MODAL
 // -------------------------------------------------------------------------
 function openVipModal() {
-    history.pushState({ modal: true }, '');
+    window.app.pushModalState();
     const modal = document.getElementById('vip-modal');
     if (modal) modal.classList.remove('hidden');
 }
 function closeVipModal() {
+    if(window.app && window.app.popModalState) window.app.popModalState();
     const modal = document.getElementById('vip-modal');
     if (modal) modal.classList.add('hidden');
 }
@@ -340,12 +343,13 @@ function enterRaffle(e) {
 // UPSELL
 // -------------------------------------------------------------------------
 function openDynamicUpsellModal() {
-    history.pushState({ modal: true }, '');
+    window.app.pushModalState();
     renderDynamicUpsells();
     const modal = document.getElementById('upsell-modal');
     if (modal) modal.classList.remove('hidden');
 }
 function closeUpsellAndReturnToMenu() {
+    if(window.app && window.app.popModalState) window.app.popModalState();
     const modal = document.getElementById('upsell-modal');
     if (modal) modal.classList.add('hidden');
 }
@@ -479,7 +483,7 @@ window.addEventListener('load', () => {
 window.app = window.app || {};
 
 window.app.openUserModal = function() {
-    history.pushState({ modal: true }, '');
+    window.app.pushModalState();
     const overlay = document.getElementById('user-modal-overlay');
     const content = document.getElementById('user-modal-content');
     if(overlay && content) {
@@ -496,6 +500,7 @@ window.app.openUserModal = function() {
 };
 
 window.app.closeUserModal = function() {
+    if(window.app && window.app.popModalState) window.app.popModalState();
     const overlay = document.getElementById('user-modal-overlay');
     const content = document.getElementById('user-modal-content');
     if(overlay && content) {
@@ -848,17 +853,53 @@ window.app.openLegalDoc = function(title) {
 };
 
 
+window.app = window.app || {};
+window.app.isModalOpen = false;
+
+window.app.pushModalState = function() {
+    if (!window.app.isModalOpen) {
+        history.pushState({ modal: true }, '');
+        window.app.isModalOpen = true;
+    }
+};
+
+window.app.popModalState = function() {
+    if (window.app.isModalOpen) {
+        window.app.isModalOpen = false;
+        history.back();
+    }
+};
+
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
 
 window.addEventListener('popstate', (e) => {
-    closeCustomizationModal();
-    closeCheckoutModal();
-    closeVipModal();
-    const up = document.getElementById('dynamic-upsell-modal');
+    window.app.isModalOpen = false;
+    
+    const m1 = document.getElementById('product-modal-overlay');
+    if(m1) m1.classList.add('hidden');
+    
+    const m2 = document.getElementById('customization-modal');
+    if(m2) m2.classList.add('hidden');
+    
+    const m3 = document.getElementById('checkout-modal');
+    if(m3) m3.classList.add('hidden');
+    
+    const m4 = document.getElementById('vip-modal');
+    if(m4) m4.classList.add('hidden');
+    
+    const up = document.getElementById('upsell-modal');
     if(up) up.classList.add('hidden');
-    if(window.app && window.app.closeUserModal) window.app.closeUserModal();
+    const up2 = document.getElementById('dynamic-upsell-modal');
+    if(up2) up2.classList.add('hidden');
+    
+    const userModalOv = document.getElementById('user-modal-overlay');
+    const userModalCo = document.getElementById('user-modal-content');
+    if(userModalOv && userModalCo) {
+        userModalOv.classList.add('opacity-0', 'pointer-events-none');
+        userModalCo.classList.add('scale-95', 'opacity-0');
+    }
 });
 
 // Forzar scroll arriba al cargar la app
