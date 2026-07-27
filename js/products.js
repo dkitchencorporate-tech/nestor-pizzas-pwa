@@ -1,86 +1,506 @@
 /* =========================================================================
-   NÉSTOR PIZZAS PWA - DICCIONARIO DE PRODUCTOS (49 ARTÍCULOS OFICIALES)
+   NÉSTOR PIZZAS — DICCIONARIO OFICIAL 1:1 FLYER FÍSICO
+   Versión: v20260726 | Estructura modular — NO MODIFICAR SIN AUTORIZACIÓN
    ========================================================================= */
 
+// ==========================================================================
+// 8 CATEGORÍAS EXACTAS DEL FLYER (NOMBRES IDÉNTICOS, NI UNA LETRA DISTINTA)
+// ==========================================================================
 const NESTOR_CATEGORIES = [
-    { id: 'PIZZAS 33CM', name: 'Pizzas Clásicas (33 cm)', icon: '🍕', desc: 'Masa casera recién horneada con mozzarella fior di latte' },
-    { id: 'PIZZAS BLANCAS', name: 'Pizzas Blancas de Nata', icon: '🧀', desc: 'Base cremosa de nata cocida sin tomate' },
-    { id: 'MAZZI PIZZAS', name: 'Mazzi Pizzas 5 Quesos', icon: '⭐', desc: 'Doble capa de masa crujiente rellena de 5 quesos' },
-    { id: 'POR INGREDIENTES', name: 'Personalizar al Gusto', icon: '🎨', desc: 'Crea tu propia combinación sobre masa casera' },
-    { id: 'PATATAS Y ENTRANTES', name: 'Patatas y Entrantes', icon: '🍟', desc: 'Raciones crujientes recién hechas para compartir' },
-    { id: 'ALGO MÁS', name: 'Pastas, Platos y Dulces', icon: '🍝', desc: 'Recetas de pasta, arroz curry y postre del mes' },
-    { id: 'BEBIDAS', name: 'Bebidas Frías', icon: '🥤', desc: 'Refrescos, cervezas y agua mineral heladas' }
+    {
+        id: 'NUESTRAS PIZZAS',
+        name: 'NUESTRAS PIZZAS',
+        subtitle: '33 ø',
+        desc: 'Base de tomate natural y mozzarella fior di latte — masa artesana horneada al momento'
+    },
+    {
+        id: 'PIZZAS BLANCAS',
+        name: 'PIZZAS BLANCAS',
+        subtitle: '33 ø',
+        desc: 'Base de nata cremosa sin tomate — sin gluten de trigo adicional'
+    },
+    {
+        id: 'NUESTRAS PATATAS',
+        name: 'NUESTRAS PATATAS',
+        subtitle: null,
+        desc: 'Raciones crujientes recién hechas para compartir'
+    },
+    {
+        id: 'PARA ACOMPAÑAR',
+        name: 'PARA ACOMPAÑAR',
+        subtitle: null,
+        desc: 'Complementos dorados y crujientes recién salidos de cocina'
+    },
+    {
+        id: 'POR INGREDIENTES',
+        name: 'POR INGREDIENTES',
+        subtitle: '33 ø',
+        desc: 'Crea tu propia pizza — base de tomate, mozzarella y orégano con los ingredientes que tú elijas'
+    },
+    {
+        id: 'MAZZI PIZZAS',
+        name: 'MAZZI PIZZAS',
+        subtitle: '31 ø',
+        desc: 'Nuestra masa artesana, exquisita mezcla de cinco quesos, una lámina de masa, nuestra base y la selección que más te apetezca. *Unidades limitadas'
+    },
+    {
+        id: 'ALGO MÁS',
+        name: 'ALGO MÁS',
+        subtitle: null,
+        desc: 'Spaguetti boloñesa y carbonara, pollo al curry con arroz y postre de temporada'
+    },
+    {
+        id: 'BEBIDAS',
+        name: 'BEBIDAS',
+        subtitle: null,
+        desc: 'Agua, refrescos y cervezas bien frías'
+    }
 ];
 
+// ==========================================================================
+// INGREDIENTES OFICIALES (extraídos literalmente del flyer)
+// ==========================================================================
+const NESTOR_INGREDIENTS_OFICIAL = [
+    'Aceitunas negras', 'Cebolla', 'Champiñón', 'Pimiento rojo',
+    'Pimiento verde', 'Maíz', 'Atún', 'Gambas', 'Delicias de mar',
+    'Bacon', 'Carne kebab', 'Jamón serrano', 'Jamón york', 'Peperoni',
+    'Pollo', 'Salami', 'Salchichas', 'Ternera', 'Extra mozzarella',
+    'Roquefort', 'Queso de cabra', 'Huevo', 'Piña', 'Alioli gratinado',
+    'Salsa barbacoa', 'Salsa cheddar', 'Salsa kebab', 'Salsa picante'
+];
+
+// ==========================================================================
+// 49 PRODUCTOS EXACTOS DEL FLYER — NINGÚN NOMBRE INVENTADO
+// ==========================================================================
 const NESTOR_PRODUCTS = [
-    // PIZZAS CLÁSICAS 33CM (18)
-    { id: 1, category: 'PIZZAS 33CM', name: 'Milanesa', desc: 'Base de tomate casero, mozzarella fundida y jamón york artesano.', price: 6.50, badge: 'CLÁSICA CANILES', badgeClass: 'bg-green-500/20 text-green-400 border border-green-500/40', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-    { id: 2, category: 'PIZZAS 33CM', name: 'Calabresa', desc: 'Base, mozzarella, jamón york y medallones de queso de cabra artesano.', price: 7.50, badge: 'QUESO DE CABRA', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
-    { id: 3, category: 'PIZZAS 33CM', name: 'Kebab', desc: 'Base, mozzarella, cebolla morada, carne kebab sazonada y salsa garlic kebab.', price: 8.50, badge: 'ESPECIAL KEBAB', badgeClass: 'bg-red-500/20 text-red-400 border border-red-500/40', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
-    { id: 4, category: 'PIZZAS 33CM', name: 'Florentina', desc: 'Base, mozzarella, jamón york, piña troceada y extra de mozzarella fundida.', price: 8.50, badge: 'CON PIÑA', badgeClass: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80' },
-    { id: 5, category: 'PIZZAS 33CM', name: 'Siciliana', desc: 'Base, mozzarella, champiñón fresco laminado, jamón york y atún jugoso.', price: 8.50, badge: 'ATÚN Y CHAMPIÑÓN', badgeClass: 'bg-blue-500/20 text-blue-400 border border-blue-500/40', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
-    { id: 6, category: 'PIZZAS 33CM', name: 'Napolitana', desc: 'Base, mozzarella, champiñones, bacon crujiente y virutas de serrano.', price: 8.50, badge: 'SERRANO Y BACON', badgeClass: 'bg-red-500/20 text-red-400 border border-red-500/40', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
-    { id: 7, category: 'PIZZAS 33CM', name: 'Veneciana', desc: 'Base, mozzarella, jamón york, salami y salchichas troceadas.', price: 8.50, badge: 'SALAMI Y SALCHICHAS', badgeClass: 'bg-orange-500/20 text-orange-400 border border-orange-500/40', img: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=800&q=80' },
-    { id: 8, category: 'PIZZAS 33CM', name: 'Genovesa', desc: 'Base, mozzarella, champiñón, gambas salteadas y atún jugoso.', price: 8.50, badge: 'GAMBAS Y ATÚN', badgeClass: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-    { id: 9, category: 'PIZZAS 33CM', name: 'Parmesana', desc: 'Base, mozzarella, gorgonzola, edam y lascas de parmesano gratinado (4 Quesos).', price: 8.50, badge: '4 QUESOS GOURMET', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1573821663912-569905455b1c?auto=format&fit=crop&w=800&q=80' },
-    { id: 10, category: 'PIZZAS 33CM', name: 'Marinera', desc: 'Base, mozzarella, atún, gambas y delicias del mar.', price: 8.50, badge: 'DELICIAS DEL MAR', badgeClass: 'bg-blue-500/20 text-blue-400 border border-blue-500/40', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
-    { id: 11, category: 'PIZZAS 33CM', name: 'Canilera', desc: 'Base, mozzarella, serrano, pollo, pimiento verde y alioli gratinado al horno.', price: 9.50, badge: '★ RECOMENDADO TOP 1', badgeClass: 'bg-green-500 text-white font-extrabold shadow-lg border border-green-400', img: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80' },
-    { id: 12, category: 'PIZZAS 33CM', name: 'Toscana', desc: 'Base, mozzarella, peperoni, ternera sazonada, cebolla y salsa picante.', price: 9.50, badge: 'PICANTE GOURMET', badgeClass: 'bg-red-600 text-white font-bold border border-red-500', img: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=800&q=80' },
-    { id: 13, category: 'PIZZAS 33CM', name: 'Texana', desc: 'Base, mozzarella, bacon, ternera sazonada, cebolla y salsa barbacoa.', price: 9.50, badge: 'SALSA BBQ', badgeClass: 'bg-orange-600 text-white font-bold border border-orange-500', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80' },
-    { id: 14, category: 'PIZZAS 33CM', name: 'Romana', desc: 'Base, mozzarella, champiñones, pimiento rojo, verde y cebolla.', price: 9.50, badge: '100% VEGETARIANA', badgeClass: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
-    { id: 15, category: 'PIZZAS 33CM', name: 'Americana', desc: 'Base, mozzarella, bacon, ternera y bañada en salsa cheddar fundida.', price: 8.50, badge: 'CHEDDAR FUNDIDO', badgeClass: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
-    { id: 16, category: 'PIZZAS 33CM', name: 'Boloñesa', desc: 'Base, mozzarella y rica salsa boloñesa casera de carne.', price: 8.50, badge: 'CARNE RAGÚ', badgeClass: 'bg-red-500/20 text-red-400 border border-red-500/40', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
-    { id: 17, category: 'PIZZAS 33CM', name: 'Calzone Curry', desc: 'Calzone doblada al horno, mozzarella + pollo al curry jugoso.', price: 9.50, badge: 'POLLO AL CURRY', badgeClass: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
-    { id: 18, category: 'PIZZAS 33CM', name: 'Calzone Carbonara', desc: 'Calzone doblada al horno, mozzarella + pollo + salsa carbonara.', price: 9.50, badge: 'CARBONARA CREMOSA', badgeClass: 'bg-gray-500/20 text-gray-300 border border-gray-500/40', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
 
-    // PIZZAS BLANCAS DE NATA (3)
-    { id: 19, category: 'PIZZAS BLANCAS', name: 'Panna', desc: 'Base de nata montada cocida, mozzarella, cebolla, bacon y pimiento verde.', price: 8.50, badge: 'BASE DE NATA', badgeClass: 'bg-gray-500/20 text-gray-300 border border-gray-500/40', img: 'https://images.unsplash.com/photo-1573821663912-569905455b1c?auto=format&fit=crop&w=800&q=80' },
-    { id: 20, category: 'PIZZAS BLANCAS', name: 'Lionesa', desc: 'Base de nata, mozzarella, pollo tierno y maíz dulce.', price: 8.50, badge: 'POLLO Y MAÍZ', badgeClass: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
-    { id: 21, category: 'PIZZAS BLANCAS', name: 'Carbonara', desc: 'Base de nata, mozzarella, champiñones, bacon y cebolla.', price: 8.50, badge: 'CLÁSICA BLANCA', badgeClass: 'bg-gray-500/20 text-gray-300 border border-gray-500/40', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
+    // -----------------------------------------------------------------------
+    // NUESTRAS PIZZAS (18 pizzas — lado frontal del flyer)
+    // -----------------------------------------------------------------------
+    {
+        id: 1, category: 'NUESTRAS PIZZAS',
+        name: 'MILANESA',
+        desc: 'base + york',
+        price: 6.50,
+        badge: 'BASE + YORK',
+        img: './assets/img/products/p01_pizza_milanesa.jpeg'
+    },
+    {
+        id: 2, category: 'NUESTRAS PIZZAS',
+        name: 'CALABRESA',
+        desc: 'base + york y queso de cabra',
+        price: 7.50,
+        badge: 'YORK Y QUESO DE CABRA',
+        img: './assets/img/products/p02_pizza_calabresa.jpeg'
+    },
+    {
+        id: 3, category: 'NUESTRAS PIZZAS',
+        name: 'KEBAB',
+        desc: 'base + cebolla, carne kebab y salsa kebab',
+        price: 8.50,
+        badge: 'CARNE KEBAB Y SALSA',
+        img: './assets/img/products/p03_pizza_kebab.jpeg'
+    },
+    {
+        id: 4, category: 'NUESTRAS PIZZAS',
+        name: 'FLORENTINA',
+        desc: 'base + york, piña y extra de mozzarella',
+        price: 8.50,
+        badge: 'YORK, PIÑA Y MOZZARELLA',
+        img: './assets/img/products/p04_pizza_florentina.jpeg'
+    },
+    {
+        id: 5, category: 'NUESTRAS PIZZAS',
+        name: 'SICILIANA',
+        desc: 'base + champiñón, york y atún',
+        price: 8.50,
+        badge: 'CHAMPIÑÓN, YORK Y ATÚN',
+        img: './assets/img/products/p05_pizza_siciliana.jpeg'
+    },
+    {
+        id: 6, category: 'NUESTRAS PIZZAS',
+        name: 'NAPOLITANA',
+        desc: 'base + champiñón, bacon y serrano',
+        price: 8.50,
+        badge: 'CHAMPIÑÓN, BACON Y SERRANO',
+        img: './assets/img/products/p06_pizza_napolitana.jpeg'
+    },
+    {
+        id: 7, category: 'NUESTRAS PIZZAS',
+        name: 'VENECIANA',
+        desc: 'base + york, salami y salchichas',
+        price: 8.50,
+        badge: 'YORK, SALAMI Y SALCHICHAS',
+        img: './assets/img/products/p07_pizza_veneciana.jpeg'
+    },
+    {
+        id: 8, category: 'NUESTRAS PIZZAS',
+        name: 'GENOVESA',
+        desc: 'base + champiñón, gambas y atún',
+        price: 8.50,
+        badge: 'CHAMPIÑÓN, GAMBAS Y ATÚN',
+        img: './assets/img/products/p08_pizza_genovesa.jpeg'
+    },
+    {
+        id: 9, category: 'NUESTRAS PIZZAS',
+        name: 'PARMESANA',
+        desc: 'base + exquisita mezcla de 4 quesos',
+        price: 8.50,
+        badge: 'MEZCLA 4 QUESOS',
+        img: './assets/img/products/p09_pizza_parmesana.jpeg'
+    },
+    {
+        id: 10, category: 'NUESTRAS PIZZAS',
+        name: 'MARINERA',
+        desc: 'base + atún, gambas y delicias de mar',
+        price: 8.50,
+        badge: 'ATÚN, GAMBAS Y MAR',
+        img: './assets/img/products/p10_pizza_marinera.jpeg'
+    },
+    {
+        id: 11, category: 'NUESTRAS PIZZAS',
+        name: 'CANILERA',
+        desc: 'base + serrano, pollo, pimiento verde y alioli gratinado',
+        price: 9.50,
+        badge: 'ESPECIALIDAD CANILES',
+        img: './assets/img/products/p11_pizza_canilera.jpeg'
+    },
+    {
+        id: 12, category: 'NUESTRAS PIZZAS',
+        name: 'TOSCANA',
+        desc: 'base + peperoni, ternera, cebolla y salsa picante',
+        price: 9.50,
+        badge: 'PEPERONI Y SALSA PICANTE',
+        img: './assets/img/products/p12_pizza_toscana.jpeg'
+    },
+    {
+        id: 13, category: 'NUESTRAS PIZZAS',
+        name: 'TEXANA',
+        desc: 'base + bacon, ternera, cebolla y salsa barbacoa',
+        price: 9.50,
+        badge: 'BACON Y SALSA BARBACOA',
+        img: './assets/img/products/p13_pizza_texana.jpeg'
+    },
+    {
+        id: 14, category: 'NUESTRAS PIZZAS',
+        name: 'ROMANA',
+        desc: 'base + champiñón, pimiento rojo, pimiento verde y cebolla',
+        price: 9.50,
+        badge: 'VERDURAS Y CHAMPIÑÓN',
+        img: './assets/img/products/p14_pizza_romana.jpeg'
+    },
+    {
+        id: 15, category: 'NUESTRAS PIZZAS',
+        name: 'AMERICANA',
+        desc: 'base + bacon, ternera, y salsa cheddar',
+        price: 8.50,
+        badge: 'BACON Y SALSA CHEDDAR',
+        img: './assets/img/products/p15_pizza_americana.jpeg'
+    },
+    {
+        id: 16, category: 'NUESTRAS PIZZAS',
+        name: 'BOLOÑESA',
+        desc: 'base + salsa boloñesa',
+        price: 8.50,
+        badge: 'SALSA BOLOÑESA',
+        img: './assets/img/products/p16_pizza_bolonesa.jpeg'
+    },
+    {
+        id: 17, category: 'NUESTRAS PIZZAS',
+        name: 'CALZONE CURRY',
+        desc: 'base + mozzarella + pollo al curry',
+        price: 9.50,
+        badge: 'POLLO AL CURRY',
+        img: './assets/img/products/p17_calzone_curry.jpeg'
+    },
+    {
+        id: 18, category: 'NUESTRAS PIZZAS',
+        name: 'CALZONE CARBONARA',
+        desc: 'base + mozzarella + pollo + salsa carbonara',
+        price: 9.50,
+        badge: 'POLLO Y CARBONARA ★ NEW',
+        img: './assets/img/products/p18_calzone_carbonara.jpeg'
+    },
 
-    // POR INGREDIENTES (5)
-    { id: 22, category: 'POR INGREDIENTES', name: 'Pizza Base (33 cm)', desc: 'Masa casera 33cm recién horneada con tomate y mozzarella.', price: 5.50, badge: 'BASE MARGHERITA', badgeClass: 'bg-green-500/20 text-green-400 border border-green-500/40', img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80' },
-    { id: 23, category: 'POR INGREDIENTES', name: 'Pizza Base + 1 Ingrediente', desc: 'Base de 33cm + 1 ingrediente fresco a tu libre elección.', price: 6.50, badge: 'TÚ ELIGES 1', badgeClass: 'bg-green-500/20 text-green-400 border border-green-500/40', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80' },
-    { id: 24, category: 'POR INGREDIENTES', name: 'Pizza Base + 2 Ingredientes', desc: 'Base de 33cm + 2 ingredientes frescos a elección.', price: 7.50, badge: 'TÚ ELIGES 2', badgeClass: 'bg-green-500/20 text-green-400 border border-green-500/40', img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80' },
-    { id: 25, category: 'POR INGREDIENTES', name: 'Pizza Base + 3 Ingredientes', desc: 'Base de 33cm + 3 ingredientes artesanos a elección.', price: 8.50, badge: 'JUEVES LOCOS OK', badgeClass: 'bg-red-500/20 text-red-400 border border-red-500/40', img: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=800&q=80' },
-    { id: 26, category: 'POR INGREDIENTES', name: 'Pizza Base + 4 Ingredientes', desc: 'Base de 33cm + 4 ingredientes gourmet a elección.', price: 9.50, badge: 'TOTAL PERSONALIZADA', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80' },
+    // -----------------------------------------------------------------------
+    // PIZZAS BLANCAS (3 pizzas)
+    // -----------------------------------------------------------------------
+    {
+        id: 19, category: 'PIZZAS BLANCAS',
+        name: 'PANNA',
+        desc: 'Nata, mozzarella, champiñón, bacon, pollo',
+        price: 8.50,
+        badge: 'NATA · CHAMPIÑÓN · BACON',
+        img: './assets/img/products/p19_pizza_panna.jpeg'
+    },
+    {
+        id: 20, category: 'PIZZAS BLANCAS',
+        name: 'LIONESA',
+        desc: 'Nata, mozzarella, york, bacon, huevo al horno',
+        price: 8.50,
+        badge: 'NATA · YORK · HUEVO',
+        img: './assets/img/products/p20_pizza_lionesa.jpeg'
+    },
+    {
+        id: 21, category: 'PIZZAS BLANCAS',
+        name: 'CARBONARA',
+        desc: 'Nata, mozzarella, york, bacon, cebolla',
+        price: 8.50,
+        badge: 'NATA · YORK · BACON',
+        img: './assets/img/products/p21_pizza_carbonara.jpeg'
+    },
 
-    // MAZZI PIZZAS (5)
-    { id: 27, category: 'MAZZI PIZZAS', name: 'Mazzi Pizza Base (31 cm)', desc: 'Especialidad 5 Quesos en doble capa artesana (31cm Ø).', price: 8.50, badge: 'DOBLE CAPA 5 QUESOS', badgeClass: 'bg-amber-500 text-black font-extrabold border border-amber-400', img: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=800&q=80' },
-    { id: 28, category: 'MAZZI PIZZAS', name: 'Mazzi + 1 Ingrediente', desc: 'Mazzi 5 Quesos + 1 ingrediente artesano a tu elección.', price: 9.50, badge: 'MAZZI + 1 ING', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1573821663912-569905455b1c?auto=format&fit=crop&w=800&q=80' },
-    { id: 29, category: 'MAZZI PIZZAS', name: 'Mazzi + 2 Ingredientes', desc: 'Mazzi 5 Quesos + 2 ingredientes artesanos a tu elección.', price: 10.50, badge: 'MAZZI + 2 ING', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80' },
-    { id: 30, category: 'MAZZI PIZZAS', name: 'Mazzi + 3 Ingredientes', desc: 'Mazzi 5 Quesos + 3 ingredientes artesanos a tu elección.', price: 11.50, badge: 'MAZZI + 3 ING', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80' },
-    { id: 31, category: 'MAZZI PIZZAS', name: 'Mazzi + 4 Ingredientes', desc: 'Mazzi 5 Quesos + 4 ingredientes gourmet a tu elección.', price: 12.50, badge: 'MAZZI EXTRA LOADED', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=800&q=80' },
+    // -----------------------------------------------------------------------
+    // NUESTRAS PATATAS (4 productos)
+    // -----------------------------------------------------------------------
+    {
+        id: 32, category: 'NUESTRAS PATATAS',
+        name: 'PATATAS FRITAS',
+        desc: 'Ración de patatas fritas crujientes',
+        price: 2.00,
+        badge: 'RACIÓN CRUJIENTE',
+        img: './assets/img/products/p32_patatas_fritas.jpeg'
+    },
+    {
+        id: 33, category: 'NUESTRAS PATATAS',
+        name: 'PATATAS GAJOS',
+        desc: 'Salsas a elegir: Alioli, Barbacoa, Brava, o morisca',
+        price: 3.00,
+        badge: 'GAJOS A ELEGIR SALSA',
+        img: './assets/img/products/p33_patatas_gajos.jpeg'
+    },
+    {
+        id: 34, category: 'NUESTRAS PATATAS',
+        name: 'GRATINADAS CHEDDAR',
+        desc: 'Patatas gratinadas con salsa cheddar',
+        price: 7.50,
+        badge: 'GRATINADAS CHEDDAR',
+        img: './assets/img/products/p34_gratinadas_cheddar.jpeg'
+    },
+    {
+        id: 35, category: 'NUESTRAS PATATAS',
+        name: 'GRATINADAS MORISCA',
+        desc: 'Patatas gratinadas estilo morisco',
+        price: 7.50,
+        badge: 'GRATINADAS MORISCA',
+        img: './assets/img/products/p35_gratinadas_morisca.jpeg'
+    },
 
-    // PATATAS Y ENTRANTES (7)
-    { id: 32, category: 'PATATAS Y ENTRANTES', name: 'Patatas Fritas', desc: 'Ración de patatas doradas y crujientes.', price: 2.00, badge: 'RACIÓN INDIVIDUAL', badgeClass: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40', img: 'https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&w=800&q=80' },
-    { id: 33, category: 'PATATAS Y ENTRANTES', name: 'Patatas Gajos', desc: 'Patatas gajos sazonadas con especias artesanas.', price: 3.00, badge: 'ESPECIADAS', badgeClass: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40', img: 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=800&q=80' },
-    { id: 34, category: 'PATATAS Y ENTRANTES', name: 'Gratinadas Cheddar', desc: 'Patatas con salsa cheddar fundida y bacon crujiente.', price: 7.50, badge: 'CHEDDAR Y BACON', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=800&q=80' },
-    { id: 35, category: 'PATATAS Y ENTRANTES', name: 'Gratinadas Morisca', desc: 'Patatas con carne kebab, cebolla morada y salsa kebab.', price: 7.50, badge: 'ESTILO MORISCO', badgeClass: 'bg-red-500/20 text-red-400 border border-red-500/40', img: 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=800&q=80' },
-    { id: 36, category: 'PATATAS Y ENTRANTES', name: 'Nuggetts de Pollo (6 Unds.)', desc: '6 nuggets de pollo crujiente dorados al punto.', price: 3.50, badge: '6 UNIDADES', badgeClass: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40', img: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80' },
-    { id: 37, category: 'PATATAS Y ENTRANTES', name: 'Aros de Cebolla (8 Unds.)', desc: '8 aros de cebolla empanados y crujientes.', price: 4.00, badge: '8 UNIDADES', badgeClass: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40', img: 'https://images.unsplash.com/photo-1639024471283-03518883512d?auto=format&fit=crop&w=800&q=80' },
-    { id: 38, category: 'PATATAS Y ENTRANTES', name: 'Alitas de Pollo (6 Unds.)', desc: '6 alitas de pollo asadas con salsa barbacoa.', price: 5.00, badge: 'ALITAS BBQ', badgeClass: 'bg-orange-500/20 text-orange-400 border border-orange-500/40', img: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=800&q=80' },
+    // -----------------------------------------------------------------------
+    // PARA ACOMPAÑAR (3 productos)
+    // -----------------------------------------------------------------------
+    {
+        id: 36, category: 'PARA ACOMPAÑAR',
+        name: 'NUGUETTS DE POLLO',
+        desc: '6 Und',
+        price: 3.50,
+        badge: 'NUGUETTS (6 UND)',
+        img: './assets/img/products/p36_nuguetts_pollo.jpeg'
+    },
+    {
+        id: 37, category: 'PARA ACOMPAÑAR',
+        name: 'AROS DE CEBOLLA',
+        desc: '8 Und',
+        price: 4.00,
+        badge: 'AROS CEBOLLA (8 UND)',
+        img: './assets/img/products/p37_aros_cebolla.jpeg'
+    },
+    {
+        id: 38, category: 'PARA ACOMPAÑAR',
+        name: 'ALITAS DE POLLO',
+        desc: '6 Und',
+        price: 5.00,
+        badge: 'ALITAS (6 UND)',
+        img: './assets/img/products/p38_alitas_pollo.jpeg'
+    },
 
-    // ALGO MÁS (4)
-    { id: 39, category: 'ALGO MÁS', name: 'Spaghetti Boloñesa', desc: 'Spaghetti con salsa boloñesa casera de carne.', price: 6.50, badge: 'PASTA BOLOÑESA', badgeClass: 'bg-red-500/20 text-red-400 border border-red-500/40', img: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80' },
-    { id: 40, category: 'ALGO MÁS', name: 'Spaghetti Carbonara', desc: 'Spaghetti con cremosa salsa carbonara y bacon.', price: 6.50, badge: 'PASTA CARBONARA', badgeClass: 'bg-gray-500/20 text-gray-300 border border-gray-500/40', img: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?auto=format&fit=crop&w=800&q=80' },
-    { id: 41, category: 'ALGO MÁS', name: 'Pollo al Curry con Arroz', desc: 'Pechuga de pollo al curry cremoso con arroz basmati.', price: 9.00, badge: 'ESPECIAL CURRY', badgeClass: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40', img: 'https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&w=800&q=80' },
-    { id: 42, category: 'ALGO MÁS', name: 'Pizza Dulce (Pizza del Mes)', desc: 'Pizza artesana con Nutella fundida y avellanas.', price: 5.00, badge: 'POSTRE ARTESANO', badgeClass: 'bg-pink-500/20 text-pink-400 border border-pink-500/40', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80' },
+    // -----------------------------------------------------------------------
+    // POR INGREDIENTES (5 productos)
+    // -----------------------------------------------------------------------
+    {
+        id: 22, category: 'POR INGREDIENTES',
+        name: 'PIZZA BASE',
+        desc: 'Tomate, mozzarella, orégano',
+        price: 5.50,
+        badge: 'BASE · TOMATE · MOZZARELLA',
+        img: './assets/img/products/p22_pizza_base_33cm.jpeg'
+    },
+    {
+        id: 23, category: 'POR INGREDIENTES',
+        name: 'PIZZA BASE + 1 INGREDIENTE',
+        desc: 'Base + 1 ingrediente a tu elección',
+        price: 6.50,
+        badge: '+ 1 INGREDIENTE',
+        img: './assets/img/products/p23_pizza_base_1ing.jpeg'
+    },
+    {
+        id: 24, category: 'POR INGREDIENTES',
+        name: 'PIZZA BASE + 2 INGREDIENTES',
+        desc: 'Base + 2 ingredientes a tu elección',
+        price: 7.50,
+        badge: '+ 2 INGREDIENTES',
+        img: './assets/img/products/p24_pizza_base_2ing.jpeg'
+    },
+    {
+        id: 25, category: 'POR INGREDIENTES',
+        name: 'PIZZA BASE + 3 INGREDIENTES',
+        desc: 'Base + 3 ingredientes a tu elección',
+        price: 8.50,
+        badge: '+ 3 INGREDIENTES',
+        img: './assets/img/products/p25_pizza_base_3ing.jpeg'
+    },
+    {
+        id: 26, category: 'POR INGREDIENTES',
+        name: 'PIZZA BASE + 4 INGREDIENTES',
+        desc: 'Base + 4 ingredientes a tu elección',
+        price: 9.50,
+        badge: '+ 4 INGREDIENTES',
+        img: './assets/img/products/p26_pizza_base_4ing.jpeg'
+    },
 
-    // BEBIDAS (7)
-    { id: 43, category: 'BEBIDAS', name: 'Agua Pequeña (50cl)', desc: 'Botella de agua mineral 50cl muy fría.', price: 1.00, badge: '50 CL HELADA', badgeClass: 'bg-blue-500/20 text-blue-400 border border-blue-500/40', img: 'https://images.unsplash.com/photo-1560023907-5f313c8754b9?auto=format&fit=crop&w=800&q=80' },
-    { id: 44, category: 'BEBIDAS', name: 'Agua 1.5 Litros', desc: 'Botella de agua mineral 1,5L muy fría.', price: 1.50, badge: '1.5 LITROS', badgeClass: 'bg-blue-500/20 text-blue-400 border border-blue-500/40', img: 'https://images.unsplash.com/photo-1560023907-5f313c8754b9?auto=format&fit=crop&w=800&q=80' },
-    { id: 45, category: 'BEBIDAS', name: 'Refresco Lata (33cl)', desc: 'Lata de refresco 33cl (Coca-Cola, Fanta, Sprite).', price: 1.50, badge: '33 CL FRÍA', badgeClass: 'bg-red-500/20 text-red-400 border border-red-500/40', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' },
-    { id: 46, category: 'BEBIDAS', name: 'Cerveza Lata (33cl)', desc: 'Lata de cerveza 33cl helada.', price: 1.50, badge: 'CERVEZA LATA', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=800&q=80' },
-    { id: 47, category: 'BEBIDAS', name: 'Aquarius (33cl)', desc: 'Lata de Aquarius 33cl helada.', price: 1.60, badge: '33 CL ISOTÓNICO', badgeClass: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' },
-    { id: 48, category: 'BEBIDAS', name: 'Cerveza Litro (1L)', desc: 'Botella de cerveza 1 Litro helada.', price: 2.50, badge: '1 LITRO CERVEZA', badgeClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40', img: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=800&q=80' },
-    { id: 49, category: 'BEBIDAS', name: 'Refresco 2 Litros', desc: 'Botella de refresco 2 Litros familiar helada.', price: 3.00, badge: '2 LITROS FAMILIAR', badgeClass: 'bg-red-500/20 text-red-400 border border-red-500/40', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80' }
+    // -----------------------------------------------------------------------
+    // MAZZI PIZZAS (5 productos)
+    // -----------------------------------------------------------------------
+    {
+        id: 27, category: 'MAZZI PIZZAS',
+        name: 'MAZZI PIZZA (MP) BASE',
+        desc: 'Nuestra masa artesana, exquisita mezcla de cinco quesos',
+        price: 8.50,
+        badge: 'MAZZI BASE 5 QUESOS',
+        img: './assets/img/products/p27_mazzi_base_31cm.jpeg'
+    },
+    {
+        id: 28, category: 'MAZZI PIZZAS',
+        name: 'M.PIZZA BASE + 1 INGREDIENTE',
+        desc: 'Mazzi 5 quesos + 1 ingrediente a tu elección',
+        price: 9.50,
+        badge: 'MAZZI + 1 INGREDIENTE',
+        img: './assets/img/products/p28_mazzi_1ing.jpeg'
+    },
+    {
+        id: 29, category: 'MAZZI PIZZAS',
+        name: 'M.PIZZA BASE + 2 INGREDIENTES',
+        desc: 'Mazzi 5 quesos + 2 ingredientes a tu elección',
+        price: 10.50,
+        badge: 'MAZZI + 2 INGREDIENTES',
+        img: './assets/img/products/p29_mazzi_2ing.jpeg'
+    },
+    {
+        id: 30, category: 'MAZZI PIZZAS',
+        name: 'M.PIZZA BASE + 3 INGREDIENTES',
+        desc: 'Mazzi 5 quesos + 3 ingredientes a tu elección',
+        price: 11.50,
+        badge: 'MAZZI + 3 INGREDIENTES',
+        img: './assets/img/products/p30_mazzi_3ing.jpeg'
+    },
+    {
+        id: 31, category: 'MAZZI PIZZAS',
+        name: 'M.PIZZA BASE + 4 INGREDIENTES',
+        desc: 'Mazzi 5 quesos + 4 ingredientes a tu elección',
+        price: 12.50,
+        badge: 'MAZZI + 4 INGREDIENTES',
+        img: './assets/img/products/p31_mazzi_4ing.jpeg'
+    },
+
+    // -----------------------------------------------------------------------
+    // ALGO MÁS (4 productos)
+    // -----------------------------------------------------------------------
+    {
+        id: 39, category: 'ALGO MÁS',
+        name: 'SPAGUETTI BOLOÑESA',
+        desc: 'Spaguetti con salsa boloñesa casera',
+        price: 6.50,
+        badge: 'PASTA BOLOÑESA',
+        img: './assets/img/products/p39_spaguetti_bolonesa.jpeg'
+    },
+    {
+        id: 40, category: 'ALGO MÁS',
+        name: 'SPAGUETTI CARBONARA',
+        desc: 'Spaguetti con cremosa salsa carbonara',
+        price: 6.50,
+        badge: 'PASTA CARBONARA',
+        img: './assets/img/products/p40_spaguetti_carbonara.jpeg'
+    },
+    {
+        id: 41, category: 'ALGO MÁS',
+        name: 'POLLO AL CURRY CON ARROZ',
+        desc: 'Pollo al curry con arroz',
+        price: 9.00,
+        badge: 'ESPECIAL CURRY',
+        img: './assets/img/products/p41_pollo_curry_arroz.jpeg'
+    },
+    {
+        id: 42, category: 'ALGO MÁS',
+        name: 'PIZZA DULCE',
+        desc: 'consultar pizza dulce del mes',
+        price: 5.00,
+        badge: 'POSTRE ARTESANO ★ NEW',
+        img: './assets/img/products/p42_pizza_dulce.jpeg'
+    },
+
+    // -----------------------------------------------------------------------
+    // BEBIDAS (7 productos)
+    // -----------------------------------------------------------------------
+    {
+        id: 43, category: 'BEBIDAS',
+        name: 'Agua Pequeña',
+        desc: 'Agua mineral pequeña fría',
+        price: 1.00,
+        badge: 'AGUA PEQUEÑA',
+        img: './assets/img/products/p43_agua_pequena.jpeg'
+    },
+    {
+        id: 44, category: 'BEBIDAS',
+        name: 'Agua 1,5 Litros',
+        desc: 'Botella de agua mineral 1,5L fría',
+        price: 1.50,
+        badge: 'AGUA 1,5 LITROS',
+        img: './assets/img/products/p44_agua_litro.jpeg'
+    },
+    {
+        id: 45, category: 'BEBIDAS',
+        name: 'Refrescos Lata',
+        desc: 'Lata de refresco 33cl fría',
+        price: 1.50,
+        badge: 'REFRESCO LATA',
+        img: './assets/img/products/p45_refrescos_lata.jpeg'
+    },
+    {
+        id: 46, category: 'BEBIDAS',
+        name: 'Cerveza Lata',
+        desc: 'Lata de cerveza 33cl fría',
+        price: 1.50,
+        badge: 'CERVEZA LATA',
+        img: './assets/img/products/p46_cerveza_lata.jpeg'
+    },
+    {
+        id: 47, category: 'BEBIDAS',
+        name: 'Aquarius',
+        desc: 'Lata de Aquarius fría',
+        price: 1.60,
+        badge: 'AQUARIUS',
+        img: './assets/img/products/p47_aquarius.jpeg'
+    },
+    {
+        id: 48, category: 'BEBIDAS',
+        name: 'Cerveza Litro',
+        desc: 'Botella de cerveza 1 litro fría',
+        price: 2.50,
+        badge: 'CERVEZA LITRO',
+        img: './assets/img/products/p48_cerveza_litro.jpeg'
+    },
+    {
+        id: 49, category: 'BEBIDAS',
+        name: 'Refreco 2 Litros',
+        desc: 'Botella de refresco 2 litros familiar fría',
+        price: 3.00,
+        badge: 'REFRESCO 2 LITROS',
+        img: './assets/img/products/p49_refresco_2litros.jpeg'
+    }
 ];
 
 const NESTOR_UPSELLS = [
-    { id: 'up-1', name: 'Patatas Gajos con Bacon y Cheddar', desc: 'Crujientes al horno con salsa especial de la casa', price: 4.50, img: 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=400&q=80' },
-    { id: 'up-2', name: 'Pan de Ajo con Doble Mozzarella', desc: 'Recién horneado crujiente con mantequilla de ajo artesana', price: 3.50, img: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=400&q=80' },
-    { id: 'up-3', name: 'Botella Refresco Familiar 1,5L Fría', desc: 'Coca-Cola, Coca-Cola Zero o Fanta Naranja bien fría', price: 2.20, img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80' },
-    { id: 'up-4', name: 'Tarta de Queso Casera Néstor', desc: 'Cremosa artesana al horno con coulis de frutos rojos', price: 4.00, img: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=400&q=80' },
-    { id: 'up-5', name: 'Alitas de Pollo BBQ Crujientes (6 unds.)', desc: 'Sazonadas al horno con salsa barbacoa ahumada canilera', price: 5.50, img: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=400&q=80' }
+    { id: 'u1', name: 'Patatas Gajos + Salsa', desc: 'Con salsa especial a elegir', price: 3.00, img: './assets/img/products/p33_patatas_gajos.jpeg' },
+    { id: 'u2', name: 'Cerveza Lata', desc: 'Bien fría para acompañar tu pizza', price: 1.50, img: './assets/img/products/p46_cerveza_lata.jpeg' },
+    { id: 'u3', name: 'Alitas de Pollo (6 Und)', desc: 'Crujientes con salsa barbacoa', price: 5.00, img: './assets/img/products/p38_alitas_pollo.jpeg' }
 ];

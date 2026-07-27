@@ -1,31 +1,44 @@
-const CACHE_NAME = 'nestor-pwa-v2.5.0';
+const CACHE_NAME = 'nestor-pwa-v10.0.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './css/custom.css',
+  './js/products.js',
+  './js/app.js',
   './manifest.json'
 ];
 
-// Instalación del Service Worker y precarga de archivos base
+// Instalación — precarga inmediata con bypass total de caché HTTP
 self.addEventListener('install', (event) => {
-  console.log('[ServiceWorker Néstor] Instalando y encriptando caché local...');
+  console.log('[SW Néstor] Instalando v8.0.0 — forzando bypass de caché HTTP...');
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => {
-      return self.skipWaiting();
+      // Usar cache: 'reload' para siempre buscar archivos frescos del servidor
+      return Promise.all(
+        ASSETS_TO_CACHE.map(url => {
+          return fetch(url, { cache: 'reload' })
+            .then(response => {
+              if (response.ok) {
+                return cache.put(url, response);
+              }
+            })
+            .catch(() => {});
+        })
+      );
     })
   );
 });
 
-// Activación y limpieza de cachés antiguas
+// Activación — eliminar TODAS las cachés antiguas y tomar control inmediato
 self.addEventListener('activate', (event) => {
-  console.log('[ServiceWorker Néstor] Activado y listo para interceptar peticiones offline.');
+  console.log('[SW Néstor] Activado v8.0.0 — eliminando cachés antiguas...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[ServiceWorker Néstor] Eliminando caché antigua:', cacheName);
+            console.log('[SW Néstor] Eliminando caché antigua:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -36,14 +49,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Estrategia Network-First con Fallback a Caché para máxima fiabilidad en Caniles
+// Estrategia Network-First: siempre intenta red primero, fallback a caché solo sin conexión
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    fetch(event.request)
+    // Network-first con bypass de caché HTTP del navegador
+    fetch(event.request, { cache: 'no-store' })
       .then((networkResponse) => {
-        // Guardar copia fresca en caché para futuras visitas o pérdidas de cobertura
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -53,16 +66,13 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch(() => {
-        // Si no hay internet/cobertura, devolver desde caché local
+        // Sin conexión: servir desde caché SW
         return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // Si pedimos index.html y no hay red, devolver el index raíz en caché
+          if (cachedResponse) return cachedResponse;
           if (event.request.mode === 'navigate') {
             return caches.match('./index.html');
           }
-          return new Response('Offline: Recurso no disponible sin conexión.', {
+          return new Response('Offline: Recurso no disponible.', {
             status: 503,
             statusText: 'Service Unavailable',
             headers: new Headers({ 'Content-Type': 'text/plain' })

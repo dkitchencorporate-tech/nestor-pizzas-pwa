@@ -1,13 +1,135 @@
 /* =========================================================================
-   NÉSTOR PIZZAS PWA - LÓGICA DE APLICACIÓN COMPLETA (ESTRUCTURA MODULAR)
+   NÉSTOR PIZZAS PWA — LÓGICA DE APLICACIÓN
+   v20260726 | Modular, sin código monolítico
    ========================================================================= */
+
+'use strict';
 
 let currentCategory = 'TODOS';
 let activeModalProduct = null;
 let cart = [];
 let currentSlide = 1;
 
-// 1. Renderizado de Catálogo por Secciones Categorizadas (4 Tarjetas por Fila en PC)
+// -------------------------------------------------------------------------
+// RENDER: Tarjeta de Ingredientes Oficiales (aparece ANTES de las pizzas)
+// -------------------------------------------------------------------------
+function renderIngredientsCard() {
+    return `
+    <div class="col-span-full mb-4">
+        <div class="relative overflow-hidden rounded-3xl border border-green-500/30 bg-gradient-to-br from-[#0D0D12] via-[#111118] to-[#0A0A0E] shadow-2xl p-6 sm:p-8">
+            <!-- Glow decorativo -->
+            <div class="absolute -top-10 -right-10 w-52 h-52 rounded-full bg-green-500/5 blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-red-500/5 blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 space-y-5">
+                <!-- Título sutil -->
+                <div class="flex items-center gap-3">
+                    <div class="w-1 h-8 rounded-full bg-green-500"></div>
+                    <div>
+                        <span class="text-[10px] font-mono font-bold text-green-400 uppercase tracking-widest">NUESTROS INGREDIENTES</span>
+                        <p class="text-white font-display font-black text-base sm:text-lg uppercase tracking-wide leading-none mt-0.5">Carta oficial de toppings disponibles</p>
+                    </div>
+                </div>
+
+                <!-- Grid de ingredientes (chips elegantes) -->
+                <div class="flex flex-wrap gap-2">
+                    ${NESTOR_INGREDIENTS_OFICIAL.map(ing => `
+                        <span class="inline-flex items-center gap-1.5 bg-[#1A1A24] border border-zinc-700/70 text-gray-300 text-xs font-semibold px-3 py-1.5 rounded-lg hover:border-green-500/50 hover:text-white transition-colors cursor-default">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-400/80 shrink-0"></span>
+                            ${ing}
+                        </span>
+                    `).join('')}
+                </div>
+
+                <p class="text-[11px] text-zinc-500 font-medium">
+                    Disponibles para pizzas al gusto y Mazzi Pizzas — pregunta disponibilidad de extras
+                </p>
+            </div>
+        </div>
+    </div>`;
+}
+
+// -------------------------------------------------------------------------
+// RENDER: Encabezado de sección de categoría (idéntico al flyer)
+// -------------------------------------------------------------------------
+function renderCategoryHeader(cat, count) {
+    const subtitleHtml = cat.subtitle
+        ? `<span class="text-green-400 font-mono text-sm font-bold">${cat.subtitle}</span>`
+        : '';
+
+    return `
+    <div class="col-span-full py-10 my-2 text-center space-y-2">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/30 mb-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+            <span class="text-green-400 font-mono font-bold text-[11px] uppercase tracking-widest">${count} VARIEDADES</span>
+        </div>
+        <div class="flex items-center justify-center gap-3">
+            <h2 class="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-white uppercase tracking-tight leading-none">
+                ${cat.name}
+            </h2>
+            ${subtitleHtml}
+        </div>
+        <p class="text-sm text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed pt-1">${cat.desc}</p>
+        <div class="w-16 h-0.5 bg-green-500/50 mx-auto mt-4 rounded-full"></div>
+    </div>`;
+}
+
+// -------------------------------------------------------------------------
+// RENDER: Tarjeta individual de producto
+// -------------------------------------------------------------------------
+function renderProductCard(product) {
+    const fallback = `data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='540' viewBox='0 0 800 540'><rect width='800' height='540' fill='%23111118'/><text x='400' y='250' font-size='28' font-family='sans-serif' font-weight='800' fill='%2316A34A' text-anchor='middle' dominant-baseline='middle'>NESTOR PIZZAS</text><text x='400' y='310' font-size='18' font-family='sans-serif' fill='%23999' text-anchor='middle'>${encodeURIComponent(product.name)}</text></svg>`;
+
+    return `
+    <div class="group relative bg-[#111118] rounded-3xl border-2 border-zinc-800 hover:border-green-500/60 overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] transition-all duration-300 flex flex-col">
+
+        <!-- Imagen -->
+        <div class="relative h-52 sm:h-56 overflow-hidden bg-black shrink-0">
+            <img
+                src="${product.img}"
+                onerror="this.onerror=null;this.src='${fallback}'"
+                alt="${product.name}"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                loading="lazy">
+            <!-- Gradiente oscuro inferior -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#111118] via-transparent to-transparent opacity-80 pointer-events-none"></div>
+
+            <!-- Badge — fondo negro sólido, borde verde, texto blanco -->
+            <span class="absolute top-3 left-3 z-20 bg-black border-2 border-green-500 text-white font-display font-black text-[10px] sm:text-xs uppercase tracking-wider px-3 py-1.5 rounded-xl shadow-2xl leading-none">
+                ${product.badge}
+            </span>
+
+            <!-- Precio -->
+            <span class="absolute bottom-3 right-3 z-20 bg-black border-2 border-green-500/70 text-white font-display font-black text-lg sm:text-xl px-4 py-1.5 rounded-xl shadow-2xl leading-none">
+                ${product.price.toFixed(2).replace('.', ',')} €
+            </span>
+        </div>
+
+        <!-- Textos -->
+        <div class="p-5 flex flex-col flex-1 gap-3">
+            <div class="flex-1">
+                <h3 class="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wide leading-tight group-hover:text-green-400 transition-colors">
+                    ${product.name}
+                </h3>
+                <p class="text-xs sm:text-sm text-gray-400 mt-1.5 leading-relaxed font-medium line-clamp-2">
+                    ${product.desc}
+                </p>
+            </div>
+
+            <!-- Botón de pedido -->
+            <button
+                onclick="openCustomizationModal(${product.id})"
+                class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-green-600 hover:to-green-700 text-white font-display font-black py-3.5 rounded-2xl text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg hover:shadow-[0_10px_25px_-5px_rgba(22,163,74,0.4)] flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                PEDIR AHORA
+            </button>
+        </div>
+    </div>`;
+}
+
+// -------------------------------------------------------------------------
+// RENDER PRINCIPAL: Todo el catálogo
+// -------------------------------------------------------------------------
 function renderProducts() {
     const grid = document.getElementById('products-grid');
     if (!grid) return;
@@ -17,99 +139,62 @@ function renderProducts() {
         : NESTOR_CATEGORIES.filter(c => c.id === currentCategory);
 
     let html = '';
+    let isFirst = true;
 
     categoriesToRender.forEach(cat => {
         const catProducts = NESTOR_PRODUCTS.filter(p => p.category === cat.id);
         if (catProducts.length === 0) return;
 
-        // Encabezado de Sección Categorizada Profesional
-        html += `
-        <div class="col-span-full border-b border-zinc-800/80 pb-3 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-green-500/20 text-green-400 border border-green-500/40 flex items-center justify-center font-bold text-xl shrink-0">
-                    ${cat.icon}
-                </div>
-                <div>
-                    <h2 class="font-display font-black text-xl sm:text-2xl text-white uppercase tracking-tight flex items-center gap-2">
-                        <span>${cat.name}</span>
-                    </h2>
-                    <p class="text-xs text-gray-400 font-medium">${cat.desc}</p>
-                </div>
-            </div>
-            <span class="text-xs font-mono font-bold bg-green-500/10 text-green-400 px-3 py-1 rounded-full border border-green-500/30 self-start sm:self-auto">
-                ${catProducts.length} Variedades
-            </span>
-        </div>
-        `;
+        // Tarjeta de ingredientes ANTES de la primera sección (solo en vista TODOS o en NUESTRAS PIZZAS)
+        if (isFirst && (currentCategory === 'TODOS' || currentCategory === 'NUESTRAS PIZZAS')) {
+            html += renderIngredientsCard();
+        }
+        isFirst = false;
 
-        // Renderizado de Tarjetas de Producto
+        // Encabezado de sección (exacto del flyer)
+        html += renderCategoryHeader(cat, catProducts.length);
+
+        // Tarjetas de producto
         catProducts.forEach(product => {
-            const fallbackSvg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='540' viewBox='0 0 800 540'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23F8F6F2'/><stop offset='100%' stop-color='%23E4E4E7'/></linearGradient></defs><rect width='800' height='540' fill='url(%23g)'/><circle cx='400' cy='230' r='110' stroke='%2316A34A' stroke-width='4' fill='none'/><text x='400' y='238' font-size='32' font-family='sans-serif' font-weight='800' fill='%2318181B' text-anchor='middle'>NÉSTOR PIZZAS</text><text x='400' y='380' font-size='26' font-family='sans-serif' font-weight='800' fill='%23EA580C' text-anchor='middle'>${product.name.replace(/&/g, 'y')}</text><text x='400' y='425' font-size='16' font-family='sans-serif' font-weight='600' fill='%2371717A' text-anchor='middle'>CANILES Y BAZA • ESPAÑA</text></svg>`;
-
-            html += `
-            <div class="card-curved overflow-hidden shadow-2xl flex flex-col justify-between group relative bg-[#14141E] rounded-3xl border-2 border-green-500/40 hover:border-green-400 hover:shadow-[0_0_30px_rgba(34,197,94,0.35)] transition-all">
-                <div>
-                    <!-- Foto de Producto -->
-                    <div class="relative h-56 sm:h-60 overflow-hidden bg-black">
-                        <img src="${product.img}" 
-                             onerror="this.onerror=null; this.src='${fallbackSvg}'"
-                             alt="${product.name}" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#14141E] via-transparent to-transparent opacity-90"></div>
-                        
-                        <!-- Insignia Personalizada Específica -->
-                        <span class="absolute top-3 left-3 ${product.badgeClass || 'bg-green-500/20 text-green-400 border border-green-500/40'} text-[10px] font-display font-extrabold uppercase px-3 py-1 rounded-xl shadow-lg tracking-wider backdrop-blur-md">
-                            ${product.badge}
-                        </span>
-
-                        <span class="absolute bottom-3 right-3 bg-black/90 text-white font-display font-black text-lg px-3.5 py-1 rounded-xl shadow-2xl border border-green-500/50 backdrop-blur-md">
-                            ${product.price.toFixed(2)} €
-                        </span>
-                    </div>
-
-                    <!-- Textos en Blanco Puro -->
-                    <div class="p-5 space-y-1.5">
-                        <h3 class="font-display font-black text-lg sm:text-xl text-white leading-tight group-hover:text-green-400 transition-colors uppercase tracking-wide drop-shadow-sm">${product.name}</h3>
-                        <p class="text-xs text-gray-300 leading-relaxed font-medium line-clamp-2">${product.desc}</p>
-                    </div>
-                </div>
-
-                <!-- Botón de Pedido -->
-                <div class="p-5 pt-0 mt-2">
-                    <button onclick="openCustomizationModal(${product.id})" class="w-full bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-green-600 hover:to-green-700 text-white font-display font-black py-3.5 rounded-2xl transition-all shadow-lg uppercase tracking-wider text-xs flex items-center justify-center gap-2 group-hover:shadow-[0_15px_30px_-5px_rgba(255,59,0,0.4)]">
-                        <span>+ PEDIR AHORA</span>
-                    </button>
-                </div>
-            </div>
-            `;
+            html += renderProductCard(product);
         });
     });
 
     grid.innerHTML = html;
 }
 
-// 2. Filtrado de Categoría con Píldoras en Modo Oscuro
+// -------------------------------------------------------------------------
+// FILTRADO DE CATEGORÍAS
+// -------------------------------------------------------------------------
 function filterCategory(cat) {
     currentCategory = cat;
+
     document.querySelectorAll('.category-pill').forEach(pill => {
-        if (pill.id === `cat-${cat}`) {
-            pill.className = 'category-pill active px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-green-500 text-white font-extrabold border border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.5)]';
-        } else {
-            pill.className = 'category-pill px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-[#14141E] text-gray-300 hover:text-white border border-zinc-700 hover:border-green-400';
-        }
+        const isActive = pill.id === `cat-${cat}`;
+        pill.className = isActive
+            ? 'category-pill active px-6 py-3 rounded-2xl bg-green-500 text-white font-extrabold border border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.5)] text-xs sm:text-sm whitespace-nowrap shrink-0'
+            : 'category-pill px-6 py-3 rounded-2xl bg-[#14141E] text-gray-300 hover:text-white border border-zinc-700 hover:border-green-400 text-xs sm:text-sm font-bold whitespace-nowrap shrink-0 transition-all';
     });
+
     renderProducts();
+    window.scrollTo({ top: 480, behavior: 'smooth' });
 }
 
-// 3. Modales de Personalización
+// -------------------------------------------------------------------------
+// MODAL DE PERSONALIZACIÓN
+// -------------------------------------------------------------------------
 function openCustomizationModal(id) {
     const product = NESTOR_PRODUCTS.find(p => p.id === id);
     if (!product) return;
     activeModalProduct = product;
 
-    document.getElementById('modal-product-title').innerText = product.name;
-    document.getElementById('modal-product-desc').innerText = product.desc;
-    document.getElementById('customization-modal').classList.remove('hidden');
+    const titleEl = document.getElementById('modal-product-title');
+    const descEl = document.getElementById('modal-product-desc');
+    const modal = document.getElementById('customization-modal');
+
+    if (titleEl) titleEl.innerText = product.name;
+    if (descEl) descEl.innerText = product.desc;
+    if (modal) modal.classList.remove('hidden');
     updateModalPrice();
 }
 
@@ -122,136 +207,45 @@ function closeCustomizationModal() {
 function updateModalPrice() {
     if (!activeModalProduct) return;
     let total = activeModalProduct.price;
-
-    const sizeRadio = document.querySelector('input[name="cust-size"]:checked');
-    if (sizeRadio && sizeRadio.value.includes('Extra Queso Mozzarella Gratinado')) {
-        total += 2.00;
-    }
-
     document.querySelectorAll('.cust-extra:checked').forEach(cb => {
         total += parseFloat(cb.getAttribute('data-price') || 0);
     });
-
     const priceEl = document.getElementById('modal-total-price');
-    if (priceEl) priceEl.innerText = `${total.toFixed(2)} €`;
-}
-
-function selectCustSizeOption(labelEl) {
-    document.querySelectorAll('.cust-size-btn').forEach(btn => {
-        btn.className = 'cust-size-btn flex items-center justify-between p-4 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all';
-    });
-    labelEl.className = 'cust-size-btn flex items-center justify-between p-4 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer shadow-sm transition-all';
-    const radio = labelEl.querySelector('input[type="radio"]');
-    if (radio) {
-        radio.checked = true;
-        updateModalPrice(radio.value.includes('Extra Queso') ? 2.00 : 0);
-    }
-}
-
-function toggleCheckboxCard(labelEl, isRemove = false) {
-    const cb = labelEl.querySelector('input[type="checkbox"]');
-    if (!cb) return;
-    cb.checked = !cb.checked;
-    if (isRemove) {
-        labelEl.className = cb.checked 
-            ? 'bg-red-500/20 text-red-400 px-3.5 py-2 rounded-xl border border-red-500 flex items-center gap-2 cursor-pointer font-bold shadow-sm transition-all'
-            : 'bg-zinc-800/80 px-3.5 py-2 rounded-xl border border-zinc-700 flex items-center gap-2 cursor-pointer hover:border-red-500 transition-all';
-    } else {
-        labelEl.className = cb.checked 
-            ? 'flex items-center justify-between p-3 rounded-xl bg-nestor-green/20 border-2 border-nestor-green text-white font-bold cursor-pointer transition-all shadow-sm'
-            : 'flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-zinc-700 cursor-pointer hover:border-nestor-green transition-all';
-        updateModalPrice();
-    }
+    if (priceEl) priceEl.innerText = `${total.toFixed(2).replace('.', ',')} €`;
 }
 
 function confirmCustomizedItem() {
     if (!activeModalProduct) return;
-
-    const sizeRadio = document.querySelector('input[name="cust-size"]:checked');
-    const sizeVal = sizeRadio ? sizeRadio.value : 'Tamaño Estándar (33cm)';
-
     const extras = [];
     document.querySelectorAll('.cust-extra:checked').forEach(cb => {
-        extras.push(`+ ${cb.getAttribute('data-name')}`);
+        extras.push(cb.getAttribute('data-name'));
     });
-
-    const removes = [];
-    document.querySelectorAll('.cust-remove:checked').forEach(cb => {
-        removes.push(cb.value);
-    });
-
-    let finalPrice = parseFloat(document.getElementById('modal-total-price').innerText);
-
-    cart.push({
-        id: Date.now(),
-        name: activeModalProduct.name,
-        size: sizeVal,
-        extras: extras,
-        removes: removes,
-        price: finalPrice
-    });
-
+    const finalPrice = parseFloat((document.getElementById('modal-total-price')?.innerText || '0').replace(',', '.'));
+    cart.push({ id: Date.now(), name: activeModalProduct.name, extras, price: finalPrice });
     closeCustomizationModal();
     updateCartStickyBar();
-    showOrderToast(`✓ ${activeModalProduct.name} se ha sumado a tu comanda (${finalPrice.toFixed(2)} €)`);
+    showOrderToast(`${activeModalProduct.name} añadido a tu comanda (${finalPrice.toFixed(2).replace('.', ',')} €)`);
 }
 
-// 4. Upsell Dinámico y Recomendador Pre-Checkout
-function openDynamicUpsellModal() {
-    renderDynamicUpsells();
-    const modal = document.getElementById('upsell-modal');
-    if (modal) modal.classList.remove('hidden');
-}
+// -------------------------------------------------------------------------
+// CARRITO Y BARRA FLOTANTE
+// -------------------------------------------------------------------------
+function updateCartStickyBar() {
+    const bar = document.getElementById('sticky-cart-bar');
+    const badge = document.getElementById('cart-counter-badge');
+    const total = document.getElementById('cart-total-badge');
+    if (!bar) return;
 
-function closeUpsellAndReturnToMenu() {
-    const modal = document.getElementById('upsell-modal');
-    if (modal) modal.classList.add('hidden');
-}
-
-function closeUpsellAndGoToCheckout() {
-    closeUpsellAndReturnToMenu();
-    openCheckoutModal();
-}
-
-function renderDynamicUpsells() {
-    const container = document.getElementById('upsell-cards-container');
-    if (!container) return;
-
-    const shuffled = [...NESTOR_UPSELLS].sort(() => 0.5 - Math.random()).slice(0, 3);
-    container.innerHTML = shuffled.map(up => `
-        <div class="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-nestor-gold transition-all group">
-            <div class="flex items-center gap-3">
-                <img src="${up.img}" alt="${up.name}" class="w-14 h-14 rounded-xl object-cover shrink-0 border border-zinc-800">
-                <div>
-                    <h4 class="font-display font-bold text-white text-xs sm:text-sm uppercase">${up.name}</h4>
-                    <p class="text-[10px] sm:text-[11px] text-zinc-400 line-clamp-1">${up.desc}</p>
-                    <span class="text-nestor-gold font-display font-black text-xs mt-0.5 inline-block">+${up.price.toFixed(2)} €</span>
-                </div>
-            </div>
-            <button onclick="addUpsellDirectly('${up.name}', ${up.price}, this)" class="bg-zinc-800 hover:bg-nestor-gold hover:text-black text-white font-display font-bold px-3 py-2 rounded-xl text-xs uppercase transition-all shrink-0 border border-zinc-700">
-                + Añadir
-            </button>
-        </div>
-    `).join('');
-}
-
-function addUpsellDirectly(name, price, btnEl) {
-    cart.push({
-        id: Date.now(),
-        name: name,
-        size: 'Complemento Sugerido',
-        extras: [],
-        removes: [],
-        price: price
-    });
-    updateCartStickyBar();
-    if (btnEl) {
-        btnEl.innerText = '✓ Añadido';
-        btnEl.className = 'bg-green-500 text-white font-display font-bold px-3 py-2 rounded-xl text-xs uppercase transition-all shrink-0 border border-green-400 shadow';
+    if (cart.length > 0) {
+        bar.classList.remove('hidden');
+        if (badge) badge.innerText = cart.length;
+        const sum = cart.reduce((a, c) => a + c.price, 0);
+        if (total) total.innerText = `${sum.toFixed(2).replace('.', ',')} €`;
+    } else {
+        bar.classList.add('hidden');
     }
 }
 
-// 5. Checkout & Carrito
 function openCheckoutModal() {
     renderCheckoutItems();
     updateCheckoutTotals();
@@ -267,28 +261,19 @@ function closeCheckoutModal() {
 function renderCheckoutItems() {
     const list = document.getElementById('checkout-items-list');
     if (!list) return;
-
     if (cart.length === 0) {
-        list.innerHTML = `
-            <div class="text-center py-8 space-y-2">
-                <p class="text-gray-400 font-medium">Tu comanda está vacía actualmente.</p>
-                <button onclick="closeCheckoutModal()" class="text-green-400 text-xs font-bold uppercase underline">Explorar carta de pizzas →</button>
-            </div>
-        `;
+        list.innerHTML = `<p class="text-center text-gray-400 py-8 font-medium">Tu comanda está vacía.</p>`;
         return;
     }
-
     list.innerHTML = cart.map((item, idx) => `
-        <div class="p-3 sm:p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-3">
+        <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-950 border border-zinc-800 gap-3">
             <div>
-                <h4 class="font-display font-bold text-white text-xs sm:text-sm uppercase">${item.name}</h4>
-                <p class="text-[10px] text-gray-400">${item.size}</p>
-                ${item.extras.length ? `<p class="text-[10px] text-green-400">${item.extras.join(', ')}</p>` : ''}
-                ${item.removes.length ? `<p class="text-[10px] text-red-400">${item.removes.join(', ')}</p>` : ''}
+                <h4 class="font-display font-bold text-white text-sm uppercase">${item.name}</h4>
+                ${item.extras?.length ? `<p class="text-xs text-green-400">${item.extras.join(', ')}</p>` : ''}
             </div>
             <div class="flex items-center gap-3 shrink-0">
-                <span class="font-display font-black text-white text-sm">${item.price.toFixed(2)} €</span>
-                <button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-white p-1 text-xs font-bold bg-red-950/60 rounded-lg border border-red-800">✕</button>
+                <span class="font-display font-black text-white">${item.price.toFixed(2).replace('.', ',')} €</span>
+                <button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-white text-xs bg-red-950/60 border border-red-800 rounded-lg px-2 py-1 font-bold">✕</button>
             </div>
         </div>
     `).join('');
@@ -302,103 +287,601 @@ function removeFromCart(idx) {
 }
 
 function updateCheckoutTotals() {
-    const subtotal = cart.reduce((acc, curr) => acc + curr.price, 0);
-    const subtotalEl = document.getElementById('checkout-subtotal');
+    const subtotal = cart.reduce((a, c) => a + c.price, 0);
+    const el = document.getElementById('checkout-subtotal');
     const totalEl = document.getElementById('checkout-total');
-
-    if (subtotalEl) subtotalEl.innerText = `${subtotal.toFixed(2)} €`;
-    if (totalEl) totalEl.innerText = `${subtotal.toFixed(2)} €`;
+    const finalEl = document.getElementById('checkout-final-total');
+    if (el) el.innerText = `${subtotal.toFixed(2).replace('.', ',')} €`;
+    if (totalEl) totalEl.innerText = `${subtotal.toFixed(2).replace('.', ',')} €`;
+    if (finalEl) finalEl.innerText = `${subtotal.toFixed(2).replace('.', ',')} €`;
 }
 
-// 6. Barra Flotante de Carrito
-function updateCartStickyBar() {
-    const bar = document.getElementById('sticky-cart-bar');
-    const counterBadge = document.getElementById('cart-counter-badge');
-    const totalBadge = document.getElementById('cart-total-badge');
-
-    if (!bar || !counterBadge || !totalBadge) return;
-
-    if (cart.length > 0) {
-        bar.classList.remove('hidden');
-        counterBadge.innerText = cart.length;
-        const sum = cart.reduce((acc, curr) => acc + curr.price, 0);
-        totalBadge.innerText = `${sum.toFixed(2)} €`;
-    } else {
-        bar.classList.add('hidden');
-    }
-}
-
-// 7. Toast Notificación
+// -------------------------------------------------------------------------
+// TOAST DE NOTIFICACIÓN
+// -------------------------------------------------------------------------
 function showOrderToast(msg) {
-    let toast = document.getElementById('order-toast-banner');
+    let toast = document.getElementById('order-toast');
     if (!toast) {
         toast = document.createElement('div');
-        toast.id = 'order-toast-banner';
-        toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-zinc-900 border-2 border-green-500 text-white px-6 py-3.5 rounded-2xl shadow-[0_20px_40px_rgba(22,163,74,0.3)] flex items-center gap-4 font-display font-bold text-xs sm:text-sm transition-all duration-300 animate-bounce';
+        toast.id = 'order-toast';
+        toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[200] bg-zinc-900 border-2 border-green-500 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 font-display font-bold text-sm max-w-sm w-full mx-4';
         document.body.appendChild(toast);
     }
     toast.innerHTML = `
-        <span class="text-green-400 text-lg">★</span>
-        <span>${msg}</span>
-        <button onclick="openCheckoutModal()" class="bg-green-500 hover:bg-green-600 text-white px-3.5 py-1.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow shrink-0">
-            Ver Pedido →
-        </button>
+        <span class="text-green-400 text-lg shrink-0">✓</span>
+        <span class="flex-1 text-xs">${msg}</span>
+        <button onclick="openCheckoutModal()" class="bg-green-500 text-white px-3 py-1.5 rounded-xl text-[10px] uppercase font-black shrink-0">Ver →</button>
     `;
-    setTimeout(() => {
-        if (toast) toast.remove();
-    }, 4500);
+    toast.style.display = 'flex';
+    setTimeout(() => { if (toast) toast.remove(); }, 4000);
 }
 
-// 8. VIP & Sorteos
+// -------------------------------------------------------------------------
+// VIP MODAL
+// -------------------------------------------------------------------------
 function openVipModal() {
     const modal = document.getElementById('vip-modal');
     if (modal) modal.classList.remove('hidden');
 }
-
 function closeVipModal() {
     const modal = document.getElementById('vip-modal');
     if (modal) modal.classList.add('hidden');
 }
-
 function enterRaffle(e) {
     if (e) e.preventDefault();
-    const box = document.getElementById('raffle-box');
     const confirm = document.getElementById('raffle-confirmation');
-    if (box && confirm) {
-        box.querySelector('form').classList.add('hidden');
-        confirm.classList.remove('hidden');
-    }
+    if (confirm) confirm.classList.remove('hidden');
 }
 
-// 9. Control de Carrusel Hero
+// -------------------------------------------------------------------------
+// UPSELL
+// -------------------------------------------------------------------------
+function openDynamicUpsellModal() {
+    renderDynamicUpsells();
+    const modal = document.getElementById('upsell-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+function closeUpsellAndReturnToMenu() {
+    const modal = document.getElementById('upsell-modal');
+    if (modal) modal.classList.add('hidden');
+}
+function closeUpsellAndGoToCheckout() {
+    closeUpsellAndReturnToMenu();
+    openCheckoutModal();
+}
+function renderDynamicUpsells() {
+    const container = document.getElementById('upsell-cards-container');
+    if (!container || !NESTOR_UPSELLS) return;
+    container.innerHTML = NESTOR_UPSELLS.map(up => `
+        <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-950 border border-zinc-800 gap-3">
+            <div class="flex items-center gap-3">
+                <img src="${up.img}" alt="${up.name}" class="w-14 h-14 rounded-xl object-cover shrink-0">
+                <div>
+                    <h4 class="font-display font-bold text-white text-xs uppercase">${up.name}</h4>
+                    <p class="text-[10px] text-zinc-400">${up.desc}</p>
+                    <span class="text-amber-400 font-display font-black text-xs">+${up.price.toFixed(2).replace('.', ',')} €</span>
+                </div>
+            </div>
+            <button onclick="addUpsellDirectly('${up.name}', ${up.price}, this)" class="bg-zinc-800 hover:bg-green-500 text-white font-bold px-3 py-2 rounded-xl text-xs uppercase transition-all shrink-0">
+                + Añadir
+            </button>
+        </div>
+    `).join('');
+}
+function addUpsellDirectly(name, price, btn) {
+    cart.push({ id: Date.now(), name, extras: [], price });
+    updateCartStickyBar();
+    if (btn) { btn.innerText = '✓'; btn.className = 'bg-green-500 text-white font-bold px-3 py-2 rounded-xl text-xs shrink-0'; }
+}
+
+// -------------------------------------------------------------------------
+// PROCESO DE PEDIDO
+// -------------------------------------------------------------------------
+function processAndPrintOrder() {
+    if (cart.length === 0) return;
+    const items = cart.map(i => `- ${i.name}: ${i.price.toFixed(2).replace('.', ',')} €`).join('\n');
+    const total = cart.reduce((a, c) => a + c.price, 0);
+    const msg = `Hola Néstor Pizzas, quisiera hacer el siguiente pedido:\n\n${items}\n\nTOTAL: ${total.toFixed(2).replace('.', ',')} €`;
+    window.open(`https://wa.me/34679761987?text=${encodeURIComponent(msg)}`, '_blank');
+    closeCheckoutModal();
+}
+
+// -------------------------------------------------------------------------
+// CARRUSEL HERO
+// -------------------------------------------------------------------------
 function changeSlide(num) {
     currentSlide = num;
-    const slide1 = document.getElementById('slide-1');
-    const slide2 = document.getElementById('slide-2');
-    const dot1 = document.getElementById('dot-1');
-    const dot2 = document.getElementById('dot-2');
+    const s1 = document.getElementById('slide-1');
+    const s2 = document.getElementById('slide-2');
+    const d1 = document.getElementById('dot-1');
+    const d2 = document.getElementById('dot-2');
 
     if (num === 1) {
-        if (slide1) { slide1.classList.remove('hidden'); slide1.style.opacity = '1'; slide1.style.pointerEvents = 'auto'; }
-        if (slide2) { slide2.classList.add('hidden'); slide2.style.opacity = '0'; slide2.style.pointerEvents = 'none'; }
-        if (dot1) dot1.className = 'w-8 h-2 rounded-full bg-green-500 transition-all';
-        if (dot2) dot2.className = 'w-2.5 h-2 rounded-full bg-zinc-600 transition-all';
+        if (s1) { s1.classList.remove('hidden'); s1.style.opacity = '1'; s1.style.pointerEvents = 'auto'; }
+        if (s2) { s2.classList.add('hidden'); s2.style.opacity = '0'; s2.style.pointerEvents = 'none'; }
+        if (d1) d1.className = 'w-8 h-2 rounded-full bg-green-500 transition-all';
+        if (d2) d2.className = 'w-2.5 h-2 rounded-full bg-zinc-600 transition-all';
     } else {
-        if (slide1) { slide1.classList.add('hidden'); slide1.style.opacity = '0'; slide1.style.pointerEvents = 'none'; }
-        if (slide2) { slide2.classList.remove('hidden'); slide2.style.opacity = '1'; slide2.style.pointerEvents = 'auto'; }
-        if (dot1) dot1.className = 'w-2.5 h-2 rounded-full bg-zinc-600 transition-all';
-        if (dot2) dot2.className = 'w-8 h-2 rounded-full bg-green-500 transition-all';
+        if (s1) { s1.classList.add('hidden'); s1.style.opacity = '0'; s1.style.pointerEvents = 'none'; }
+        if (s2) { s2.classList.remove('hidden'); s2.style.opacity = '1'; s2.style.pointerEvents = 'auto'; }
+        if (d1) d1.className = 'w-2.5 h-2 rounded-full bg-zinc-600 transition-all';
+        if (d2) d2.className = 'w-8 h-2 rounded-full bg-green-500 transition-all';
     }
 }
 
-function nextSlide() { 
-    changeSlide(currentSlide === 1 ? 2 : 1); 
-}
-setInterval(() => { nextSlide(); }, 6500);
+function nextSlide() { changeSlide(currentSlide === 1 ? 2 : 1); }
+setInterval(nextSlide, 7000);
 
-// Inicializar al cargar de forma robusta e inmediata
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', renderProducts);
-} else {
+// -------------------------------------------------------------------------
+// INICIALIZACIÓN
+// -------------------------------------------------------------------------
+function init() {
     renderProducts();
+    // Mostrar barra de instalación PWA si procede
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window._deferredPWAPrompt = e;
+        const banner = document.getElementById('pwa-install-banner');
+        if (banner) banner.classList.remove('hidden');
+        banner.classList.add('flex');
+    });
 }
+
+function installPWA() {
+    if (window._deferredPWAPrompt) {
+        window._deferredPWAPrompt.prompt();
+        window._deferredPWAPrompt.userChoice.then(() => {
+            window._deferredPWAPrompt = null;
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) banner.classList.add('hidden');
+        });
+    }
+}
+
+// Ejecutar al cargar
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => {
+                console.log('[SW] Registrado:', reg.scope);
+                reg.update();
+            })
+            .catch(err => console.warn('[SW] Error:', err));
+    });
+}
+
+
+// =========================================================================
+// SPLASH SCREEN & PWA LIFECYCLE
+// =========================================================================
+window.addEventListener('load', () => {
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+        // Simular tiempo de carga del motor (1.5s)
+        setTimeout(() => {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 700); // Wait for transition
+        }, 1500);
+    }
+});
+
+// =========================================================================
+// USER MODAL LOGIC (Auth, Registration, Points)
+// =========================================================================
+window.app = window.app || {};
+
+window.app.openUserModal = function() {
+    const overlay = document.getElementById('user-modal-overlay');
+    const content = document.getElementById('user-modal-content');
+    if(overlay && content) {
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-95', 'opacity-0');
+        
+        // Reset view to login if not logged in
+        if (!localStorage.getItem('nestor_logged_in')) {
+            window.app.switchModalView('login');
+        } else {
+            window.app.switchModalView('profile');
+        }
+    }
+};
+
+window.app.closeUserModal = function() {
+    const overlay = document.getElementById('user-modal-overlay');
+    const content = document.getElementById('user-modal-content');
+    if(overlay && content) {
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.add('scale-95', 'opacity-0');
+    }
+};
+
+
+window.app.simulateLogin = function() {
+    // Basic simulation
+    localStorage.setItem('nestor_logged_in', 'true');
+    window.app.switchModalView('profile');
+};
+
+window.app.simulateLogout = function() {
+    localStorage.removeItem('nestor_logged_in');
+    window.app.switchModalView('login');
+};
+
+
+// =========================================================================
+// TICKER TIMER LOGIC (MARKETING AGRESIVO)
+// =========================================================================
+function updateTickerTimer() {
+    const now = new Date();
+    // Simulate a countdown ending at midnight
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    
+    const diff = end - now;
+    if(diff < 0) return;
+    
+    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    
+    for(let i = 1; i <= 3; i++) {
+        const el = document.getElementById(i === 1 ? 'ticker-timer' : 'ticker-timer-' + i);
+        if(el) el.textContent = timeStr;
+    }
+}
+setInterval(updateTickerTimer, 1000);
+updateTickerTimer();
+
+
+
+
+
+// =========================================================================
+// UNIVERSAL PWA INSTALLATION LOGIC
+// =========================================================================
+let deferredPrompt;
+
+// Wait for DOM to check standalone mode
+document.addEventListener('DOMContentLoaded', () => {
+    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+    if (isInStandaloneMode()) {
+        const btn1 = document.getElementById('nav-install-btn');
+        const btn2 = document.getElementById('mobile-install-btn');
+        if(btn1) btn1.style.display = 'none';
+        if(btn2) btn2.style.display = 'none';
+    }
+});
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent default prompt
+    e.preventDefault();
+    deferredPrompt = e;
+});
+
+window.installPWA = async function() {
+    // iOS Safari workaround check
+    const isIos = () => {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(userAgent);
+    }
+    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (isIos() && !isInStandaloneMode()) {
+        alert("Para instalar en iOS:\nToca el botón 'Compartir' (el cuadrado con la flecha hacia arriba) y selecciona 'Añadir a la pantalla de inicio'.");
+        return;
+    }
+
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('User accepted the A2HS prompt');
+            const btn1 = document.getElementById('nav-install-btn');
+            const btn2 = document.getElementById('mobile-install-btn');
+            if(btn1) btn1.style.display = 'none';
+            if(btn2) btn2.style.display = 'none';
+        }
+        deferredPrompt = null;
+    } else {
+        alert("La aplicación web está lista. Si usas Chrome o Edge, ve al menú superior y selecciona 'Instalar aplicación'.");
+    }
+};
+
+window.addEventListener('appinstalled', (evt) => {
+    const btn1 = document.getElementById('nav-install-btn');
+    const btn2 = document.getElementById('mobile-install-btn');
+    if(btn1) btn1.style.display = 'none';
+    if(btn2) btn2.style.display = 'none';
+});
+
+
+window.installPWA = async function() {
+    // iOS Safari workaround check
+    const isIos = () => {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(userAgent);
+    }
+    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+    
+    if (isIos() && !isInStandaloneMode()) {
+        alert("Para instalar en iOS:\nToca el botón 'Compartir' (el cuadrado con la flecha hacia arriba) y selecciona 'Añadir a la pantalla de inicio'.");
+        return;
+    }
+
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('User accepted the A2HS prompt');
+            const btn1 = document.getElementById('nav-install-btn');
+            const btn2 = document.getElementById('mobile-install-btn');
+            if(btn1) btn1.style.display = 'none';
+            if(btn2) btn2.style.display = 'none';
+        }
+        deferredPrompt = null;
+    } else {
+        alert("La aplicación ya está instalada o tu navegador no soporta instalaciones automáticas.");
+    }
+};
+
+window.addEventListener('appinstalled', (evt) => {
+    const btn1 = document.getElementById('nav-install-btn');
+    const btn2 = document.getElementById('mobile-install-btn');
+    if(btn1) btn1.style.display = 'none';
+    if(btn2) btn2.style.display = 'none';
+});
+
+
+// =========================================================================
+// USER AUTHENTICATION & MODAL LOGIC (MOCK)
+// =========================================================================
+let currentUser = null; // null if not logged in
+
+window.app = window.app || {};
+
+window.app.openUserModal = function() {
+    const overlay = document.getElementById('user-modal-overlay');
+    const content = document.getElementById('user-modal-content');
+    
+    // Set correct view before opening
+    if(currentUser) {
+        window.app.switchModalView('profile');
+    } else {
+        window.app.switchModalView('login');
+    }
+    
+    overlay.classList.remove('pointer-events-none');
+    overlay.classList.replace('opacity-0', 'opacity-100');
+    content.classList.replace('scale-95', 'scale-100');
+    content.classList.replace('opacity-0', 'opacity-100');
+};
+
+window.app.closeUserModal = function() {
+    const overlay = document.getElementById('user-modal-overlay');
+    const content = document.getElementById('user-modal-content');
+    
+    overlay.classList.add('pointer-events-none');
+    overlay.classList.replace('opacity-100', 'opacity-0');
+    content.classList.replace('scale-100', 'scale-95');
+    content.classList.replace('opacity-100', 'opacity-0');
+};
+
+
+window.app.simulateLogin = function() {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    const errorMsg = document.getElementById('login-error-msg');
+    
+    if(email === 'admin' && pass === 'admin') {
+        // Success
+        if (errorMsg) errorMsg.classList.add('hidden');
+        currentUser = {
+            name: 'Administrador',
+            points: 0,
+            phone: '679 00 00 00',
+            address: 'Calle Falsa 123, 1ºA, Caniles'
+        };
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-password').value = '';
+        
+        window.app.updateHeaderAuth();
+        window.app.switchModalView('profile');
+    } else {
+        // Error
+        if (errorMsg) {
+            errorMsg.classList.remove('hidden');
+            // Shake effect
+            const content = document.getElementById('user-modal-content');
+            content.classList.add('animate-[shake_0.5s_ease-in-out]');
+            setTimeout(() => content.classList.remove('animate-[shake_0.5s_ease-in-out]'), 500);
+        }
+    }
+};
+
+window.app.simulateRegister = function() {
+    const name = document.getElementById('reg-name').value;
+    if(!name) { alert('Introduce tu nombre'); return; }
+    
+    currentUser = {
+        name: name,
+        points: 0
+    };
+    
+    window.app.updateHeaderAuth();
+    window.app.switchModalView('profile');
+};
+
+window.app.simulateLogout = function() {
+    currentUser = null;
+    window.app.updateHeaderAuth();
+    window.app.closeUserModal();
+};
+
+window.app.updateHeaderAuth = function() {
+    const icon = document.getElementById('header-auth-icon');
+    const text = document.getElementById('header-auth-text');
+    
+    // Also update points inside checkout if visible
+    const chkPts = document.getElementById('chk-pts');
+    const btnRedeem = document.getElementById('btn-redeem-pts');
+    
+    if(currentUser) {
+        icon.textContent = 'VIP';
+        text.innerHTML = `<span class="text-green-400 font-display font-extrabold">${currentUser.points}</span> pts`;
+        
+        if(chkPts) chkPts.textContent = currentUser.points;
+        if(btnRedeem) {
+            if(currentUser.points >= 100) {
+                btnRedeem.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                btnRedeem.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+    } else {
+        icon.textContent = '🔑';
+        text.textContent = 'INICIAR SESIÓN';
+        
+        if(chkPts) chkPts.textContent = '0';
+        if(btnRedeem) btnRedeem.classList.add('opacity-50', 'pointer-events-none');
+    }
+};
+
+// Initialize auth header on load
+document.addEventListener('DOMContentLoaded', () => {
+    window.app.updateHeaderAuth();
+});
+
+
+window.app.togglePasswordVisibility = function(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(inputId + '-eye');
+    if(input.type === 'password') {
+        input.type = 'text';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
+    } else {
+        input.type = 'password';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+    }
+};
+
+
+window.app.switchModalView = function(viewName) {
+    const errorMsg = document.getElementById('login-error-msg');
+    if (errorMsg) errorMsg.classList.add('hidden');
+
+    const views = ['login', 'register', 'profile', 'legal', 'legal-doc', 'delete-account', 'delete-success'];
+    views.forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if(el) {
+            if(v === viewName) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+    });
+
+    const title = document.getElementById('user-modal-title');
+    const subtitle = document.getElementById('user-modal-subtitle');
+    
+    if(viewName === 'login') {
+        if(title) title.textContent = 'MI CUENTA';
+        if(subtitle) subtitle.textContent = 'Inicia sesión para acumular puntos';
+    } else if(viewName === 'register') {
+        if(title) title.textContent = 'CREAR CUENTA';
+        if(subtitle) subtitle.textContent = 'Únete al club VIP de Néstor';
+    } else if(viewName === 'profile') {
+        if(title) title.textContent = 'PERFIL VIP';
+        if(subtitle) subtitle.textContent = 'Gestiona tu fidelización';
+        if(currentUser) {
+            document.getElementById('profile-name').textContent = currentUser.name;
+            document.getElementById('profile-points').textContent = currentUser.points;
+            document.getElementById('profile-phone').textContent = currentUser.phone || 'No registrado';
+            document.getElementById('profile-address').textContent = currentUser.address || 'No registrada';
+            
+            // Logic for rewards buttons
+            const btn100 = document.getElementById('btn-reward-100');
+            const btn250 = document.getElementById('btn-reward-250');
+            
+            if(currentUser.points >= 100) {
+                btn100.className = 'text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all bg-nestor-green hover:bg-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)]';
+                btn100.textContent = 'Canjear';
+                btn100.disabled = false;
+            } else {
+                btn100.className = 'text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all bg-gray-700 text-gray-400 cursor-not-allowed';
+                btn100.textContent = 'Bloqueado';
+                btn100.disabled = true;
+            }
+            
+            if(currentUser.points >= 250) {
+                btn250.className = 'text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all bg-nestor-gold hover:bg-yellow-500 text-black shadow-[0_0_10px_rgba(250,204,21,0.3)]';
+                btn250.textContent = 'Canjear';
+                btn250.disabled = false;
+            } else {
+                btn250.className = 'text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all bg-gray-700 text-gray-400 cursor-not-allowed';
+                btn250.textContent = 'Bloqueado';
+                btn250.disabled = true;
+            }
+        }
+    } else if(viewName === 'legal' || viewName === 'legal-doc' || viewName === 'delete-account' || viewName === 'delete-success') {
+        if(title) title.textContent = 'CENTRO LEGAL';
+        if(subtitle) subtitle.textContent = 'Transparencia y Normativas';
+    }
+    
+    // Hide footer link in legal views
+    const legalFooter = document.getElementById('legal-footer-link');
+    if(legalFooter) {
+        if(['legal', 'legal-doc', 'delete-account', 'delete-success'].includes(viewName)) {
+            legalFooter.classList.add('hidden');
+        } else {
+            legalFooter.classList.remove('hidden');
+        }
+    }
+};
+
+window.app.openLegalDoc = function(title) {
+    const titleEl = document.getElementById('legal-doc-title');
+    if(titleEl) titleEl.textContent = title;
+    window.app.switchModalView('legal-doc');
+};
+
+
+// Forzar scroll arriba al cargar la app
+window.addEventListener('load', () => {
+    setTimeout(() => window.scrollTo(0, 0), 100);
+});
+
+// Lógica del botón Scroll to Top
+window.addEventListener('scroll', () => {
+    const btn = document.getElementById('scroll-to-top-btn');
+    if(btn) {
+        if(window.scrollY > 300) {
+            btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+        } else {
+            btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+        }
+    }
+});
+
+
+window.app.processAccountDeletion = function() {
+    const reason = document.getElementById('delete-reason').value;
+    if(!reason) {
+        alert('Por favor, selecciona un motivo.');
+        return;
+    }
+    // Simulate sending email to support
+    console.log('Enviando solicitud de baja a soporte@nestorpizzas.com por motivo:', reason);
+    window.app.switchModalView('delete-success');
+};
