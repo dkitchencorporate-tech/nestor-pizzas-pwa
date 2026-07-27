@@ -204,7 +204,7 @@
             </div>
 
             <!-- Botones de Acción Directa Kiosco -->
-            <div class="flex items-center gap-2.5">
+            <div class="flex items-center gap-4 sm:gap-2.5 ml-auto">
 
                 <!-- PWA Install Button (Desktop) -->
                 <button id="nav-install-btn" onclick="installPWA()" class="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-nestor-gold to-yellow-400 text-black font-display font-bold text-sm shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:scale-105 transition-transform uppercase tracking-widest border border-yellow-300/50">
@@ -297,7 +297,7 @@
             </div>
 
             <!-- Controles de Navegación -->
-            <div class="absolute top-4 right-4 sm:top-auto sm:bottom-4 sm:right-14 z-20 flex items-center gap-2.5 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+            <div class="absolute bottom-4 right-4 sm:bottom-4 sm:right-14 z-20 flex items-center gap-2.5 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                 <button onclick="changeSlide(1)" id="dot-1" class="w-8 h-2 rounded-full bg-nestor-green transition-all shadow-[0_0_10px_rgba(34,197,94,0.5)]"></button>
                 <button onclick="changeSlide(2)" id="dot-2" class="w-2.5 h-2 rounded-full bg-zinc-600 hover:bg-zinc-400 transition-all"></button>
             </div>
@@ -436,21 +436,23 @@
     <!-- =========================================================================
          BARRA FLOTANTE DE COMANDA (RESPONSIVIDAD TOTAL MÓVIL Y TABLET SIN SOLAPAMIENTOS)
          ========================================================================= -->
-    <div id="sticky-cart-bar" class="hidden fixed bottom-3 sm:bottom-6 left-3 right-3 sm:left-8 sm:right-auto z-40 glass-floating text-white rounded-3xl p-3 sm:px-6 sm:py-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2.5 sm:gap-6 cursor-pointer hover:scale-[1.02] transition-all max-w-[calc(100%-24px)] sm:max-w-md w-auto border border-zinc-700/80" onclick="openDynamicUpsellModal()">
-        <div class="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+    <div id="sticky-cart-bar" class="hidden fixed bottom-3 sm:bottom-6 left-3 right-3 sm:left-8 sm:right-auto z-40 glass-floating text-white rounded-3xl p-3 sm:px-6 sm:py-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2.5 sm:gap-6 cursor-pointer hover:scale-[1.02] transition-all max-w-[calc(100%-24px)] sm:max-w-md w-auto border border-zinc-700/80" onclick="openDynamicUpsellModal()">
+        <div class="flex items-center gap-2 sm:gap-3.5 shrink-0 min-w-0">
             <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-nestor-green text-white flex items-center justify-center font-display font-bold text-[11px] sm:text-sm shadow-md relative uppercase shrink-0">
-                <span>PEDIDO</span>
+                <span class="hidden sm:inline">PEDIDO</span>
+                <span class="sm:hidden">🛒</span>
                 <span id="cart-counter-badge" class="absolute -top-2 -right-2 bg-nestor-terracotta text-white font-display font-black text-sm px-2 py-0.5 rounded-full border-2 border-zinc-900 shadow">0</span>
             </div>
-            <div>
-                <span class="text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase tracking-widest block leading-none">Comanda en Curso</span>
-                <span id="cart-total-badge" class="font-display font-extrabold text-lg sm:text-2xl text-white">0.00 €</span>
+            <div class="min-w-0 truncate">
+                <span class="text-[9px] sm:text-[10px] font-bold text-zinc-400 uppercase tracking-widest block leading-none truncate">Comanda</span>
+                <span id="cart-total-badge" class="font-display font-extrabold text-lg sm:text-2xl text-white truncate">0.00 €</span>
             </div>
         </div>
         
           
-<div class="flex items-center justify-center gap-1.5 sm:gap-2 font-display font-bold text-[11px] sm:text-sm bg-gradient-to-r from-nestor-green to-nestor-greenDark hover:from-nestor-terracotta hover:to-nestor-terracottaDark text-white uppercase tracking-wider px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl transition-all shadow-md shrink-0">
-            <span>Tramitar Comanda</span>
+<div class="flex items-center justify-center gap-1.5 sm:gap-2 font-display font-bold text-[10px] sm:text-sm bg-gradient-to-r from-nestor-green to-nestor-greenDark hover:from-nestor-terracotta hover:to-nestor-terracottaDark text-white uppercase tracking-wider px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl transition-all shadow-md shrink-0 whitespace-nowrap">
+            <span>Tramitar</span>
+            <span class="hidden sm:inline"> Comanda</span>
             <span>→</span>
         </div>
     </div>
@@ -614,7 +616,7 @@
             </div>
 
             <!-- Contenedor Dinámico con Productos 100% Reales de Comida (Sin Personas) -->
-            <div id="upsell-cards-container" class="p-4 sm:p-6 overflow-y-auto space-y-2.5 sm:space-y-3 flex-1 text-sm sm:text-sm font-medium text-zinc-300 max-h-[52vh] no-scrollbar">
+            <div id="upsell-cards-container" class="p-4 sm:p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 flex-1 text-sm sm:text-sm font-medium text-zinc-300 max-h-[52vh] no-scrollbar">
                 <!-- Renderizado por JS de forma dinámica -->
             </div>
 
@@ -751,7 +753,7 @@
                             <span>Pago Inmediato y Seguro vía Bizum</span>
                         </div>
                         <p class="text-sm text-zinc-400">Al pulsar en "Confirmar Comanda", se enviará una solicitud oficial de Bizum al número móvil que indique o podrá realizar la transferencia en 1 segundo al teléfono de cocina Néstor: <strong>679 76 19 87</strong>.</p>
-                        <input type="tel" id="bizum-phone-input" placeholder="Confirmar número móvil para Bizum (Ej. 679 00 00 00)" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white">
+                        <input type="tel" id="bizum-phone-input" onfocus="showOrderToast('🚧 Módulo de pagos en construcción (Demo Visual).')" placeholder="Confirmar número móvil para Bizum (Ej. 679 00 00 00)" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white">
                     </div>
 
                     <!-- Panel Dinámico de Pago: Tarjeta TPV -->
@@ -761,10 +763,10 @@
                             <span class="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">VISA / Mastercard</span>
                         </div>
                         <div class="space-y-2">
-                            <input type="text" placeholder="Número de Tarjeta (•••• •••• •••• ••••)" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white">
+                            <input type="text" onfocus="showOrderToast('🚧 Módulo de pagos en construcción (Demo Visual).')" placeholder="Número de Tarjeta (•••• •••• •••• ••••)" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white">
                             <div class="grid grid-cols-2 gap-2">
-                                <input type="text" placeholder="Caducidad (MM/AA)" class="bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white">
-                                <input type="password" placeholder="CVV (3 dígitos)" class="bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white">
+                                <input type="text" onfocus="showOrderToast('🚧 Módulo de pagos en construcción (Demo Visual).')" placeholder="Caducidad (MM/AA)" class="bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white">
+                                <input type="password" onfocus="showOrderToast('🚧 Módulo de pagos en construcción (Demo Visual).')" placeholder="CVV (3 dígitos)" class="bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white">
                             </div>
                         </div>
                     </div>

@@ -184,6 +184,7 @@ function filterCategory(cat) {
 // MODAL DE PERSONALIZACIÓN
 // -------------------------------------------------------------------------
 function openCustomizationModal(id) {
+    history.pushState({ modal: true }, '');
     const product = NESTOR_PRODUCTS.find(p => p.id === id);
     if (!product) return;
     activeModalProduct = product;
@@ -247,6 +248,7 @@ function updateCartStickyBar() {
 }
 
 function openCheckoutModal() {
+    history.pushState({ modal: true }, '');
     renderCheckoutItems();
     updateCheckoutTotals();
     const modal = document.getElementById('checkout-modal');
@@ -320,6 +322,7 @@ function showOrderToast(msg) {
 // VIP MODAL
 // -------------------------------------------------------------------------
 function openVipModal() {
+    history.pushState({ modal: true }, '');
     const modal = document.getElementById('vip-modal');
     if (modal) modal.classList.remove('hidden');
 }
@@ -337,6 +340,7 @@ function enterRaffle(e) {
 // UPSELL
 // -------------------------------------------------------------------------
 function openDynamicUpsellModal() {
+    history.pushState({ modal: true }, '');
     renderDynamicUpsells();
     const modal = document.getElementById('upsell-modal');
     if (modal) modal.classList.remove('hidden');
@@ -431,16 +435,7 @@ function init() {
     });
 }
 
-function installPWA() {
-    if (window._deferredPWAPrompt) {
-        window._deferredPWAPrompt.prompt();
-        window._deferredPWAPrompt.userChoice.then(() => {
-            window._deferredPWAPrompt = null;
-            const banner = document.getElementById('pwa-install-banner');
-            if (banner) banner.classList.add('hidden');
-        });
-    }
-}
+// (PWA install logic moved to the bottom section)
 
 // Ejecutar al cargar
 if (document.readyState === 'loading') {
@@ -484,6 +479,7 @@ window.addEventListener('load', () => {
 window.app = window.app || {};
 
 window.app.openUserModal = function() {
+    history.pushState({ modal: true }, '');
     const overlay = document.getElementById('user-modal-overlay');
     const content = document.getElementById('user-modal-content');
     if(overlay && content) {
@@ -623,7 +619,7 @@ window.installPWA = async function() {
         }
         deferredPrompt = null;
     } else {
-        alert("La aplicación web está lista. Si usas Chrome o Edge, ve al menú superior y selecciona 'Instalar aplicación'.");
+        alert("La aplicación ya está instalada o tu navegador no soporta instalaciones automáticas. Intenta instalar desde el menú de opciones de tu navegador.");
     }
 };
 
@@ -632,43 +628,7 @@ window.addEventListener('appinstalled', (evt) => {
     const btn2 = document.getElementById('mobile-install-btn');
     if(btn1) btn1.style.display = 'none';
     if(btn2) btn2.style.display = 'none';
-});
-
-
-window.installPWA = async function() {
-    // iOS Safari workaround check
-    const isIos = () => {
-        const userAgent = window.navigator.userAgent.toLowerCase();
-        return /iphone|ipad|ipod/.test(userAgent);
-    }
-    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
-    
-    if (isIos() && !isInStandaloneMode()) {
-        alert("Para instalar en iOS:\nToca el botón 'Compartir' (el cuadrado con la flecha hacia arriba) y selecciona 'Añadir a la pantalla de inicio'.");
-        return;
-    }
-
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            console.log('User accepted the A2HS prompt');
-            const btn1 = document.getElementById('nav-install-btn');
-            const btn2 = document.getElementById('mobile-install-btn');
-            if(btn1) btn1.style.display = 'none';
-            if(btn2) btn2.style.display = 'none';
-        }
-        deferredPrompt = null;
-    } else {
-        alert("La aplicación ya está instalada o tu navegador no soporta instalaciones automáticas.");
-    }
-};
-
-window.addEventListener('appinstalled', (evt) => {
-    const btn1 = document.getElementById('nav-install-btn');
-    const btn2 = document.getElementById('mobile-install-btn');
-    if(btn1) btn1.style.display = 'none';
-    if(btn2) btn2.style.display = 'none';
+    deferredPrompt = null;
 });
 
 
@@ -887,6 +847,19 @@ window.app.openLegalDoc = function(title) {
     window.app.switchModalView('legal-doc');
 };
 
+
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+}
+
+window.addEventListener('popstate', (e) => {
+    closeCustomizationModal();
+    closeCheckoutModal();
+    closeVipModal();
+    const up = document.getElementById('dynamic-upsell-modal');
+    if(up) up.classList.add('hidden');
+    if(window.app && window.app.closeUserModal) window.app.closeUserModal();
+});
 
 // Forzar scroll arriba al cargar la app
 window.addEventListener('load', () => {
