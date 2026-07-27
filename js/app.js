@@ -668,64 +668,7 @@ let currentUser = null; // null if not logged in
 
 window.app = window.app || {};
 
-window.app.openUserModal = function() {
-    const overlay = document.getElementById('user-modal-overlay');
-    const content = document.getElementById('user-modal-content');
-    
-    // Set correct view before opening
-    if(currentUser) {
-        window.app.switchModalView('profile');
-    } else {
-        window.app.switchModalView('login');
-    }
-    
-    overlay.classList.remove('pointer-events-none');
-    overlay.classList.replace('opacity-0', 'opacity-100');
-    content.classList.replace('scale-95', 'scale-100');
-    content.classList.replace('opacity-0', 'opacity-100');
-};
 
-window.app.closeUserModal = function() {
-    const overlay = document.getElementById('user-modal-overlay');
-    const content = document.getElementById('user-modal-content');
-    
-    overlay.classList.add('pointer-events-none');
-    overlay.classList.replace('opacity-100', 'opacity-0');
-    content.classList.replace('scale-100', 'scale-95');
-    content.classList.replace('opacity-100', 'opacity-0');
-};
-
-
-window.app.simulateLogin = function() {
-    const email = document.getElementById('login-email').value;
-    const pass = document.getElementById('login-password').value;
-    const errorMsg = document.getElementById('login-error-msg');
-    
-    if(email === 'admin' && pass === 'admin') {
-        // Success
-        if (errorMsg) errorMsg.classList.add('hidden');
-        currentUser = {
-            name: 'Administrador',
-            points: 0,
-            phone: '679 00 00 00',
-            address: 'Calle Falsa 123, 1ºA, Caniles'
-        };
-        document.getElementById('login-email').value = '';
-        document.getElementById('login-password').value = '';
-        
-        window.app.updateHeaderAuth();
-        window.app.switchModalView('profile');
-    } else {
-        // Error
-        if (errorMsg) {
-            errorMsg.classList.remove('hidden');
-            // Shake effect
-            const content = document.getElementById('user-modal-content');
-            content.classList.add('animate-[shake_0.5s_ease-in-out]');
-            setTimeout(() => content.classList.remove('animate-[shake_0.5s_ease-in-out]'), 500);
-        }
-    }
-};
 
 window.app.simulateRegister = function() {
     const name = document.getElementById('reg-name').value;
@@ -901,28 +844,30 @@ if ('scrollRestoration' in history) {
 window.addEventListener('popstate', (e) => {
     window.app.isModalOpen = false;
     
-    const m1 = document.getElementById('product-modal-overlay');
-    if(m1) m1.classList.add('hidden');
+    // Cierre universal de todos los modales (overlay con clase fixed e IDs comunes)
+    const modalsToHide = [
+        'product-modal-overlay',
+        'customization-modal',
+        'checkout-modal',
+        'vip-modal',
+        'upsell-modal',
+        'dynamic-upsell-modal',
+        'construction-modal'
+    ];
     
-    const m2 = document.getElementById('customization-modal');
-    if(m2) m2.classList.add('hidden');
+    modalsToHide.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.add('hidden');
+    });
     
-    const m3 = document.getElementById('checkout-modal');
-    if(m3) m3.classList.add('hidden');
-    
-    const m4 = document.getElementById('vip-modal');
-    if(m4) m4.classList.add('hidden');
-    
-    const up = document.getElementById('upsell-modal');
-    if(up) up.classList.add('hidden');
-    const up2 = document.getElementById('dynamic-upsell-modal');
-    if(up2) up2.classList.add('hidden');
-    
+    // Modales que usan opacidad en lugar de hidden
     const userModalOv = document.getElementById('user-modal-overlay');
     const userModalCo = document.getElementById('user-modal-content');
     if(userModalOv && userModalCo) {
         userModalOv.classList.add('opacity-0', 'pointer-events-none');
+        userModalOv.classList.remove('opacity-100');
         userModalCo.classList.add('scale-95', 'opacity-0');
+        userModalCo.classList.remove('scale-100', 'opacity-100');
     }
 });
 
