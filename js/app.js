@@ -379,11 +379,15 @@ function addUpsellDirectly(name, price, btn) {
 // -------------------------------------------------------------------------
 function processAndPrintOrder() {
     if (cart.length === 0) return;
-    const items = cart.map(i => `- ${i.name}: ${i.price.toFixed(2).replace('.', ',')} €`).join('\n');
-    const total = cart.reduce((a, c) => a + c.price, 0);
-    const msg = `Hola Néstor Pizzas, quisiera hacer el siguiente pedido:\n\n${items}\n\nTOTAL: ${total.toFixed(2).replace('.', ',')} €`;
-    window.open(`https://wa.me/34679761987?text=${encodeURIComponent(msg)}`, '_blank');
-    closeCheckoutModal();
+    
+    // Mostrar modal o toast de "En construcción" (Evitar saltos a WhatsApp reales en la demo)
+    const toastMsg = '🚧 Módulo de pagos y envío de pedidos en construcción (Demo Visual).';
+    showOrderToast(toastMsg);
+    
+    // Cerrar el modal para que no se quede atascado
+    setTimeout(() => {
+        closeCheckoutModal();
+    }, 1500);
 }
 
 // -------------------------------------------------------------------------
@@ -506,15 +510,40 @@ window.app.closeUserModal = function() {
 
 
 window.app.simulateLogin = function() {
-    // Basic simulation
-    localStorage.setItem('nestor_logged_in', 'true');
-    window.app.switchModalView('profile');
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-password').value.trim();
+    const errorMsg = document.getElementById('login-error-msg');
+    
+    if (email === 'admin' && pass === 'admin') {
+        if(errorMsg) errorMsg.classList.add('hidden');
+        currentUser = {
+            name: 'Néstor Admin VIP',
+            points: 1250,
+            phone: '679 76 19 87',
+            address: 'Calle Alcalde Felip, 9'
+        };
+        localStorage.setItem('nestor_logged_in', 'true');
+        window.app.updateHeaderAuth();
+        window.app.switchModalView('profile');
+    } else {
+        if(errorMsg) {
+            errorMsg.classList.remove('hidden');
+            const content = document.getElementById('user-modal-content');
+            if(content) {
+                content.classList.add('animate-[shake_0.5s_ease-in-out]');
+                setTimeout(() => content.classList.remove('animate-[shake_0.5s_ease-in-out]'), 500);
+            }
+        }
+    }
 };
 
 window.app.simulateLogout = function() {
+    currentUser = null;
     localStorage.removeItem('nestor_logged_in');
+    window.app.updateHeaderAuth();
     window.app.switchModalView('login');
 };
+
 
 
 // =========================================================================
