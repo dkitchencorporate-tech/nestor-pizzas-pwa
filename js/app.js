@@ -262,6 +262,21 @@ function closeCheckoutModal() {
     if (modal) modal.classList.add('hidden');
 }
 
+function showConstructionModal() {
+    // Only push state if not already open
+    const modal = document.getElementById('construction-modal');
+    if (modal && modal.classList.contains('hidden')) {
+        window.app.pushModalState();
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeConstructionModal() {
+    if(window.app && window.app.popModalState) window.app.popModalState();
+    const modal = document.getElementById('construction-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
 function renderCheckoutItems() {
     const list = document.getElementById('checkout-items-list');
     if (!list) return;
