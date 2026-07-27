@@ -360,21 +360,35 @@ function closeUpsellAndGoToCheckout() {
 function renderDynamicUpsells() {
     const container = document.getElementById('upsell-cards-container');
     if (!container || !NESTOR_UPSELLS) return;
-    container.innerHTML = NESTOR_UPSELLS.map(up => `
-        <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-950 border border-zinc-800 gap-3">
-            <div class="flex items-center gap-3">
-                <img src="${up.img}" alt="${up.name}" class="w-14 h-14 rounded-xl object-cover shrink-0">
-                <div>
-                    <h4 class="font-display font-bold text-white text-xs uppercase">${up.name}</h4>
-                    <p class="text-[10px] text-zinc-400">${up.desc}</p>
-                    <span class="text-amber-400 font-display font-black text-xs">+${up.price.toFixed(2).replace('.', ',')} €</span>
+    
+    let html = '';
+    
+    NESTOR_UPSELLS.forEach(group => {
+        html += `
+            <div class="mb-4 sm:mb-6 last:mb-0">
+                <h3 class="text-[10px] sm:text-xs text-nestor-green font-display font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-nestor-terracotta rounded-full"></span>
+                    ${group.category}
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                    ${group.items.map(up => `
+                        <div class="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors gap-3">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-display font-bold text-white text-xs uppercase truncate">${up.name}</h4>
+                                <p class="text-[10px] text-zinc-400 truncate">${up.desc}</p>
+                                <span class="text-amber-400 font-display font-black text-xs">+${up.price.toFixed(2).replace('.', ',')} €</span>
+                            </div>
+                            <button onclick="addUpsellDirectly('${up.name}', ${up.price}, this)" class="bg-zinc-800 hover:bg-green-500 text-white font-bold px-3 py-2 rounded-xl text-xs uppercase transition-all shrink-0">
+                                + Añadir
+                            </button>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
-            <button onclick="addUpsellDirectly('${up.name}', ${up.price}, this)" class="bg-zinc-800 hover:bg-green-500 text-white font-bold px-3 py-2 rounded-xl text-xs uppercase transition-all shrink-0">
-                + Añadir
-            </button>
-        </div>
-    `).join('');
+        `;
+    });
+    
+    container.innerHTML = html;
 }
 function addUpsellDirectly(name, price, btn) {
     cart.push({ id: Date.now(), name, extras: [], price });

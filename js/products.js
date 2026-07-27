@@ -500,7 +500,27 @@ const NESTOR_PRODUCTS = [
 ];
 
 const NESTOR_UPSELLS = [
-    { id: 'u1', name: 'Patatas Gajos + Salsa', desc: 'Con salsa especial a elegir', price: 3.00, img: './assets/img/products/p33_patatas_gajos.jpeg' },
-    { id: 'u2', name: 'Cerveza Lata', desc: 'Bien fría para acompañar tu pizza', price: 1.50, img: './assets/img/products/p46_cerveza_lata.jpeg' },
-    { id: 'u3', name: 'Alitas de Pollo (6 Und)', desc: 'Crujientes con salsa barbacoa', price: 5.00, img: './assets/img/products/p38_alitas_pollo.jpeg' }
+    {
+        category: 'PARA PICAR',
+        items: [
+            { id: 'u1', name: 'Patatas Gajos + Salsa', desc: 'Con salsa especial a elegir', price: 3.00 },
+            { id: 'u3', name: 'Alitas de Pollo (6 Und)', desc: 'Crujientes con salsa barbacoa', price: 5.00 },
+            { id: 'u4', name: 'Aros de Cebolla (6 Und)', desc: 'Crujientes y dorados', price: 3.00 }
+        ]
+    },
+    {
+        category: 'BEBIDAS',
+        items: [
+            { id: 'u2', name: 'Cerveza Lata', desc: 'Bien fría', price: 1.50 },
+            { id: 'u5', name: 'Refresco Lata', desc: 'Cola, Naranja, Limón', price: 1.50 },
+            { id: 'u6', name: 'Agua 500ml', desc: 'Agua mineral natural', price: 1.00 }
+        ]
+    },
+    {
+        category: 'POSTRES',
+        items: [
+            { id: 'u7', name: 'Helado Sandwich', desc: 'Nata y chocolate', price: 2.00 },
+            { id: 'u8', name: 'Cono de Helado', desc: 'Vainilla con almendras', price: 2.00 }
+        ]
+    }
 ];
