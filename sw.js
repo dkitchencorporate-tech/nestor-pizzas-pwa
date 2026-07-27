@@ -1,11 +1,13 @@
-const CACHE_NAME = 'nestor-pwa-v10.0.4';
+const CACHE_NAME = 'nestor-pwa-v10.0.5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './css/custom.css',
   './js/products.js',
   './js/app.js',
-  './manifest.json'
+  './manifest.json',
+  './assets/brand/icon-192x192.png',
+  './assets/brand/icon-512x512.png'
 ];
 
 // Instalación — precarga inmediata con bypass total de caché HTTP
