@@ -354,7 +354,8 @@ function closeUpsellAndReturnToMenu() {
     if (modal) modal.classList.add('hidden');
 }
 function closeUpsellAndGoToCheckout() {
-    closeUpsellAndReturnToMenu();
+    const modal = document.getElementById('upsell-modal');
+    if (modal) modal.classList.add('hidden');
     openCheckoutModal();
 }
 function renderDynamicUpsells() {

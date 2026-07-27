@@ -732,12 +732,12 @@
                 <div class="space-y-3 border-t border-zinc-800 pt-4 sm:pt-5">
                     <span class="font-display font-bold text-white text-sm uppercase tracking-wider block">3. Elige tu Forma de Pago Oficial</span>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-sm font-bold">
-                        <label onclick="selectCheckoutOption('pay', 'Bizum Móvil', this, 'bizum')" class="chk-pay-btn flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer transition-all text-center">
-                            <input type="radio" name="chk-pay" value="Bizum Móvil" checked class="text-nestor-green shrink-0">
+                        <label onclick="selectCheckoutOption('pay', 'Bizum Móvil', this, 'bizum')" class="chk-pay-btn flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all text-center">
+                            <input type="radio" name="chk-pay" value="Bizum Móvil" class="text-nestor-green shrink-0">
                             <span>Bizum Directo</span>
                         </label>
-                        <label onclick="selectCheckoutOption('pay', 'Tarjeta Bancaria TPV', this, 'card')" class="chk-pay-btn flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all text-center">
-                            <input type="radio" name="chk-pay" value="Tarjeta Bancaria TPV" class="text-nestor-green shrink-0">
+                        <label onclick="selectCheckoutOption('pay', 'Tarjeta Bancaria TPV', this, 'card')" class="chk-pay-btn flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border-2 border-nestor-green bg-nestor-green/15 cursor-pointer transition-all text-center">
+                            <input type="radio" name="chk-pay" value="Tarjeta Bancaria TPV" checked class="text-nestor-green shrink-0">
                             <span>Tarjeta TPV / Apple Pay</span>
                         </label>
                         <label onclick="selectCheckoutOption('pay', 'Efectivo en Entrega', this, 'cash')" class="chk-pay-btn flex items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl border border-zinc-700 bg-zinc-800 cursor-pointer hover:border-nestor-green transition-all text-center">
@@ -747,7 +747,7 @@
                     </div>
 
                     <!-- Panel Dinámico de Pago: Bizum -->
-                    <div id="pay-panel-bizum" class="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-2.5 animate-fade">
+                    <div id="pay-panel-bizum" class="hidden bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-2.5 animate-fade">
                         <div class="flex items-center gap-2 text-sm font-bold text-nestor-greenLight">
                             <span class="w-2 h-2 rounded-full bg-nestor-green animate-pulse"></span>
                             <span>Pago Inmediato y Seguro vía Bizum</span>
@@ -757,7 +757,7 @@
                     </div>
 
                     <!-- Panel Dinámico de Pago: Tarjeta TPV -->
-                    <div id="pay-panel-card" class="hidden bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-3 animate-fade">
+                    <div id="pay-panel-card" class="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 space-y-3 animate-fade">
                         <div class="flex items-center justify-between text-sm font-bold text-white">
                             <span>Pasarela Bancaria Encriptada SSL (Stripe / Redsys)</span>
                             <span class="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">VISA / Mastercard</span>
