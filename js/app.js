@@ -418,14 +418,8 @@ function addUpsellDirectly(name, price, btn) {
 function processAndPrintOrder() {
     if (cart.length === 0) return;
     
-    // Mostrar modal o toast de "En construcción" (Evitar saltos a WhatsApp reales en la demo)
-    const toastMsg = '🚧 Módulo de pagos y envío de pedidos en construcción (Demo Visual).';
-    showOrderToast(toastMsg);
-    
-    // Cerrar el modal para que no se quede atascado
-    setTimeout(() => {
-        closeCheckoutModal();
-    }, 1500);
+    // Mostramos el modal centralizado en lugar del toast
+    showConstructionModal();
 }
 
 // -------------------------------------------------------------------------
