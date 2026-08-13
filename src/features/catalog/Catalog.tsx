@@ -88,8 +88,27 @@ export default function Catalog() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#0A0A0E]">
+        <Header />
+        <Hero />
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-zinc-900/50 rounded-[2rem] border border-white/5 overflow-hidden animate-pulse">
+                <div className="h-48 sm:h-56 bg-zinc-800/50"></div>
+                <div className="p-5 sm:p-6 space-y-4">
+                  <div className="h-6 bg-zinc-800/50 rounded w-2/3"></div>
+                  <div className="h-4 bg-zinc-800/50 rounded w-1/2"></div>
+                  <div className="h-4 bg-zinc-800/50 rounded w-4/5"></div>
+                  <div className="flex justify-between items-center pt-2">
+                    <div className="h-6 bg-zinc-800/50 rounded w-1/4"></div>
+                    <div className="h-10 bg-zinc-800/50 rounded-xl w-10"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

@@ -6,6 +6,7 @@ import CartBar from './components/CartBar';
 import UpsellModal from './components/UpsellModal';
 import CheckoutModal from './components/CheckoutModal';
 import UserModal from './components/UserModal';
+import LiveOrderTracker from './components/LiveOrderTracker';
 import { useCartStore } from './store/cartStore';
 
 function App() {
@@ -105,6 +106,8 @@ function App() {
           )}
           
           <UserModal />
+          
+          <LiveOrderTracker />
         </>
       )}
     </div>
