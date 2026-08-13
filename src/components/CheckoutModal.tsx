@@ -14,7 +14,24 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>('delivery');
   const [clientName, setClientName] = useState(kioskClientInfo?.name || profile?.full_name || '');
   const [clientPhone, setClientPhone] = useState(kioskClientInfo?.phone || profile?.phone || '');
-  const [deliveryAddress, setDeliveryAddress] = useState(profile?.address || (kioskClientInfo ? 'Local / Mesa' : ''));
+  let initStreet = '';
+  let initNumber = '';
+  let initNotes = kioskClientInfo ? 'Local / Mesa' : '';
+
+  if (profile?.address) {
+    try {
+      const parsed = JSON.parse(profile.address);
+      initStreet = parsed.street || '';
+      initNumber = parsed.number || '';
+      initNotes = parsed.notes || '';
+    } catch (e) {
+      initStreet = profile.address;
+    }
+  }
+
+  const [addressStreet, setAddressStreet] = useState(initStreet);
+  const [addressNumber, setAddressNumber] = useState(initNumber);
+  const [addressNotes, setAddressNotes] = useState(initNotes);
   const [pointsRedeemed, setPointsRedeemed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -35,14 +52,10 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
   const handleCheckout = async () => {
-    // Geographic Validation for Caniles
-    if (deliveryMethod === 'delivery') {
-      const addressLower = deliveryAddress.toLowerCase();
-      if (!addressLower.includes('caniles') && !addressLower.includes('18810')) {
-        alert('Lo sentimos, actualmente sólo realizamos repartos a domicilio en Caniles (CP: 18810). Por favor, indica que es en Caniles o usa la opción de recoger en tienda.');
-        return;
-      }
-    }
+    // Generate the final address string to save
+    const finalDeliveryAddress = deliveryMethod === 'delivery' 
+      ? `${addressStreet}, Nº ${addressNumber}, 18810 Caniles${addressNotes ? '. Notas: ' + addressNotes : ''}`
+      : addressNotes ? `Notas/Mesa: ${addressNotes}` : 'Recogida en local';
 
     setIsProcessing(true);
     
@@ -63,7 +76,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           status: 'pending',
           client_name: clientName,
           client_phone: clientPhone,
-          delivery_address: deliveryAddress,
+          delivery_address: finalDeliveryAddress,
           delivery_method: deliveryMethod
         })
         .select()
@@ -94,7 +107,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           .update({ 
             points: finalPoints,
             phone: clientPhone,
-            address: deliveryAddress,
+            address: JSON.stringify({ street: addressStreet, number: addressNumber, cp: '18810', notes: addressNotes }),
             full_name: clientName
           })
           .eq('id', user.id);
@@ -222,7 +235,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           {/* Datos de Envío */}
           <div className="space-y-3 border-t border-zinc-800 pt-4 sm:pt-5">
             <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">2. Datos de Contacto y Entrega</span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-medium">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-medium mb-3">
               <div>
                 <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Nombre Completo *</label>
                 <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Ej. Carlos Mendoza" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
@@ -231,11 +245,29 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                 <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Móvil WhatsApp *</label>
                 <input type="tel" value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="Ej. 679 00 00 00" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
               </div>
-              <div>
-                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Dirección / Mesa / Notas *</label>
-                <input type="text" value={deliveryAddress} onChange={e => setDeliveryAddress(e.target.value)} placeholder="Calle, nº, piso o 'Mesa 3'" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
-              </div>
             </div>
+
+            {deliveryMethod === 'delivery' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 font-medium">
+                <div className="sm:col-span-6">
+                  <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Calle Exacta *</label>
+                  <input type="text" value={addressStreet} onChange={e => setAddressStreet(e.target.value)} placeholder="Ej. Calle Amapola" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Nº *</label>
+                  <input type="text" value={addressNumber} onChange={e => setAddressNumber(e.target.value)} placeholder="1" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+                </div>
+                <div className="sm:col-span-4">
+                  <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Notas (Opcional)</label>
+                  <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder="Piso, puerta..." className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+                </div>
+              </div>
+            ) : (
+              <div className="font-medium">
+                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Notas o Mesa (Opcional)</label>
+                <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder="Ej. Mesa 3 o Llegaré en 15 mins" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+              </div>
+            )}
           </div>
 
           {/* Forma de Pago */}
@@ -274,7 +306,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             <span className="font-display font-black text-2xl sm:text-3xl text-white">{finalTotal.toFixed(2)} €</span>
           </div>
           <button 
-            disabled={isProcessing || !clientName || !clientPhone || !deliveryAddress}
+            disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber))}
             onClick={handleCheckout} 
             className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
           >
