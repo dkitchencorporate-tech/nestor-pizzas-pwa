@@ -67,6 +67,10 @@ export default function LiveOrderTracker() {
         return { icon: '🔥', label: 'COCINANDO', color: 'text-orange-400', bg: 'bg-orange-400', desc: 'Tu comida está en el horno.' };
       case 'delivering': 
         return { icon: '🛵', label: 'EN REPARTO', color: 'text-blue-400', bg: 'bg-blue-400', desc: 'El repartidor va en camino.' };
+      case 'ready':
+        return { icon: '🛍️', label: 'LISTO PARA RECOGER', color: 'text-yellow-400', bg: 'bg-yellow-400', desc: 'Tu pedido está listo en el local.' };
+      case 'cancelled':
+        return { icon: '❌', label: 'PEDIDO CANCELADO', color: 'text-red-500', bg: 'bg-red-500', desc: 'Tu pedido ha sido cancelado.' };
       default: 
         return { icon: '✅', label: 'COMPLETADO', color: 'text-green-400', bg: 'bg-green-400', desc: '' };
     }

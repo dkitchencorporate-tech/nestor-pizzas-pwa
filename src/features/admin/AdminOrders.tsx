@@ -65,8 +65,8 @@ export default function AdminOrders() {
 
   // Group by status
   const pending = orders.filter(o => o.status === 'pending');
-  const preparing = orders.filter(o => o.status === 'preparing');
-  const ready = orders.filter(o => o.status === 'ready');
+  const cooking = orders.filter(o => o.status === 'cooking');
+  const ready = orders.filter(o => o.status === 'ready' || o.status === 'delivering');
   const delivered = orders.filter(o => o.status === 'delivered');
 
   return (
@@ -112,7 +112,7 @@ export default function AdminOrders() {
                 <div className="space-y-1 mb-4 border-t border-zinc-700/50 pt-3">
                   {order.order_items?.map((item: any) => (
                     <div key={item.id} className="text-sm text-gray-300">
-                      <span className="font-bold text-white">{item.quantity}x</span> {item.products?.name || 'Producto'}
+                      <span className="font-bold text-white">{item.quantity}x</span> {item.customization_details?.name || item.products?.name || 'Producto'}
                     </div>
                   ))}
                 </div>
@@ -120,9 +120,9 @@ export default function AdminOrders() {
                 {/* Actions */}
                 <div className="space-y-2 mt-4">
                   <div className="flex gap-2">
-                    <button onClick={() => updateOrderStatus(order.id, 'preparing', '20')} className="flex-1 bg-zinc-800 hover:bg-green-600 text-xs font-bold py-2 rounded-lg transition-colors">20m</button>
-                    <button onClick={() => updateOrderStatus(order.id, 'preparing', '30')} className="flex-1 bg-zinc-800 hover:bg-green-600 text-xs font-bold py-2 rounded-lg transition-colors">30m</button>
-                    <button onClick={() => updateOrderStatus(order.id, 'preparing', '45')} className="flex-1 bg-zinc-800 hover:bg-green-600 text-xs font-bold py-2 rounded-lg transition-colors">45m</button>
+                    <button onClick={() => updateOrderStatus(order.id, 'cooking', '20')} className="flex-1 bg-zinc-800 hover:bg-green-600 text-xs font-bold py-2 rounded-lg transition-colors">20m</button>
+                    <button onClick={() => updateOrderStatus(order.id, 'cooking', '30')} className="flex-1 bg-zinc-800 hover:bg-green-600 text-xs font-bold py-2 rounded-lg transition-colors">30m</button>
+                    <button onClick={() => updateOrderStatus(order.id, 'cooking', '45')} className="flex-1 bg-zinc-800 hover:bg-green-600 text-xs font-bold py-2 rounded-lg transition-colors">45m</button>
                   </div>
                   <button onClick={() => updateOrderStatus(order.id, 'cancelled')} className="w-full bg-transparent border border-red-500/50 text-red-400 hover:bg-red-500/10 text-xs font-bold py-2 rounded-lg transition-colors">Rechazar Pedido</button>
                 </div>
@@ -132,15 +132,15 @@ export default function AdminOrders() {
           </div>
         </div>
 
-        {/* Column: PREPARING */}
+        {/* Column: COOKING */}
         <div className="w-80 flex-shrink-0 flex flex-col bg-[#14141E] border border-zinc-800 rounded-2xl overflow-hidden">
           <div className="p-4 bg-yellow-500/10 border-b border-yellow-500/20">
             <h3 className="font-display font-black text-yellow-500 uppercase flex justify-between">
-              En Preparación <span>{preparing.length}</span>
+              En Preparación <span>{cooking.length}</span>
             </h3>
           </div>
           <div className="p-4 flex-1 overflow-y-auto space-y-4 no-scrollbar">
-            {preparing.map(order => (
+            {cooking.map(order => (
               <div key={order.id} className="bg-[#1A1A24] border border-zinc-700 rounded-xl p-4">
                 <div className="flex justify-between items-start mb-3">
                   <span className="text-[10px] text-gray-400 font-mono">ID: {order.id.slice(0,8)}</span>
@@ -149,12 +149,21 @@ export default function AdminOrders() {
                 <div className="space-y-1 mb-4">
                   {order.order_items?.map((item: any) => (
                     <div key={item.id} className="text-sm text-gray-300">
-                      <span className="font-bold text-white">{item.quantity}x</span> {item.products?.name || 'Producto'}
+                      <span className="font-bold text-white">{item.quantity}x</span> {item.customization_details?.name || item.products?.name || 'Producto'}
                     </div>
                   ))}
                 </div>
-                <button onClick={() => updateOrderStatus(order.id, 'ready')} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase text-xs py-2.5 rounded-lg transition-colors">
-                  Marcar como Listo
+                {order.delivery_method === 'delivery' ? (
+                  <button onClick={() => updateOrderStatus(order.id, 'delivering')} className="w-full bg-blue-500 hover:bg-blue-400 text-white font-black uppercase text-xs py-2.5 rounded-lg transition-colors">
+                    En Reparto
+                  </button>
+                ) : (
+                  <button onClick={() => updateOrderStatus(order.id, 'ready')} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase text-xs py-2.5 rounded-lg transition-colors">
+                    Marcar como Listo
+                  </button>
+                )}
+                <button onClick={() => updateOrderStatus(order.id, 'cancelled')} className="w-full mt-2 bg-transparent border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs font-bold py-2 rounded-lg transition-colors">
+                  Cancelar Pedido
                 </button>
               </div>
             ))}
@@ -176,12 +185,15 @@ export default function AdminOrders() {
                 </div>
                 <div className="space-y-1 mb-4 text-sm text-gray-300">
                   {order.order_items?.map((item: any) => (
-                    <div key={item.id}><span className="font-bold text-white">{item.quantity}x</span> {item.products?.name || 'Producto'}</div>
+                    <div key={item.id}><span className="font-bold text-white">{item.quantity}x</span> {item.customization_details?.name || item.products?.name || 'Producto'}</div>
                   ))}
                 </div>
                 <button onClick={() => updateOrderStatus(order.id, 'delivered')} className="w-full bg-green-600 hover:bg-green-500 text-white font-black uppercase text-xs py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                   Entregado
+                </button>
+                <button onClick={() => updateOrderStatus(order.id, 'cancelled')} className="w-full mt-2 bg-transparent border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs font-bold py-2 rounded-lg transition-colors">
+                  Cancelar Pedido
                 </button>
               </div>
             ))}

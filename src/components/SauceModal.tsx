@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Product } from '../data/products';
 import { useCartStore } from '../store/cartStore';
+import { useHardwareBack } from '../utils/useHardwareBack';
 
 interface SauceModalProps {
   product: Product;
@@ -17,6 +18,8 @@ const SAUCES = [
 ];
 
 export default function SauceModal({ product, onClose }: SauceModalProps) {
+  useHardwareBack(true, onClose);
+
   const [selectedSauce, setSelectedSauce] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const addItem = useCartStore(state => state.addItem);
@@ -54,9 +57,9 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
       ></div>
 
       {/* Modal */}
-      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in">
+      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="p-6 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] relative">
+        <div className="p-4 sm:p-6 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] relative shrink-0">
           <button 
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-white bg-zinc-800/50 hover:bg-red-500/80 p-2 rounded-xl transition-all z-10"
@@ -68,7 +71,7 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto">
           {/* Sauces */}
           <div>
             <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm flex items-center gap-2">
