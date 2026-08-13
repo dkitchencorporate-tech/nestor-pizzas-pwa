@@ -32,12 +32,14 @@ export default function Catalog() {
         
         const aguas = bebidas.filter(p => p.name.toUpperCase().includes('AGUA'));
         const cervezas = bebidas.filter(p => p.name.toUpperCase().includes('CERVEZA'));
-        const refrescos = bebidas.filter(p => !aguas.includes(p) && !cervezas.includes(p));
+        const tintos = bebidas.filter(p => p.name.toUpperCase().includes('TINTO'));
+        const refrescos = bebidas.filter(p => !aguas.includes(p) && !cervezas.includes(p) && !tintos.includes(p));
         
         const groupedBebidas = [];
         if (aguas.length > 0) groupedBebidas.push({ id: 'agua-group', category_id: 'BEBIDAS', name: 'Agua', desc: 'Selecciona tus opciones de agua', price: aguas[0].price, img_url: aguas[0].img_url, badge: 'AGUAS', isGroup: true, subProducts: aguas.sort((a,b)=>a.price-b.price), is_active: true });
         if (refrescos.length > 0) groupedBebidas.push({ id: 'refresco-group', category_id: 'BEBIDAS', name: 'Refrescos', desc: 'Selecciona tus refrescos favoritos', price: refrescos[0].price, img_url: refrescos[0].img_url, badge: 'REFRESCOS', isGroup: true, subProducts: refrescos.sort((a,b)=>a.price-b.price), is_active: true });
         if (cervezas.length > 0) groupedBebidas.push({ id: 'cerveza-group', category_id: 'BEBIDAS', name: 'Cervezas', desc: 'Selecciona tus opciones de cerveza', price: cervezas[0].price, img_url: cervezas[0].img_url, badge: 'CERVEZAS', isGroup: true, subProducts: cervezas.sort((a,b)=>a.price-b.price), is_active: true });
+        if (tintos.length > 0) groupedBebidas.push({ id: 'tinto-group', category_id: 'BEBIDAS', name: 'Tinto de Verano', desc: 'Selecciona tus opciones de tinto', price: tintos[0].price, img_url: tintos[0].img_url, badge: 'TINTO', isGroup: true, subProducts: tintos.sort((a,b)=>a.price-b.price), is_active: true });
         
         setProducts([...nonBebidas, ...groupedBebidas]);
       }
