@@ -59,7 +59,7 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
       {/* Modal */}
       <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] relative shrink-0">
+        <div className="p-4 pt-6 sm:p-6 sm:pt-8 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] relative shrink-0">
           <button 
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-white bg-zinc-800/50 hover:bg-red-500/80 p-2 rounded-xl transition-all z-10"

@@ -37,7 +37,7 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
       <div className="bg-zinc-900 border border-yellow-500/40 rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] animate-fade text-white relative">
         
         {/* Header */}
-        <div className="p-4 sm:p-6 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border-b border-zinc-800 flex items-center justify-between gap-3">
+        <div className="p-4 pt-6 sm:p-6 sm:pt-8 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border-b border-zinc-800 flex items-center justify-between gap-3">
           <div>
             <span className="text-[9px] sm:text-[10px] font-display font-bold uppercase tracking-widest text-yellow-500 flex items-center gap-1.5">
               <span>★ Recomendación Especial del Horno</span>
