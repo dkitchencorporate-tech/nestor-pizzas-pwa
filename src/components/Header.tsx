@@ -25,7 +25,7 @@ export default function Header() {
             </div>
             <p className="flex text-[11px] text-gray-300 font-medium items-center gap-1.5 mt-1">
               <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0"></span>
-              <span>Tel: <strong className="text-white font-bold">679 76 19 87</strong> • Calle Alcalde Felip, 9</span>
+              <span>Tel: <strong className="text-white font-bold">+34 679 76 19 87</strong> • C. Alcalde Felip, 9, 18810 Caniles</span>
             </p>
           </div>
         </div>

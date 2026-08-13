@@ -3,6 +3,7 @@ import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { SumUpPaymentModal } from './SumUpPaymentModal';
+import { isStoreOpen, generateAvailableTimeSlots } from '../utils/timeUtils';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -42,6 +43,10 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [minimumOrderError, setMinimumOrderError] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'physical'>('online');
+  const [scheduledTime, setScheduledTime] = useState<string>(isStoreOpen() ? 'asap' : (generateAvailableTimeSlots(15)[0] || 'asap'));
+
+  const isOpen = isStoreOpen();
+  const availableSlots = generateAvailableTimeSlots(15);
 
   const subtotal = getTotal();
   
@@ -364,9 +369,43 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             )}
           </div>
 
+          {/* Cuándo lo quieres */}
+          <div className="space-y-3 border-t border-zinc-800 pt-4 sm:pt-5">
+            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">3. Cuándo lo quieres</span>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-medium">
+              <label onClick={() => isOpen && setScheduledTime('asap')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${scheduledTime === 'asap' ? 'bg-green-500/10 border border-green-500/50' : 'bg-zinc-950 border border-zinc-800'} ${!isOpen ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-700'}`}>
+                <input type="radio" checked={scheduledTime === 'asap'} readOnly disabled={!isOpen} className="text-green-500 w-4 h-4 shrink-0" />
+                <div>
+                  <span className="font-bold text-white text-sm block">Lo antes posible</span>
+                  <span className="text-xs text-zinc-400">{isOpen ? 'Prepárenlo ya' : 'Local Cerrado Ahora'}</span>
+                </div>
+              </label>
+
+              <label onClick={() => availableSlots.length > 0 && scheduledTime === 'asap' && setScheduledTime(availableSlots[0])} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${scheduledTime !== 'asap' ? 'bg-blue-500/10 border border-blue-500/50' : 'bg-zinc-950 border border-zinc-800'} ${availableSlots.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-700'}`}>
+                <input type="radio" checked={scheduledTime !== 'asap'} readOnly disabled={availableSlots.length === 0} className="text-blue-500 w-4 h-4 shrink-0" />
+                <div className="w-full pr-2">
+                  <span className="font-bold text-white text-sm block">Programar</span>
+                  {scheduledTime !== 'asap' && availableSlots.length > 0 ? (
+                    <select value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="mt-1.5 block w-full bg-zinc-900 border border-zinc-700 text-white rounded-lg px-2 py-1.5 text-xs outline-none focus:border-blue-500">
+                      {availableSlots.map(slot => (
+                        <option key={slot} value={slot}>{slot}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="text-xs text-zinc-400">{availableSlots.length > 0 ? 'Elegir hora' : 'Sin turnos hoy'}</span>
+                  )}
+                </div>
+              </label>
+            </div>
+            {!isOpen && availableSlots.length === 0 && (
+              <p className="text-[10px] text-orange-400">El local está cerrado y no hay más turnos por hoy.</p>
+            )}
+          </div>
+
           {/* Forma de Pago */}
           <div className="space-y-3 border-t border-zinc-800 pt-4 sm:pt-5">
-            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">3. Forma de Pago</span>
+            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">4. Forma de Pago</span>
 
             <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 space-y-3">
               {deliveryMethod === 'delivery' ? (
@@ -376,10 +415,17 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                       <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                     </div>
                     <div>
-                      <span className="font-bold text-white text-sm block">Pago Seguro Online (SumUp)</span>
-                      <span className="text-xs text-zinc-400">Pago con tarjeta para envíos a domicilio</span>
+                      <span className="font-bold text-white text-sm block">Pagar con Tarjeta</span>
+                      <span className="text-xs text-zinc-400">Pago online para envíos a domicilio</span>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">VISA</span>
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">MASTERCARD</span>
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">G Pay</span>
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Apple Pay</span>
+                      </div>
                     </div>
                   </div>
+
                   <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
                     🔒 Serás redirigido a la pasarela de pago segura de SumUp para completar tu pedido.
                   </p>
@@ -389,8 +435,14 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   <label onClick={() => setPaymentMethod('online')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${paymentMethod === 'online' ? 'bg-blue-500/10 border border-blue-500/50' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
                     <input type="radio" checked={paymentMethod === 'online'} readOnly className="text-blue-500 w-4 h-4 shrink-0" />
                     <div>
-                      <span className="font-bold text-white text-sm block">Pago Seguro Online (SumUp)</span>
+                      <span className="font-bold text-white text-sm block">Pagar con Tarjeta (Online)</span>
                       <span className="text-xs text-zinc-400">Paga ahora y solo ven a recoger</span>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">VISA</span>
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">MASTER</span>
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">G Pay</span>
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Apple Pay</span>
+                      </div>
                     </div>
                   </label>
                   <label onClick={() => setPaymentMethod('physical')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${paymentMethod === 'physical' ? 'bg-green-500/10 border border-green-500/50' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
@@ -422,7 +474,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               <span className="font-display font-black text-2xl sm:text-3xl text-white">{finalTotal.toFixed(2)} €</span>
             </div>
             <button 
-              disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber || !addressCP)) || (deliveryMethod === 'delivery' && finalTotal < 10)}
+              disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber || !addressCP)) || (deliveryMethod === 'delivery' && finalTotal < 10) || (!isOpen && availableSlots.length === 0)}
               onClick={handleCheckoutClick} 
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
             >
