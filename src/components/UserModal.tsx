@@ -5,7 +5,7 @@ import { useCartStore } from '../store/cartStore';
 
 export default function UserModal() {
   const { isUserModalOpen, closeUserModal, userModalView, setModalView, setLegalDoc, activeLegalDoc, user, profile, logout, orders } = useAuthStore();
-  const { addItem, clearCart, setIsCartOpen } = useCartStore();
+  const { addItem, clearCart } = useCartStore();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -153,13 +153,11 @@ export default function UserModal() {
            name: item.products.name,
            price: item.unit_price,
            quantity: item.quantity,
-           size: item.size || 'normal',
-           image_url: item.products.image_url
+           size: item.size || 'normal'
          });
        }
     });
     closeUserModal();
-    setTimeout(() => setIsCartOpen(true), 300);
   };
 
   const getStatusBadge = (status: string) => {
@@ -438,7 +436,7 @@ export default function UserModal() {
                 <h3 className="text-xl font-display font-black text-white uppercase tracking-wider">Mis Pedidos</h3>
               </div>
               
-              {orders.length === 0 ? (
+              {(!orders || orders.length === 0) ? (
                 <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
                   <div className="w-20 h-20 bg-zinc-800/50 rounded-full flex items-center justify-center text-4xl mb-2">
                     🍕
@@ -451,7 +449,7 @@ export default function UserModal() {
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 no-scrollbar">
-                  {orders.map((order: any) => (
+                  {(orders || []).map((order: any) => (
                     <div key={order.id} className="bg-[#14141E] border border-white/5 rounded-2xl p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>

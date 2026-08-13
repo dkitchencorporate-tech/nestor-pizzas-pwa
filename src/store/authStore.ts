@@ -128,7 +128,7 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
   } else {
     useAuthStore.getState().setProfile(null);
-    useAuthStore.getState().orders = [];
+    useAuthStore.setState({ orders: [] });
     if (ordersSubscription) {
       supabase.removeChannel(ordersSubscription);
       ordersSubscription = null;
