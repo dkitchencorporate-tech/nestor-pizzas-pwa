@@ -48,8 +48,8 @@ export function useHardwareBack(isOpen: boolean, onClose: () => void) {
     modalStack.push(id);
     closeHandlers[id] = () => onCloseRef.current();
     
-    // If this is the first modal, push state.
-    if (modalStack.length === 1) {
+    // If this is the first modal and we don't already have the hash, push state.
+    if (modalStack.length === 1 && window.location.hash !== '#modal') {
       window.history.pushState({ modalOpen: true }, '', '#modal');
     }
 

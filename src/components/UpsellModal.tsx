@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
+import { useHardwareBack } from '../utils/useHardwareBack';
 import { NESTOR_UPSELLS } from '../data/products';
 import { useCartStore } from '../store/cartStore';
 
@@ -9,6 +11,7 @@ interface UpsellModalProps {
 
 export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModalProps) {
   const addItem = useCartStore(state => state.addItem);
+  useHardwareBack(true, onClose);
   const [addedItems, setAddedItems] = useState<string[]>([]);
   // Simulated shuffle
   const [shuffleKey, setShuffleKey] = useState(0);
@@ -30,8 +33,8 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-scrollbar">
-      <div className="bg-zinc-900 border border-yellow-500/40 rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] animate-fade text-white my-auto relative">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 overflow-y-auto no-scrollbar">
+      <div className="bg-zinc-900 border border-yellow-500/40 rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] animate-fade text-white relative">
         
         {/* Header */}
         <div className="p-4 sm:p-6 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border-b border-zinc-800 flex items-center justify-between gap-3">
