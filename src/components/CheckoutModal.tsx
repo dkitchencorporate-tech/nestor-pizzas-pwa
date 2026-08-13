@@ -34,6 +34,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [addressNotes, setAddressNotes] = useState(initNotes);
   const [pointsRedeemed, setPointsRedeemed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [geofenceError, setGeofenceError] = useState<string | null>(null);
 
   const subtotal = getTotal();
   
@@ -52,49 +53,48 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
   const handleCheckout = async () => {
-    if (deliveryMethod === 'delivery') {
-      setIsProcessing(true);
-      // Geofence Check: strict 10km radius
-      const isWithinRange = await new Promise<boolean>((resolve) => {
-        if (!navigator.geolocation) {
-          alert("Tu navegador no soporta geolocalización. Para envíos a domicilio es obligatorio. Por favor, selecciona 'Recoger en Pizzería'.");
-          resolve(false);
-          return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat1 = position.coords.latitude;
-            const lon1 = position.coords.longitude;
-            const lat2 = 37.4346; // Caniles Center
-            const lon2 = -2.7350;
-            
-            const R = 6371; // Earth radius km
-            const dLat = (lat2 - lat1) * (Math.PI / 180);
-            const dLon = (lon2 - lon1) * (Math.PI / 180);
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-            
-            if (distance > 10) {
-              alert(`Estás a ${distance.toFixed(1)} km de Caniles. Nuestro radio máximo de reparto es de 10 km. Por favor, selecciona 'Recoger en Pizzería'.`);
-              resolve(false);
-            } else {
-              resolve(true);
-            }
-          },
-          (error) => {
-            console.error(error);
-            alert("Para envíos a domicilio, necesitamos verificar que estás en nuestro radio de reparto (máx 10 km). Por favor, PERMITE el acceso a la ubicación en tu navegador, o selecciona 'Recoger en Pizzería'.");
-            resolve(false);
-          },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
-      });
-
-      if (!isWithinRange) {
-        setIsProcessing(false);
+    setIsProcessing(true);
+    
+    // Geofence Check: strict 10km radius for ALL orders (delivery and pickup)
+    const isWithinRange = await new Promise<boolean>((resolve) => {
+      if (!navigator.geolocation) {
+        setGeofenceError("Tu navegador no soporta geolocalización. Necesitamos validar tu ubicación para asegurar que podrás disfrutar de nuestras pizzas calientes.");
+        resolve(false);
         return;
       }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat1 = position.coords.latitude;
+          const lon1 = position.coords.longitude;
+          const lat2 = 37.4346; // Caniles Center
+          const lon2 = -2.7350;
+          
+          const R = 6371; // Earth radius km
+          const dLat = (lat2 - lat1) * (Math.PI / 180);
+          const dLon = (lon2 - lon1) * (Math.PI / 180);
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+          
+          if (distance > 10) {
+            setGeofenceError(`Estás a ${distance.toFixed(1)} km de Caniles. Nuestro radio máximo para realizar pedidos por la app es de 10 km. Para pedidos excepcionales o de alto volumen, contáctanos.`);
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        },
+        (error) => {
+          console.error(error);
+          setGeofenceError("Necesitamos acceso a tu ubicación para verificar el radio de cobertura de Néstor Pizzas. Por favor, actívala en tu navegador.");
+          resolve(false);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    });
+
+    if (!isWithinRange) {
+      setIsProcessing(false);
+      return;
     }
 
     // Generate the final address string to save
@@ -102,8 +102,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       ? `${addressStreet}, Nº ${addressNumber}, 18810 Caniles${addressNotes ? '. Notas: ' + addressNotes : ''}`
       : addressNotes ? `Notas/Mesa: ${addressNotes}` : 'Recogida en local';
 
-    setIsProcessing(true);
-    
+
     try {
       // Prepare order items
       const orderItems = items.map(item => ({
@@ -177,7 +176,31 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   return (
     <div className="fixed inset-0 z-[1100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto no-scrollbar">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[94vh] animate-fade text-white my-auto">
+      
+      {geofenceError && (
+        <div className="absolute inset-0 z-[1200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-orange-500 to-red-500"></div>
+            <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <h3 className="font-display font-black text-2xl text-white mb-2 uppercase tracking-wide">¡Estás un poco lejos!</h3>
+            <p className="text-zinc-400 text-sm mb-6 leading-relaxed font-medium">
+              {geofenceError}
+            </p>
+            <div className="space-y-3">
+              <a href="tel:+34679761987" className="block w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-sm transition-all shadow-[0_0_20px_rgba(22,163,74,0.3)]">
+                Llamar Ahora
+              </a>
+              <button onClick={() => setGeofenceError(null)} className="block w-full bg-transparent hover:bg-zinc-900 text-zinc-500 font-bold py-3.5 rounded-xl uppercase tracking-wider text-sm transition-all border border-zinc-800">
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[94vh] animate-fade text-white my-auto relative">
         <div className="p-4 sm:p-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 relative overflow-hidden gap-3">
           <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-orange-500/10 via-green-500/10 to-transparent pointer-events-none"></div>
           <div>
