@@ -19,6 +19,7 @@ export default function UserModal() {
   const [editPhone, setEditPhone] = useState(profile?.phone || '');
   const [editStreet, setEditStreet] = useState('');
   const [editNumber, setEditNumber] = useState('');
+  const [editCP, setEditCP] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const { updateProfile } = useAuthStore();
 
@@ -44,6 +45,7 @@ export default function UserModal() {
         if (parsed.street) {
           setEditStreet(parsed.street || '');
           setEditNumber(parsed.number || '');
+          setEditCP(parsed.cp || '');
           setEditNotes(parsed.notes || '');
         } else {
           setEditStreet(profile.address || '');
@@ -158,7 +160,7 @@ export default function UserModal() {
       const addressJson = JSON.stringify({
         street: editStreet,
         number: editNumber,
-        cp: '18810',
+        cp: editCP,
         notes: editNotes
       });
       await updateProfile({ phone: editPhone, address: addressJson });
@@ -524,18 +526,22 @@ export default function UserModal() {
               </div>
               
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Teléfono</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Teléfono <span className="text-red-500">*</span></label>
                 <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: 600 000 000" />
               </div>
               
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Calle</label>
+              <div className="grid grid-cols-12 gap-3">
+                <div className="col-span-6">
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Calle <span className="text-red-500">*</span></label>
                   <input type="text" value={editStreet} onChange={e => setEditStreet(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: Calle Amapola" />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Número</label>
+                <div className="col-span-3">
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Número <span className="text-red-500">*</span></label>
                   <input type="text" value={editNumber} onChange={e => setEditNumber(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: 1" />
+                </div>
+                <div className="col-span-3">
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">CP <span className="text-red-500">*</span></label>
+                  <input type="text" value={editCP} onChange={e => setEditCP(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="18810" />
                 </div>
               </div>
               
@@ -550,7 +556,7 @@ export default function UserModal() {
                 </div>
               )}
               
-              <button onClick={handleUpdateProfile} disabled={isLoading || !editPhone || !editStreet || !editNumber} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-4 disabled:opacity-50">
+              <button onClick={handleUpdateProfile} disabled={isLoading || !editPhone || !editStreet || !editNumber || !editCP} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-4 disabled:opacity-50">
                 {isLoading ? 'Guardando...' : 'Guardar Información'}
               </button>
               
