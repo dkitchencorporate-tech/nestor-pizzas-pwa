@@ -25,12 +25,8 @@ export default function UserModal() {
     if (profile) {
       setEditPhone(profile.phone || '');
       setEditAddress(profile.address || '');
-      // Auto-prompt to edit profile if missing critical info
-      if (userModalView === 'profile' && (!profile.phone || !profile.address)) {
-        setModalView('edit-profile');
-      }
     }
-  }, [profile, userModalView, setModalView]);
+  }, [profile]);
   
   if (!isUserModalOpen) return null;
 
@@ -185,11 +181,13 @@ export default function UserModal() {
         <div className="bg-[#101018] px-6 py-8 text-center border-b border-white/5 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-500/10 via-transparent to-transparent opacity-50"></div>
           <div className="relative z-10 flex flex-col items-center">
-            <div className="w-16 h-16 bg-black rounded-2xl border border-green-500/40 p-2 shadow-[0_0_20px_rgba(34,197,94,0.2)] mb-4 flex items-center justify-center">
-                <span className="font-display font-black text-2xl text-white">N</span>
+            <div className="w-16 h-16 bg-zinc-950 rounded-2xl border border-green-500/40 p-2 shadow-[0_0_20px_rgba(34,197,94,0.2)] mb-4 flex items-center justify-center">
+              <svg className="w-8 h-8 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v4H8v2h3v3h2v-3h3v-2h-3V7z"/>
+              </svg>
             </div>
-            <h2 className="text-2xl font-display font-black text-white uppercase tracking-tight">Mi Cuenta</h2>
-            <p className="text-sm text-gray-400 mt-1">Inicia sesión para acumular puntos</p>
+            <h2 className="text-2xl font-display font-black text-white uppercase tracking-tight">{(user || profile) ? 'Mi Cuenta VIP' : 'Néstor Pizzas'}</h2>
+            <p className="text-sm text-gray-400 mt-1">{(user || profile) ? 'Club de Fidelización y Pedidos' : 'Inicia sesión para acumular puntos'}</p>
           </div>
         </div>
 
@@ -485,17 +483,22 @@ export default function UserModal() {
             </div>
           ) : userModalView === 'edit-profile' ? (
             <div className="space-y-4 text-left pb-4">
-              <h3 className="text-xl font-display font-black text-white uppercase mb-2 text-center">Completar Perfil</h3>
-              <p className="text-sm text-gray-400 text-center mb-4">Para poder enviar tus pedidos necesitamos tu teléfono y dirección.</p>
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-5 mb-2 text-center">
+                <div className="w-12 h-12 bg-yellow-500/20 rounded-full mx-auto flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h3 className="text-xl font-display font-black text-yellow-500 uppercase mb-2">Completar Datos de Entrega</h3>
+                <p className="text-xs text-gray-300">Para poder enviar tus pedidos a domicilio o contactarte si surge un imprevisto, necesitamos conocer tu teléfono y dirección.</p>
+              </div>
               
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Teléfono</label>
-                <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: 600 000 000" />
+                <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: 600 000 000" />
               </div>
               
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Dirección de Entrega</label>
-                <textarea value={editAddress} onChange={e => setEditAddress(e.target.value)} rows={3} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500 transition-colors resize-none" placeholder="Tu dirección completa..." />
+                <textarea value={editAddress} onChange={e => setEditAddress(e.target.value)} rows={3} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors resize-none" placeholder="Tu dirección completa..." />
               </div>
               
               {errorMsg && (
@@ -504,12 +507,12 @@ export default function UserModal() {
                 </div>
               )}
               
-              <button onClick={handleUpdateProfile} disabled={isLoading || !editPhone || !editAddress} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-2 disabled:opacity-50">
-                {isLoading ? 'Guardando...' : 'Guardar Datos'}
+              <button onClick={handleUpdateProfile} disabled={isLoading || !editPhone || !editAddress} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-4 disabled:opacity-50">
+                {isLoading ? 'Guardando...' : 'Guardar Información'}
               </button>
               
               {profile?.phone && profile?.address && (
-                <button onClick={() => setModalView('profile')} className="w-full bg-transparent hover:bg-white/5 text-gray-400 border border-white/10 font-bold py-3 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
+                <button onClick={() => setModalView('profile')} className="w-full bg-transparent hover:bg-white/5 text-gray-400 border border-white/10 font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
                   Cancelar
                 </button>
               )}
