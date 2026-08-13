@@ -49,7 +49,7 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 overflow-y-auto no-scrollbar">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
@@ -57,7 +57,7 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
       ></div>
 
       {/* Modal */}
-      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh] mt-10 sm:mt-0">
+      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] relative shrink-0">
           <button 

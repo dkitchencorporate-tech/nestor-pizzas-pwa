@@ -29,8 +29,8 @@ export const SumUpPaymentModal: React.FC<SumUpPaymentModalProps> = ({ isOpen, on
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative max-h-[85vh] mt-10 sm:mt-0 flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 bg-black/80 backdrop-blur-sm animate-fade-in overflow-y-auto no-scrollbar">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative max-h-[85vh] flex flex-col">
         <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
           <div>
             <h3 className="font-display font-black text-xl text-white uppercase">Pago Seguro</h3>
