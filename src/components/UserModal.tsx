@@ -17,16 +17,42 @@ export default function UserModal() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   
   const [editPhone, setEditPhone] = useState(profile?.phone || '');
-  const [editAddress, setEditAddress] = useState(profile?.address || '');
+  const [editStreet, setEditStreet] = useState('');
+  const [editNumber, setEditNumber] = useState('');
+  const [editNotes, setEditNotes] = useState('');
   const { updateProfile } = useAuthStore();
+
+  const formatAddress = (addrString: string | undefined | null) => {
+    if (!addrString) return '-';
+    try {
+      const parsed = JSON.parse(addrString);
+      if (parsed.street) {
+        return `${parsed.street} ${parsed.number ? ', Nº ' + parsed.number : ''}`;
+      }
+    } catch (e) {
+      // Return as is if not JSON
+    }
+    return addrString;
+  };
 
   // Pre-fill states if profile loads after modal opens
   React.useEffect(() => {
     if (profile) {
       setEditPhone(profile.phone || '');
-      setEditAddress(profile.address || '');
+      try {
+        const parsed = JSON.parse(profile.address || '{}');
+        if (parsed.street) {
+          setEditStreet(parsed.street || '');
+          setEditNumber(parsed.number || '');
+          setEditNotes(parsed.notes || '');
+        } else {
+          setEditStreet(profile.address || '');
+        }
+      } catch (e) {
+        setEditStreet(profile.address || '');
+      }
     }
-  }, [profile]);
+  }, [profile, isUserModalOpen]);
   
   if (!isUserModalOpen) return null;
 
@@ -129,7 +155,13 @@ export default function UserModal() {
     setIsLoading(true);
     setErrorMsg('');
     try {
-      await updateProfile({ phone: editPhone, address: editAddress });
+      const addressJson = JSON.stringify({
+        street: editStreet,
+        number: editNumber,
+        cp: '18810',
+        notes: editNotes
+      });
+      await updateProfile({ phone: editPhone, address: addressJson });
       setModalView('profile');
     } catch (e: any) {
       setErrorMsg(e.message || 'Error al actualizar perfil');
@@ -384,7 +416,7 @@ export default function UserModal() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500">Dirección:</span>
-                    <span className="font-medium text-white text-right max-w-[65%] leading-tight">{profile?.address || '-'}</span>
+                    <span className="font-medium text-white text-right max-w-[65%] leading-tight">{formatAddress(profile?.address)}</span>
                   </div>
                 </div>
               </div>
@@ -496,9 +528,20 @@ export default function UserModal() {
                 <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: 600 000 000" />
               </div>
               
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Calle</label>
+                  <input type="text" value={editStreet} onChange={e => setEditStreet(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: Calle Amapola" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Número</label>
+                  <input type="text" value={editNumber} onChange={e => setEditNumber(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: 1" />
+                </div>
+              </div>
+              
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Dirección de Entrega</label>
-                <textarea value={editAddress} onChange={e => setEditAddress(e.target.value)} rows={3} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors resize-none" placeholder="Tu dirección completa..." />
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Detalles o Notas (Opcional)</label>
+                <input type="text" value={editNotes} onChange={e => setEditNotes(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Piso, puerta, etc." />
               </div>
               
               {errorMsg && (
@@ -507,7 +550,7 @@ export default function UserModal() {
                 </div>
               )}
               
-              <button onClick={handleUpdateProfile} disabled={isLoading || !editPhone || !editAddress} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-4 disabled:opacity-50">
+              <button onClick={handleUpdateProfile} disabled={isLoading || !editPhone || !editStreet || !editNumber} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-4 disabled:opacity-50">
                 {isLoading ? 'Guardando...' : 'Guardar Información'}
               </button>
               
