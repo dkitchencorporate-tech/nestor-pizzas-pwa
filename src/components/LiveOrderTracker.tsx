@@ -9,7 +9,7 @@ export default function LiveOrderTracker() {
 
   // Find the most recent active order
   const activeOrder = useMemo(() => {
-    return orders.find(o => ['pending', 'cooking', 'delivering'].includes(o.status));
+    return (orders || []).find((o: any) => ['pending', 'cooking', 'delivering'].includes(o?.status));
   }, [orders]);
 
   // Listen for the custom 'order-delivered' event dispatched by authStore

@@ -19,6 +19,18 @@ export default function UserModal() {
   const [editPhone, setEditPhone] = useState(profile?.phone || '');
   const [editAddress, setEditAddress] = useState(profile?.address || '');
   const { updateProfile } = useAuthStore();
+
+  // Pre-fill states if profile loads after modal opens
+  React.useEffect(() => {
+    if (profile) {
+      setEditPhone(profile.phone || '');
+      setEditAddress(profile.address || '');
+      // Auto-prompt to edit profile if missing critical info
+      if (userModalView === 'profile' && (!profile.phone || !profile.address)) {
+        setModalView('edit-profile');
+      }
+    }
+  }, [profile, userModalView, setModalView]);
   
   if (!isUserModalOpen) return null;
 
@@ -130,17 +142,6 @@ export default function UserModal() {
     }
   };
 
-  // Pre-fill states if profile loads after modal opens
-  React.useEffect(() => {
-    if (profile) {
-      setEditPhone(profile.phone || '');
-      setEditAddress(profile.address || '');
-      // Auto-prompt to edit profile if missing critical info
-      if (userModalView === 'profile' && (!profile.phone || !profile.address)) {
-        setModalView('edit-profile');
-      }
-    }
-  }, [profile, userModalView, setModalView]);
 
   const handleRepeatOrder = (order: any) => {
     if (!order.order_items) return;
