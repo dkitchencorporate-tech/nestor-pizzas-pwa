@@ -43,7 +43,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
       ></div>
 
       {/* Modal */}
-      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
+      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh] mt-10 sm:mt-0">
         {/* Header */}
         <div className="p-5 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] flex items-start justify-between shrink-0">
           <div>

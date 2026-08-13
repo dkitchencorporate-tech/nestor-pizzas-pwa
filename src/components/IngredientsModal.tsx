@@ -55,7 +55,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
       ></div>
 
       {/* Modal */}
-      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
+      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh] mt-10 sm:mt-0">
         {/* Header con Imagen */}
         <div className="relative h-40 sm:h-56 shrink-0 border-b border-zinc-800 bg-[#0A0A0E]">
             <img 
