@@ -68,14 +68,14 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
         {/* Imagen */}
         <div className="relative h-52 sm:h-56 overflow-hidden bg-black shrink-0">
           <img
-            src={product.img_url || product.img || fallback}
-            onError={(e) => { (e.target as HTMLImageElement).src = fallback; }}
+            src={(product as any).img_url || product.img || fallback}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            className="w-full h-full object-cover opacity-80 mix-blend-lighten group-hover:scale-110 transition-transform duration-700 ease-out"
             loading="lazy"
+            onError={(e) => { e.currentTarget.src = fallback; }}
           />
-          {/* Gradiente oscuro inferior */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#111118] via-transparent to-transparent opacity-80 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#111118] via-[#111118]/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+        </div>
 
           {/* Badge */}
           {product.badge && (

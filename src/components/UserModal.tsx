@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { useCartStore } from '../store/cartStore';
+import { useHardwareBack } from '../utils/useHardwareBack';
 
 export default function UserModal() {
   const { isUserModalOpen, closeUserModal, userModalView, setModalView, setLegalDoc, activeLegalDoc, user, profile, logout, orders } = useAuthStore();
+  useHardwareBack(isUserModalOpen, closeUserModal);
   const { addItem, clearCart } = useCartStore();
   
   const [email, setEmail] = useState('');

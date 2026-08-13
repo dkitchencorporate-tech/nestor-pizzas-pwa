@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { SumUpPaymentModal } from './SumUpPaymentModal';
 import { isStoreOpen, generateAvailableTimeSlots } from '../utils/timeUtils';
+import { useHardwareBack } from '../utils/useHardwareBack';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -11,6 +12,7 @@ interface CheckoutModalProps {
 }
 
 export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps) {
+  useHardwareBack(true, onClose);
   const { items, getTotal, removeItem, kioskClientInfo, setKioskClientInfo } = useCartStore();
   const { user, profile, updateProfile } = useAuthStore();
   const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>('delivery');
@@ -42,6 +44,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [geofenceError, setGeofenceError] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [minimumOrderError, setMinimumOrderError] = useState(false);
+  const [acceptSmallOrderFee, setAcceptSmallOrderFee] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'physical'>('online');
   const [scheduledTime, setScheduledTime] = useState<string>(isStoreOpen() ? 'asap' : (generateAvailableTimeSlots(15)[0] || 'asap'));
 
@@ -58,18 +61,19 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const eligibleDiscount = eligibleItems.length > 0 ? Math.min(...eligibleItems.map(i => i.price)) : 0;
   
   const discount = pointsRedeemed && eligibleDiscount > 0 ? eligibleDiscount : 0;
-  const finalTotal = Math.max(0, subtotal - discount);
+  
+  const needsSmallOrderFee = deliveryMethod === 'delivery' && (subtotal - discount) < 10;
+  const smallOrderFee = needsSmallOrderFee && acceptSmallOrderFee ? 1.50 : 0;
+  const finalTotal = Math.max(0, subtotal - discount) + smallOrderFee;
   
   const userPoints = profile?.points || 0;
   const canRedeem = userPoints >= 25 && eligibleDiscount > 0;
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
   const handleCheckoutClick = () => {
-    if (deliveryMethod === 'delivery' && finalTotal < 10) {
-      setMinimumOrderError(true);
+    if (needsSmallOrderFee && !acceptSmallOrderFee) {
       return;
     }
-    setMinimumOrderError(false);
 
     if (paymentMethod === 'online' || deliveryMethod === 'delivery') {
       setShowPaymentModal(true);
@@ -133,9 +137,15 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
     try {
       // Prepare order items
       const orderItems = items.map(item => ({
-        product_id: item.productId,
+        product_id: typeof item.productId === 'number' ? item.productId : null,
         quantity: item.quantity,
         unit_price: item.price,
+        customization_details: { 
+          name: item.name, 
+          notes: item.notes, 
+          extras: item.extras, 
+          size: item.size 
+        }
       }));
 
       // Insert Order
@@ -227,7 +237,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         </div>
       )}
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[94vh] animate-fade text-white my-auto relative">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[94vh] animate-fade text-white my-auto relative mt-8 sm:mt-auto">
         <div className="p-4 sm:p-6 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 relative overflow-hidden gap-3">
           <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-orange-500/10 via-green-500/10 to-transparent pointer-events-none"></div>
           <div>
@@ -462,10 +472,21 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         </div>
 
         <div className="p-6 bg-zinc-950 text-white border-t border-zinc-800">
-          {minimumOrderError && (
-            <div className="mb-4 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs text-center p-3 rounded-xl flex items-center justify-center gap-2 font-medium">
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-              <span>El pedido mínimo para envíos a domicilio es de <strong>10.00 €</strong>. Por favor, añade más productos.</span>
+          {needsSmallOrderFee && (
+            <div className="mb-4 bg-orange-500/10 border border-orange-500/30 text-orange-400 p-3 sm:p-4 rounded-xl flex flex-col gap-2 transition-all">
+              <div className="flex items-center gap-2 font-medium text-xs sm:text-sm">
+                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <span>El pedido mínimo para envíos a domicilio gratuitos es de <strong>10.00 €</strong>.</span>
+              </div>
+              <label className="flex items-center gap-3 mt-1 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={acceptSmallOrderFee} 
+                  onChange={(e) => setAcceptSmallOrderFee(e.target.checked)} 
+                  className="w-4 h-4 text-orange-500 rounded border-orange-500/50 bg-black/50 cursor-pointer focus:ring-orange-500" 
+                />
+                <span className="text-xs sm:text-sm text-orange-200 group-hover:text-orange-100 transition-colors">Aceptar recargo de 1.50 € por pedido pequeño</span>
+              </label>
             </div>
           )}
           <div className="flex items-center justify-between gap-4">
@@ -474,7 +495,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               <span className="font-display font-black text-2xl sm:text-3xl text-white">{finalTotal.toFixed(2)} €</span>
             </div>
             <button 
-              disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber || !addressCP)) || (deliveryMethod === 'delivery' && finalTotal < 10) || (!isOpen && availableSlots.length === 0)}
+              disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber || !addressCP)) || (needsSmallOrderFee && !acceptSmallOrderFee) || (!isOpen && availableSlots.length === 0)}
               onClick={handleCheckoutClick} 
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
             >

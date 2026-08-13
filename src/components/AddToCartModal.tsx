@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCartStore } from '../store/cartStore';
+import { useHardwareBack } from '../utils/useHardwareBack';
 
 interface Product {
   id: number;
@@ -13,6 +14,8 @@ interface AddToCartModalProps {
 }
 
 export default function AddToCartModal({ product, onClose }: AddToCartModalProps) {
+  useHardwareBack(true, onClose);
+  
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const addItem = useCartStore(state => state.addItem);
@@ -40,7 +43,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
       ></div>
 
       {/* Modal */}
-      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col">
+      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="p-5 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] flex items-start justify-between shrink-0">
           <div>
@@ -55,7 +58,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 overflow-y-auto">
           
           {/* Quantity Selector */}
           <div className="flex flex-col gap-2">

@@ -1,4 +1,5 @@
 import { useCartStore } from '../store/cartStore';
+import { useHardwareBack } from '../utils/useHardwareBack';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -7,6 +8,7 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerProps) {
+  useHardwareBack(isOpen, onClose);
   const { items, removeItem, updateQuantity, getTotal } = useCartStore();
 
   if (!isOpen) return null;

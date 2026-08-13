@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useHardwareBack } from '../utils/useHardwareBack';
 
 interface SumUpPaymentModalProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface SumUpPaymentModalProps {
 }
 
 export const SumUpPaymentModal: React.FC<SumUpPaymentModalProps> = ({ isOpen, onClose, onSuccess, amount }) => {
+  useHardwareBack(isOpen, onClose);
+  
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
