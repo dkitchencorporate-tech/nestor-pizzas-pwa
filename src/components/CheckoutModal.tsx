@@ -35,6 +35,15 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
   const handleCheckout = async () => {
+    // Geographic Validation for Caniles
+    if (deliveryMethod === 'delivery') {
+      const addressLower = deliveryAddress.toLowerCase();
+      if (!addressLower.includes('caniles') && !addressLower.includes('18810')) {
+        alert('Lo sentimos, actualmente sólo realizamos repartos a domicilio en Caniles (CP: 18810). Por favor, indica que es en Caniles o usa la opción de recoger en tienda.');
+        return;
+      }
+    }
+
     setIsProcessing(true);
     
     try {

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
+import { useCartStore } from '../store/cartStore';
 
 export default function UserModal() {
-  const { isUserModalOpen, closeUserModal, userModalView, setModalView, setLegalDoc, activeLegalDoc, user, profile, logout } = useAuthStore();
+  const { isUserModalOpen, closeUserModal, userModalView, setModalView, setLegalDoc, activeLegalDoc, user, profile, logout, orders } = useAuthStore();
+  const { addItem, clearCart, setIsCartOpen } = useCartStore();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -139,6 +141,37 @@ export default function UserModal() {
       }
     }
   }, [profile, userModalView, setModalView]);
+
+  const handleRepeatOrder = (order: any) => {
+    if (!order.order_items) return;
+    clearCart();
+    order.order_items.forEach((item: any) => {
+       if (item.products) {
+         addItem({
+           id: Math.random().toString(36).substring(7),
+           productId: item.products.id,
+           name: item.products.name,
+           price: item.unit_price,
+           quantity: item.quantity,
+           size: item.size || 'normal',
+           image_url: item.products.image_url
+         });
+       }
+    });
+    closeUserModal();
+    setTimeout(() => setIsCartOpen(true), 300);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case 'pending': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-400">PENDIENTE</span>;
+      case 'cooking': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400">COCINANDO</span>;
+      case 'delivering': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400">EN REPARTO</span>;
+      case 'delivered': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-400">ENTREGADO</span>;
+      case 'cancelled': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400">CANCELADO</span>;
+      default: return null;
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -359,6 +392,17 @@ export default function UserModal() {
                 </div>
               </div>
 
+              {/* Botón de Pedidos */}
+              <button onClick={() => setModalView('orders')} className="w-full bg-[#14141E] hover:bg-[#1E1E2C] border border-white/5 text-left px-4 py-4 rounded-2xl text-sm text-gray-300 font-medium transition-all flex justify-between items-center group">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                  </div>
+                  <span className="font-bold text-white uppercase tracking-wider">Historial de Pedidos</span>
+                </div>
+                <svg className="w-5 h-5 text-gray-600 group-hover:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+
               {/* Recompensas */}
               <div className="bg-[#14141E] border border-white/5 rounded-2xl p-4">
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Recompensas Disponibles</h4>
@@ -384,6 +428,61 @@ export default function UserModal() {
               <button onClick={logout} className="w-full bg-transparent hover:bg-red-500/10 text-red-400 border border-red-500/30 font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
                 Cerrar Sesión
               </button>
+            </div>
+          ) : userModalView === 'orders' ? (
+            <div className="space-y-4 text-left pb-4">
+              <div className="flex items-center gap-3 mb-4">
+                <button onClick={() => setModalView('profile')} className="p-2 -ml-2 text-gray-400 hover:text-white transition-colors">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <h3 className="text-xl font-display font-black text-white uppercase tracking-wider">Mis Pedidos</h3>
+              </div>
+              
+              {orders.length === 0 ? (
+                <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-zinc-800/50 rounded-full flex items-center justify-center text-4xl mb-2">
+                    🍕
+                  </div>
+                  <h4 className="font-display font-bold text-white text-lg">Aún no hay pedidos</h4>
+                  <p className="text-sm text-zinc-400 px-4">Tu estómago ruge... ¡Es hora de hacer tu primer pedido!</p>
+                  <button onClick={() => { closeUserModal(); window.scrollTo({top: 0, behavior: 'smooth'}); }} className="mt-4 px-6 py-2 bg-green-600 text-white font-bold text-sm uppercase rounded-xl">
+                    Ver Menú
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 no-scrollbar">
+                  {orders.map((order: any) => (
+                    <div key={order.id} className="bg-[#14141E] border border-white/5 rounded-2xl p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider mb-1">
+                            {new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                          {getStatusBadge(order.status)}
+                        </div>
+                        <div className="text-right">
+                          <span className="font-black text-white text-lg">{Number(order.total_amount).toFixed(2)}€</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1.5 mb-4">
+                        {order.order_items?.map((item: any) => (
+                          <div key={item.id} className="text-sm text-zinc-300 flex justify-between">
+                            <span><span className="text-green-500 font-bold">{item.quantity}x</span> {item.products?.name || 'Producto'}</span>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {order.status === 'delivered' && (
+                        <button onClick={() => handleRepeatOrder(order)} className="w-full py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 font-bold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                          Repetir Pedido
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : userModalView === 'edit-profile' ? (
             <div className="space-y-4 text-left pb-4">

@@ -2,11 +2,12 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
-type ViewType = 'login' | 'register' | 'profile' | 'edit-profile' | 'legal' | 'legal-doc' | 'delete-account' | 'delete-success' | 'forgot-password';
+type ViewType = 'login' | 'register' | 'profile' | 'edit-profile' | 'orders' | 'legal' | 'legal-doc' | 'delete-account' | 'delete-success' | 'forgot-password';
 
 interface AuthState {
   user: User | null;
   profile: any | null;
+  orders: any[];
   isUserModalOpen: boolean;
   userModalView: ViewType;
   activeLegalDoc: string;
@@ -20,11 +21,13 @@ interface AuthState {
   fetchProfile: (userId?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   updateProfile: (data: { full_name?: string; phone?: string; address?: string }) => Promise<void>;
+  fetchOrders: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
+  orders: [],
   isUserModalOpen: false,
   userModalView: 'login',
   activeLegalDoc: '',
@@ -36,7 +39,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setLegalDoc: (doc) => set({ activeLegalDoc: doc, userModalView: 'legal-doc' }),
   logout: async () => {
     await supabase.auth.signOut();
-    set({ user: null, profile: null, isUserModalOpen: false });
+    set({ user: null, profile: null, orders: [], isUserModalOpen: false });
     // Import useCartStore at the top or dynamically, wait, it's better to dynamically import to avoid circular dep just in case
     const { useCartStore } = await import('./cartStore');
     useCartStore.getState().clearCart();
@@ -81,15 +84,54 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!error) {
       await get().fetchProfile(user.id);
     }
+  },
+  fetchOrders: async () => {
+    const user = get().user;
+    if (!user) return;
+    const { data } = await supabase
+      .from('orders')
+      .select('*, order_items(*, products(*))')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (data) set({ orders: data });
   }
 }));
+
+let ordersSubscription: any = null;
 
 // Initialize auth listener
 supabase.auth.onAuthStateChange((event, session) => {
   useAuthStore.getState().setUser(session?.user || null);
   if (session?.user) {
     useAuthStore.getState().fetchProfile();
+    useAuthStore.getState().fetchOrders();
+    
+    if (!ordersSubscription) {
+      ordersSubscription = supabase.channel(`public:orders:${session.user.id}`)
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'orders',
+          filter: `user_id=eq.${session.user.id}`
+        }, (payload) => {
+          // Re-fetch orders when any change happens
+          useAuthStore.getState().fetchOrders();
+          
+          // Show notification if an order was marked as delivered
+          if (payload.eventType === 'UPDATE' && payload.new.status === 'delivered' && payload.old.status !== 'delivered') {
+             // We can use a global event or something, but for now we rely on the component tracking this.
+             // We will implement the custom toast logic in App.tsx or similar.
+             window.dispatchEvent(new CustomEvent('order-delivered', { detail: payload.new }));
+          }
+        })
+        .subscribe();
+    }
   } else {
     useAuthStore.getState().setProfile(null);
+    useAuthStore.getState().orders = [];
+    if (ordersSubscription) {
+      supabase.removeChannel(ordersSubscription);
+      ordersSubscription = null;
+    }
   }
 });

@@ -35,9 +35,15 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {items.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-4">
-              <svg className="w-16 h-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-              <p className="font-medium">Tu pedido está vacío</p>
+            <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-6">
+              <div className="relative">
+                <svg className="w-24 h-24 text-green-500/20 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                <span className="absolute inset-0 flex items-center justify-center text-3xl opacity-50">🍕</span>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="font-display font-black text-xl text-white uppercase tracking-widest">Carrito Vacío</p>
+                <p className="font-medium text-sm text-zinc-400 px-4">Tu estómago ruge... ¡Es hora de añadir algo delicioso!</p>
+              </div>
             </div>
           ) : (
             items.map(item => (

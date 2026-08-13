@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Néstor Pizzas | PWA Oficial Caniles y Baza</title>
+
+    <!-- SEO & OpenGraph Meta Tags -->
+    <meta name="description" content="Néstor Pizzas: La mejor pizza artesana de Caniles y Baza. Masa crujiente, 5 quesos fundidos y sabor gourmet insuperable. Descubre tu 1 pizza favorita. Pide online ahora.">
+    <meta name="keywords" content="1 pizza, pizza, pizzería, Néstor Pizzas, Caniles, Baza, comida a domicilio, pizza artesana, pizza gourmet">
+    <meta property="og:title" content="Néstor Pizzas | Tu 1 Pizza en Caniles y Baza">
+    <meta property="og:description" content="Pide la mejor pizza de Caniles y Baza. Masa artesana, ingredientes frescos, calidad gourmet. Prueba tu 1 pizza ahora.">
+    <meta property="og:image" content="https://nestorpizzas.com/assets/brand/logo_exact_2k.png">
+    <meta property="og:url" content="https://nestorpizzas.com">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+
+    
+    <!-- PWA Manifest & iOS Support -->
+    <link rel="manifest" href="/assets/manifest-DHSiVwK2.json">
+    <meta name="theme-color" content="#16A34A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Néstor Pizzas">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><circle cx='256' cy='256' r='256' fill='%2318181B'/><path d='M368 208c0-35.3-28.7-64-64-64h-96c-35.3 0-64 28.7-64 64v16H112v48h32l24 96h176l24-96h32v-48h-32v-16zm-176-16h96c8.8 0 16 7.2 16 16v16H176v-16c0-8.8 7.2-16 16-16zm152 112l-16 64H184l-16-64h176z' fill='%2316A34A'/><circle cx='180' cy='360' r='36' fill='%23EA580C'/><circle cx='332' cy='360' r='36' fill='%23EA580C'/></svg>">
+    
+    <!-- Tailwind CSS & Google Fonts (Tipografía de Alto Standing: Outfit & Plus Jakarta Sans) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nestor: {
+                            base: '#0A0A0E',
+                            card: '#14141C',
+                            cardHover: '#1C1C26',
+                            obsidian: '#09090D',
+                            charcoal: '#1E1E28',
+                            red: '#FF3B00',
+                            redDark: '#D02E00',
+                            redLight: '#FF3B0020',
+                            green: '#22C55E',
+                            greenDark: '#16A34A',
+                            greenLight: '#22C55E20',
+                            gold: '#FACC15',
+                            border: '#262636'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'premium': '0 20px 45px -15px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.05)',
+                        'premium-hover': '0 28px 55px -15px rgba(255, 59, 0, 0.35), 0 12px 25px -10px rgba(34, 197, 94, 0.3)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.6)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0A0A0E;
+            color: #F3F4F6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            /* overflow-x: hidden removed to fix sticky scroll */
+        }
+        
+        /* Ocultación absoluta de barras de desplazamiento (scrollbars) en toda la PWA para estética 100% nativa */
+        *, *::before, *::after {
+            scrollbar-width: none !important; /* Firefox */
+            -ms-overflow-style: none !important; /* IE y Edge */
+        }
+
+        *::-webkit-scrollbar {
+            display: none !important; /* Chrome, Safari, Opera */
+            width: 0px !important;
+            height: 0px !important;
+            background: transparent !important;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none !important; width: 0px !important; height: 0px !important; }
+        .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+        
+        .glass-nav {
+            background: rgba(12, 12, 18, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(34, 197, 94, 0.35);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .glass-floating {
+            background: rgba(14, 14, 20, 0.96);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .category-pill {
+            background-color: #14141E;
+            color: #9CA3AF;
+            border: 1px solid #262638;
+            transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+        .category-pill:hover {
+            color: #FFFFFF;
+            border-color: #22C55E;
+            background-color: #1E1E2C;
+        }
+        .category-pill.active {
+            background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+
+        }
+        .category-pill.active {
+            background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+            color: #FFFFFF;
+            font-weight: 800;
+            box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+            border-color: #4ADE80;
+        }
+
+        .card-curved {
+            background-color: #14141E;
+            border: 2px solid rgba(34, 197, 94, 0.4);
+            border-radius: 2rem;
+            transition: all 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-curved:hover {
+            border-color: #22C55E;
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.35);
+            transform: translateY(-4px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+  <script type="module" crossorigin src="/assets/index-DBEcEcKZ.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BG6W-cok.css">
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
