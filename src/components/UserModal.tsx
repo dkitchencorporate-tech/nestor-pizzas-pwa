@@ -14,6 +14,10 @@ export default function UserModal() {
   const [deleteReason, setDeleteReason] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   
+  const [editPhone, setEditPhone] = useState(profile?.phone || '');
+  const [editAddress, setEditAddress] = useState(profile?.address || '');
+  const { updateProfile } = useAuthStore();
+  
   if (!isUserModalOpen) return null;
 
   const handleLogin = async () => {
@@ -111,8 +115,33 @@ export default function UserModal() {
     }
   };
 
+  const handleUpdateProfile = async () => {
+    setIsLoading(true);
+    setErrorMsg('');
+    try {
+      await updateProfile({ phone: editPhone, address: editAddress });
+      setModalView('profile');
+    } catch (e: any) {
+      setErrorMsg(e.message || 'Error al actualizar perfil');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Pre-fill states if profile loads after modal opens
+  React.useEffect(() => {
+    if (profile) {
+      setEditPhone(profile.phone || '');
+      setEditAddress(profile.address || '');
+      // Auto-prompt to edit profile if missing critical info
+      if (userModalView === 'profile' && (!profile.phone || !profile.address)) {
+        setModalView('edit-profile');
+      }
+    }
+  }, [profile, userModalView, setModalView]);
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="bg-[#1A1A24] border border-green-500/30 rounded-3xl shadow-2xl w-full max-w-lg sm:max-w-xl overflow-hidden relative max-h-[90vh] overflow-y-auto no-scrollbar animate-fade-in-up">
         
         {/* Botón Cerrar */}
@@ -316,7 +345,7 @@ export default function UserModal() {
               <div className="bg-[#14141E] border border-white/5 rounded-2xl p-4">
                 <div className="flex justify-between items-center mb-3">
                   <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mis Datos</h4>
-                  <button className="text-[10px] text-green-500 hover:text-green-400 font-bold uppercase tracking-wider px-2 py-1 bg-green-500/10 rounded-lg">Editar</button>
+                  <button onClick={() => setModalView('edit-profile')} className="text-[10px] text-green-500 hover:text-green-400 font-bold uppercase tracking-wider px-2 py-1 bg-green-500/10 rounded-lg transition-colors">Editar</button>
                 </div>
                 <div className="space-y-2 text-sm text-gray-300">
                   <div className="flex justify-between items-center">
@@ -355,6 +384,37 @@ export default function UserModal() {
               <button onClick={logout} className="w-full bg-transparent hover:bg-red-500/10 text-red-400 border border-red-500/30 font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
                 Cerrar Sesión
               </button>
+            </div>
+          ) : userModalView === 'edit-profile' ? (
+            <div className="space-y-4 text-left pb-4">
+              <h3 className="text-xl font-display font-black text-white uppercase mb-2 text-center">Completar Perfil</h3>
+              <p className="text-sm text-gray-400 text-center mb-4">Para poder enviar tus pedidos necesitamos tu teléfono y dirección.</p>
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Teléfono</label>
+                <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: 600 000 000" />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Dirección de Entrega</label>
+                <textarea value={editAddress} onChange={e => setEditAddress(e.target.value)} rows={3} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500 transition-colors resize-none" placeholder="Tu dirección completa..." />
+              </div>
+              
+              {errorMsg && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center p-2 rounded-lg mt-2 animate-fade-in font-medium">
+                  {errorMsg}
+                </div>
+              )}
+              
+              <button onClick={handleUpdateProfile} disabled={isLoading || !editPhone || !editAddress} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-2 disabled:opacity-50">
+                {isLoading ? 'Guardando...' : 'Guardar Datos'}
+              </button>
+              
+              {profile?.phone && profile?.address && (
+                <button onClick={() => setModalView('profile')} className="w-full bg-transparent hover:bg-white/5 text-gray-400 border border-white/10 font-bold py-3 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
+                  Cancelar
+                </button>
+              )}
             </div>
           ) : null}
 

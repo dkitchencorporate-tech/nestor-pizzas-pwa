@@ -1,7 +1,7 @@
 import { useAuthStore } from '../store/authStore';
 
 export default function Header() {
-  const { openUserModal } = useAuthStore();
+  const { user, profile, openUserModal } = useAuthStore();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#0A0A0E]/95 backdrop-blur-xl border-b border-green-500/40 shadow-2xl transition-all">
@@ -46,8 +46,19 @@ export default function Header() {
           </a>
           
           <div onClick={() => openUserModal()} className="cursor-pointer flex bg-[#14141E] hover:bg-[#1E1E2C] border border-green-500/40 rounded-xl w-10 h-10 sm:w-auto sm:px-3 sm:py-1.5 items-center justify-center gap-2 transition-all shadow shrink-0">
-            <div className="w-6 h-6 sm:w-6 sm:h-6 rounded-lg bg-green-500/20 text-green-400 border border-green-500/40 flex items-center justify-center font-display font-bold text-xs sm:text-[10px] shrink-0">🔑</div>
-            <span className="hidden sm:inline text-sm font-bold text-white">INICIAR SESIÓN</span>
+            {user ? (
+              <>
+                <div className="w-6 h-6 sm:w-6 sm:h-6 rounded-lg bg-green-500/20 text-green-400 border border-green-500/40 flex items-center justify-center font-display font-bold text-xs sm:text-[10px] shrink-0">👤</div>
+                <span className="hidden sm:inline text-sm font-bold text-white uppercase truncate max-w-[120px]">
+                  HOLA, {profile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'USUARIO'}
+                </span>
+              </>
+            ) : (
+              <>
+                <div className="w-6 h-6 sm:w-6 sm:h-6 rounded-lg bg-green-500/20 text-green-400 border border-green-500/40 flex items-center justify-center font-display font-bold text-xs sm:text-[10px] shrink-0">🔑</div>
+                <span className="hidden sm:inline text-sm font-bold text-white uppercase">ENTRAR</span>
+              </>
+            )}
           </div>
         </div>
       </div>

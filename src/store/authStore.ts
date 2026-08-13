@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
-type ViewType = 'login' | 'register' | 'profile' | 'legal' | 'legal-doc' | 'delete-account' | 'delete-success' | 'forgot-password';
+type ViewType = 'login' | 'register' | 'profile' | 'edit-profile' | 'legal' | 'legal-doc' | 'delete-account' | 'delete-success' | 'forgot-password';
 
 interface AuthState {
   user: User | null;
@@ -19,6 +19,7 @@ interface AuthState {
   logout: () => Promise<void>;
   fetchProfile: (userId?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  updateProfile: (data: { full_name?: string; phone?: string; address?: string }) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -66,6 +67,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .eq('id', resolvedId)
         .single();
       if (data) set({ profile: data });
+    }
+  },
+  updateProfile: async (updates) => {
+    const user = get().user;
+    if (!user) return;
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id);
+      
+    if (!error) {
+      await get().fetchProfile(user.id);
     }
   }
 }));

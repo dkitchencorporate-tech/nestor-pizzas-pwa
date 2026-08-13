@@ -10,7 +10,7 @@ interface CheckoutModalProps {
 
 export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps) {
   const { items, getTotal, removeItem, kioskClientInfo, setKioskClientInfo } = useCartStore();
-  const { user, profile } = useAuthStore();
+  const { user, profile, updateProfile } = useAuthStore();
   const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>('delivery');
   const [clientName, setClientName] = useState(kioskClientInfo?.name || profile?.full_name || '');
   const [clientPhone, setClientPhone] = useState(kioskClientInfo?.phone || profile?.phone || '');
@@ -74,7 +74,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
       if (itemsError) throw itemsError;
 
-      // Si el usuario está autenticado, sumarle los puntos
+      // Si el usuario está autenticado, sumarle los puntos y actualizar sus datos
       if (user && profile) {
         const newPoints = profile.points + pointsEarned;
         // Si canjeó puntos (25 pts), restarlos.
@@ -82,7 +82,12 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         
         await supabase
           .from('profiles')
-          .update({ points: finalPoints })
+          .update({ 
+            points: finalPoints,
+            phone: clientPhone,
+            address: deliveryAddress,
+            full_name: clientName
+          })
           .eq('id', user.id);
           
         // Recargar perfil local
