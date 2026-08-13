@@ -41,6 +41,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [geofenceError, setGeofenceError] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [minimumOrderError, setMinimumOrderError] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'physical'>('online');
 
   const subtotal = getTotal();
   
@@ -65,7 +66,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
     }
     setMinimumOrderError(false);
 
-    if (deliveryMethod === 'delivery') {
+    if (paymentMethod === 'online' || deliveryMethod === 'delivery') {
       setShowPaymentModal(true);
     } else {
       processOrder();
@@ -384,20 +385,25 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   </p>
                 </>
               ) : (
-                <>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-green-600/20 border border-green-600/30 flex items-center justify-center shrink-0">
-                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                <div className="flex flex-col gap-2">
+                  <label onClick={() => setPaymentMethod('online')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${paymentMethod === 'online' ? 'bg-blue-500/10 border border-blue-500/50' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
+                    <input type="radio" checked={paymentMethod === 'online'} readOnly className="text-blue-500 w-4 h-4 shrink-0" />
+                    <div>
+                      <span className="font-bold text-white text-sm block">Pago Seguro Online (SumUp)</span>
+                      <span className="text-xs text-zinc-400">Paga ahora y solo ven a recoger</span>
                     </div>
+                  </label>
+                  <label onClick={() => setPaymentMethod('physical')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${paymentMethod === 'physical' ? 'bg-green-500/10 border border-green-500/50' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
+                    <input type="radio" checked={paymentMethod === 'physical'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
                     <div>
                       <span className="font-bold text-white text-sm block">Pago Físico al Recoger</span>
-                      <span className="text-xs text-zinc-400">Puedes pagar con Tarjeta o Efectivo en local</span>
+                      <span className="text-xs text-zinc-400">Paga con Tarjeta o Efectivo en local</span>
                     </div>
-                  </div>
+                  </label>
                   <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
-                    🔒 Tu pedido queda confirmado al instante y lo pagas al venir a recogerlo.
+                    🔒 Tu pedido queda confirmado al instante.
                   </p>
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -420,7 +426,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               onClick={handleCheckoutClick} 
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
             >
-              {isProcessing ? 'Procesando...' : (deliveryMethod === 'delivery' ? 'Pagar Online →' : 'Confirmar Pedido →')}
+              {isProcessing ? 'Procesando...' : (paymentMethod === 'online' || deliveryMethod === 'delivery' ? 'Pagar Online →' : 'Confirmar Pedido →')}
             </button>
           </div>
         </div>

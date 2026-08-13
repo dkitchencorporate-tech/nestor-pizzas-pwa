@@ -116,12 +116,13 @@ supabase.auth.onAuthStateChange((event, session) => {
         }, (payload) => {
           // Re-fetch orders when any change happens
           useAuthStore.getState().fetchOrders();
-          
-          // Show notification if an order was marked as delivered
-          if (payload.eventType === 'UPDATE' && payload.new.status === 'delivered' && payload.old.status !== 'delivered') {
-             // We can use a global event or something, but for now we rely on the component tracking this.
-             // We will implement the custom toast logic in App.tsx or similar.
-             window.dispatchEvent(new CustomEvent('order-delivered', { detail: payload.new }));
+          // Trigger events for status changes
+          if (payload.eventType === 'UPDATE' && payload.new.status !== payload.old.status) {
+            window.dispatchEvent(new CustomEvent('order-status-changed', { detail: payload.new }));
+            
+            if (payload.new.status === 'delivered') {
+              window.dispatchEvent(new CustomEvent('order-delivered', { detail: payload.new }));
+            }
           }
         })
         .subscribe();

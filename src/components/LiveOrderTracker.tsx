@@ -12,17 +12,49 @@ export default function LiveOrderTracker() {
     return (orders || []).find((o: any) => ['pending', 'cooking', 'delivering'].includes(o?.status));
   }, [orders]);
 
-  // Listen for the custom 'order-delivered' event dispatched by authStore
+  const playNotificationSound = () => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch (e) {
+      console.error('AudioContext error', e);
+    }
+  };
+
+  // Listen for the custom events dispatched by authStore
   useEffect(() => {
     const handleDelivered = (e: any) => {
       setLastDeliveredOrder(e.detail);
       setShowDeliveryToast(true);
+      playNotificationSound();
       // Auto-hide after 8 seconds
       setTimeout(() => setShowDeliveryToast(false), 8000);
     };
 
+    const handleStatusChanged = (e: any) => {
+      playNotificationSound();
+    };
+
     window.addEventListener('order-delivered', handleDelivered);
-    return () => window.removeEventListener('order-delivered', handleDelivered);
+    window.addEventListener('order-status-changed', handleStatusChanged);
+    return () => {
+      window.removeEventListener('order-delivered', handleDelivered);
+      window.removeEventListener('order-status-changed', handleStatusChanged);
+    };
   }, []);
 
   if (!activeOrder && !showDeliveryToast) return null;
@@ -109,6 +141,15 @@ export default function LiveOrderTracker() {
                 </span>
               </div>
             </div>
+
+            <a 
+              href="https://search.google.com/local/writereview?placeid=ChIJT4A9k0uXbQ0RfI7_K2j0P2k" // Placeholder ID, change if needed
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block w-full py-3 mb-3 bg-white hover:bg-gray-100 text-black font-bold text-sm uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+            >
+              ⭐ Déjanos una reseña
+            </a>
             
             <button 
               onClick={() => setShowDeliveryToast(false)}
