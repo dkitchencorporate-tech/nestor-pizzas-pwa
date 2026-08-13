@@ -1,0 +1,115 @@
+import { useState } from 'react';
+import { useCartStore } from '../store/cartStore';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+}
+
+interface AddToCartModalProps {
+  product: Product;
+  onClose: () => void;
+}
+
+export default function AddToCartModal({ product, onClose }: AddToCartModalProps) {
+  const [quantity, setQuantity] = useState(1);
+  const [notes, setNotes] = useState('');
+  const addItem = useCartStore(state => state.addItem);
+
+  const finalPrice = product.price * quantity;
+
+  const handleAddToCart = () => {
+    addItem({
+      id: crypto.randomUUID(),
+      productId: product.id,
+      name: product.name,
+      price: finalPrice,
+      quantity,
+      notes: notes.trim()
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      ></div>
+
+      {/* Modal */}
+      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col">
+        {/* Header */}
+        <div className="p-5 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] flex items-start justify-between shrink-0">
+          <div>
+            <h2 className="font-display font-black text-xl text-white uppercase tracking-wider pr-4">
+              {product.name}
+            </h2>
+            <p className="text-green-400 font-bold mt-1 text-lg">{product.price.toFixed(2).replace('.', ',')} €</p>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors bg-zinc-900 hover:bg-zinc-800 p-2 rounded-xl shrink-0">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-6">
+          
+          {/* Quantity Selector */}
+          <div className="flex flex-col gap-2">
+            <label className="text-xs text-gray-400 uppercase tracking-wider font-bold">Cantidad</label>
+            <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-2">
+              <button 
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white flex items-center justify-center font-bold text-xl transition-colors disabled:opacity-50"
+                disabled={quantity <= 1}
+              >
+                -
+              </button>
+              <span className="font-display font-black text-xl text-white w-12 text-center">{quantity}</span>
+              <button 
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white flex items-center justify-center font-bold text-xl transition-colors"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="flex flex-col gap-2">
+            <label className="text-xs text-gray-400 uppercase tracking-wider font-bold flex justify-between">
+              Notas para cocina 
+              <span className="text-zinc-600 font-normal lowercase tracking-normal">(opcional)</span>
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Ej: Sin cebolla, extra crujiente..."
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white placeholder-zinc-600 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 resize-none h-20 text-sm custom-scrollbar transition-all"
+            ></textarea>
+          </div>
+
+        </div>
+
+        {/* Footer */}
+        <div className="p-5 border-t border-zinc-800 bg-[#0A0A0E] flex items-center justify-between gap-4 shrink-0">
+          <div>
+            <div className="text-gray-400 text-[10px] mb-1 uppercase tracking-wider font-bold">Total</div>
+            <div className="text-white font-display font-black text-xl">
+              {finalPrice.toFixed(2).replace('.', ',')} €
+            </div>
+          </div>
+          <button
+            onClick={handleAddToCart}
+            className="px-6 py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]"
+          >
+            AÑADIR AL PEDIDO
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
