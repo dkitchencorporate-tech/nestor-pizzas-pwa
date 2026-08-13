@@ -356,7 +356,7 @@ export default function UserModal() {
                 Cerrar Sesión
               </button>
             </div>
-          )}
+          ) : null}
 
           {userModalView === 'legal' && (
             <div className="space-y-4 text-left pb-4">
