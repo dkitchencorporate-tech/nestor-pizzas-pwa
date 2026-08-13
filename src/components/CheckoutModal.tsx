@@ -52,6 +52,51 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
   const handleCheckout = async () => {
+    if (deliveryMethod === 'delivery') {
+      setIsProcessing(true);
+      // Geofence Check: strict 10km radius
+      const isWithinRange = await new Promise<boolean>((resolve) => {
+        if (!navigator.geolocation) {
+          alert("Tu navegador no soporta geolocalización. Para envíos a domicilio es obligatorio. Por favor, selecciona 'Recoger en Pizzería'.");
+          resolve(false);
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat1 = position.coords.latitude;
+            const lon1 = position.coords.longitude;
+            const lat2 = 37.4346; // Caniles Center
+            const lon2 = -2.7350;
+            
+            const R = 6371; // Earth radius km
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+            
+            if (distance > 10) {
+              alert(`Estás a ${distance.toFixed(1)} km de Caniles. Nuestro radio máximo de reparto es de 10 km. Por favor, selecciona 'Recoger en Pizzería'.`);
+              resolve(false);
+            } else {
+              resolve(true);
+            }
+          },
+          (error) => {
+            console.error(error);
+            alert("Para envíos a domicilio, necesitamos verificar que estás en nuestro radio de reparto (máx 10 km). Por favor, PERMITE el acceso a la ubicación en tu navegador, o selecciona 'Recoger en Pizzería'.");
+            resolve(false);
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+      });
+
+      if (!isWithinRange) {
+        setIsProcessing(false);
+        return;
+      }
+    }
+
     // Generate the final address string to save
     const finalDeliveryAddress = deliveryMethod === 'delivery' 
       ? `${addressStreet}, Nº ${addressNumber}, 18810 Caniles${addressNotes ? '. Notas: ' + addressNotes : ''}`
