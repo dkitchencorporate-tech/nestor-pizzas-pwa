@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
+import { SumUpPaymentModal } from './SumUpPaymentModal';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -38,6 +39,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [pointsRedeemed, setPointsRedeemed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [geofenceError, setGeofenceError] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [minimumOrderError, setMinimumOrderError] = useState(false);
 
   const subtotal = getTotal();
   
@@ -55,7 +58,22 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const canRedeem = userPoints >= 25 && eligibleDiscount > 0;
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
-  const handleCheckout = async () => {
+  const handleCheckoutClick = () => {
+    if (deliveryMethod === 'delivery' && finalTotal < 10) {
+      setMinimumOrderError(true);
+      return;
+    }
+    setMinimumOrderError(false);
+
+    if (deliveryMethod === 'delivery') {
+      setShowPaymentModal(true);
+    } else {
+      processOrder();
+    }
+  };
+
+  const processOrder = async () => {
+    setShowPaymentModal(false);
     setIsProcessing(true);
     
     // Geofence Check: strict 10km radius for ALL orders (delivery and pickup)
@@ -350,45 +368,70 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">3. Forma de Pago</span>
 
             <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-green-600/20 border border-green-600/30 flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                </div>
-                <div>
-                  <span className="font-bold text-white text-sm block">Pago con Tarjeta al Recoger / Entregar</span>
-                  <span className="text-xs text-zinc-400">Visa, Mastercard, contactless o móvil</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                </div>
-                <div>
-                  <span className="font-bold text-white text-sm block">Pago en Efectivo al Recoger</span>
-                  <span className="text-xs text-zinc-400">Prepara el importe exacto si es posible</span>
-                </div>
-              </div>
-              <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
-                🔒 El pago se realiza en el momento de la entrega o recogida. Tu pedido queda confirmado al instante.
-              </p>
+              {deliveryMethod === 'delivery' ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-600/30 flex items-center justify-center shrink-0">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    </div>
+                    <div>
+                      <span className="font-bold text-white text-sm block">Pago Seguro Online (SumUp)</span>
+                      <span className="text-xs text-zinc-400">Pago con tarjeta para envíos a domicilio</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
+                    🔒 Serás redirigido a la pasarela de pago segura de SumUp para completar tu pedido.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-green-600/20 border border-green-600/30 flex items-center justify-center shrink-0">
+                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    </div>
+                    <div>
+                      <span className="font-bold text-white text-sm block">Pago Físico al Recoger</span>
+                      <span className="text-xs text-zinc-400">Puedes pagar con Tarjeta o Efectivo en local</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
+                    🔒 Tu pedido queda confirmado al instante y lo pagas al venir a recogerlo.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="p-6 bg-zinc-950 text-white border-t border-zinc-800 flex items-center justify-between gap-4">
-          <div>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Total a Abonar</span>
-            <span className="font-display font-black text-2xl sm:text-3xl text-white">{finalTotal.toFixed(2)} €</span>
+        <div className="p-6 bg-zinc-950 text-white border-t border-zinc-800">
+          {minimumOrderError && (
+            <div className="mb-4 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs text-center p-3 rounded-xl flex items-center justify-center gap-2 font-medium">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              <span>El pedido mínimo para envíos a domicilio es de <strong>10.00 €</strong>. Por favor, añade más productos.</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Total a Abonar</span>
+              <span className="font-display font-black text-2xl sm:text-3xl text-white">{finalTotal.toFixed(2)} €</span>
+            </div>
+            <button 
+              disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber || !addressCP)) || (deliveryMethod === 'delivery' && finalTotal < 10)}
+              onClick={handleCheckoutClick} 
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
+            >
+              {isProcessing ? 'Procesando...' : (deliveryMethod === 'delivery' ? 'Pagar Online →' : 'Confirmar Pedido →')}
+            </button>
           </div>
-          <button 
-            disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber || !addressCP))}
-            onClick={handleCheckout} 
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
-          >
-            {isProcessing ? 'Procesando...' : 'Confirmar Pedido →'}
-          </button>
         </div>
       </div>
+
+      <SumUpPaymentModal 
+        isOpen={showPaymentModal} 
+        onClose={() => setShowPaymentModal(false)} 
+        onSuccess={processOrder} 
+        amount={finalTotal} 
+      />
     </div>
   );
 }
