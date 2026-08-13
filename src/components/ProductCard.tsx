@@ -75,8 +75,6 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
             onError={(e) => { e.currentTarget.src = fallback; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#111118] via-[#111118]/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
-        </div>
-
           {/* Badge */}
           {product.badge && (
             <span className="absolute top-3 left-3 z-20 bg-black border-2 border-green-500 text-white font-display font-black text-[10px] sm:text-xs uppercase tracking-wider px-3 py-1.5 rounded-xl shadow-2xl leading-none">
