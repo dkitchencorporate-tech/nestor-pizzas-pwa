@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
-type ViewType = 'login' | 'register' | 'profile' | 'legal' | 'legal-doc' | 'delete-account' | 'delete-success';
+type ViewType = 'login' | 'register' | 'profile' | 'legal' | 'legal-doc' | 'delete-account' | 'delete-success' | 'forgot-password';
 
 interface AuthState {
   user: User | null;
@@ -36,6 +36,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     await supabase.auth.signOut();
     set({ user: null, profile: null, isUserModalOpen: false });
+    // Import useCartStore at the top or dynamically, wait, it's better to dynamically import to avoid circular dep just in case
+    const { useCartStore } = await import('./cartStore');
+    useCartStore.getState().clearCart();
   },
   signIn: async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });

@@ -41,7 +41,7 @@ export const useCartStore = create<CartState>()(
           item.id === id ? { ...item, quantity } : item
         )
       })),
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], kioskClientInfo: undefined }),
       getTotal: () => {
         const items = get().items;
         return items.reduce((total, item) => total + (item.price * item.quantity), 0);
