@@ -38,6 +38,20 @@ function App() {
     }
   }, [currentView]);
 
+  // Cart Auto-Clear (15 minutes inactivity)
+  useEffect(() => {
+    const checkCartTimeout = () => {
+      const state = useCartStore.getState();
+      const FIFTEEN_MINUTES = 15 * 60 * 1000;
+      if (state.items.length > 0 && Date.now() - state.lastUpdated > FIFTEEN_MINUTES) {
+        state.clearCart();
+      }
+    };
+    checkCartTimeout();
+    const interval = setInterval(checkCartTimeout, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (currentView === 'admin') {
     return <AdminDashboard />;
   }
