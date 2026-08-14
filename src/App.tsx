@@ -10,9 +10,12 @@ import OrderTracking from './pages/OrderTracking';
 import NotificationManager from './components/NotificationManager';
 import { useCartStore } from './store/cartStore';
 
+import { supabase } from './lib/supabase';
+
 function App() {
   const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking'>('splash');
   const [isPreloaderFading, setIsPreloaderFading] = useState(false);
+  const [isStoreClosed, setIsStoreClosed] = useState(false);
   
   // Modals state
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -42,7 +45,28 @@ function App() {
   useEffect(() => {
     const handleOpenTracking = () => setCurrentView('tracking');
     window.addEventListener('open-tracking', handleOpenTracking);
-    return () => window.removeEventListener('open-tracking', handleOpenTracking);
+    
+    // Fetch Store Status
+    const fetchStoreStatus = async () => {
+      const { data } = await supabase.from('app_settings').select('value').eq('key', 'store_closed').single();
+      if (data && data.value === 'true') {
+        setIsStoreClosed(true);
+      }
+    };
+    fetchStoreStatus();
+
+    // Listen to Store Status changes
+    const settingsChannel = supabase.channel('public:app_settings_global')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings', filter: "key=eq.store_closed" }, payload => {
+        const newValue = payload.new as any;
+        setIsStoreClosed(newValue.value === 'true');
+      })
+      .subscribe();
+      
+    return () => {
+      window.removeEventListener('open-tracking', handleOpenTracking);
+      supabase.removeChannel(settingsChannel);
+    };
   }, []);
 
   // Cart Auto-Clear (15 minutes inactivity)
@@ -90,6 +114,27 @@ function App() {
       {currentView === 'catalog' && (
         <>
           <Catalog />
+
+          {/* Store Closed Modal */}
+          {isStoreClosed && (
+            <div className="fixed inset-0 z-[1200] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+              <div className="w-24 h-24 bg-red-600/20 border-2 border-red-500 rounded-full flex items-center justify-center mb-8 animate-pulse shadow-[0_0_50px_rgba(220,38,38,0.3)]">
+                <span className="text-5xl">🔒</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-display font-black text-white uppercase tracking-wider mb-4">
+                Cerrado Temporalmente
+              </h2>
+              <p className="text-zinc-400 max-w-md mx-auto text-sm sm:text-base leading-relaxed mb-8">
+                Lo sentimos mucho, pero en este momento no podemos aceptar nuevos pedidos por un cierre de emergencia o asuntos de fuerza mayor.
+              </p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="bg-transparent border border-zinc-700 hover:bg-zinc-800 text-white font-bold py-3 px-8 rounded-xl uppercase tracking-wider text-sm transition-all"
+              >
+                Actualizar Página
+              </button>
+            </div>
+          )}
 
           {/* Floating Cart Bar */}
           <CartBar onOpenUpsell={() => setIsUpsellOpen(true)} />
