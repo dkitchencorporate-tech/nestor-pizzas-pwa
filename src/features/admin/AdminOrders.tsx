@@ -8,7 +8,7 @@ export default function AdminOrders() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [silencedCount, setSilencedCount] = useState<number>(0);
   const [printingOrder, setPrintingOrder] = useState<any>(null);
-  const [isAudioArmed, setIsAudioArmed] = useState(false);
+  const [isAudioArmed, setIsAudioArmed] = useState<boolean>((window as any).isAudioUnlocked || false);
   const [isOpeningAlarm, setIsOpeningAlarm] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -81,6 +81,7 @@ export default function AdminOrders() {
       audioRef.current.play().then(() => {
         audioRef.current?.pause();
         setIsAudioArmed(true);
+        (window as any).isAudioUnlocked = true;
       }).catch(e => console.log('Armado bloqueado', e));
     }
   };

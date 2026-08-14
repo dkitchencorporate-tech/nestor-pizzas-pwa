@@ -9,8 +9,11 @@ const ASSETS_TO_CACHE = [
   './js/i18n/catalog.js',
   './js/i18n/switcher.js',
   './manifest.json',
+  './manifest-admin.json',
   './assets/brand/icon-192x192.png',
-  './assets/brand/icon-512x512.png'
+  './assets/brand/icon-512x512.png',
+  './assets/brand/admin-icon-192x192.png',
+  './assets/brand/admin-icon-512x512.png'
 ];
 
 // Instalación — precarga inmediata con bypass total de caché HTTP

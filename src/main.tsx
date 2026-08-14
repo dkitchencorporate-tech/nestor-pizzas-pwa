@@ -9,6 +9,14 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   </React.StrictMode>,
 );
 
+// Handle dynamic PWA manifest for Admin separation
+if (window.location.pathname.startsWith('/admin')) {
+  const manifestLink = document.getElementById('manifest-link');
+  if (manifestLink) {
+    manifestLink.setAttribute('href', '/manifest-admin.json');
+  }
+}
+
 // Register Service Worker for PWA installability
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
