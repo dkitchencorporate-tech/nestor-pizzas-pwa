@@ -62,6 +62,7 @@ export default function AdminAnalytics() {
     document.body.removeChild(a);
   };
 
+  return (
     <div className="h-full flex flex-col bg-[#0A0A0E] overflow-y-auto print:bg-white print:text-black">
       <div className="p-6 print:hidden">
         <h2 className="text-2xl font-display font-black uppercase text-white tracking-wide mb-6">
