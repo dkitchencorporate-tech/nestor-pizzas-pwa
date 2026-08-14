@@ -148,7 +148,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
     try {
       // Prepare order items
       const orderItems = items.map(item => ({
-        product_id: typeof item.productId === 'number' ? item.productId : null,
+        product_id: typeof item.productId === 'number' && item.productId < 1000 ? item.productId : null,
         quantity: item.quantity,
         unit_price: item.price,
         customization_details: { 
@@ -250,7 +250,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       )}
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[94vh] animate-fade text-white relative">
-        <div className="p-4 pt-6 sm:p-6 sm:pt-8 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 relative overflow-hidden gap-3">
+        <div className="p-4 pt-6 sm:p-6 sm:pt-8 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 relative overflow-hidden gap-3 shrink-0">
           <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-orange-500/10 via-green-500/10 to-transparent pointer-events-none"></div>
           <div>
             <span className="text-[9px] sm:text-[10px] font-display font-bold text-green-500 uppercase tracking-widest block">Pasarela Oficial de Pedidos Caniles</span>
