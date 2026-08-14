@@ -111,10 +111,8 @@ function App() {
             <CheckoutModal 
               onClose={() => setIsCheckoutOpen(false)}
               onSuccess={() => {
-                // Return to splash after successful payment
                 useCartStore.getState().clearCart();
                 setIsCheckoutOpen(false);
-                setCurrentView('splash');
               }}
             />
           )}
