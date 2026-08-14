@@ -44,8 +44,8 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
   const [showAddToCartModal, setShowAddToCartModal] = useState(false);
 
   const handleAdd = () => {
-    // Si es Pizza Margarita (ID 22) o Mazzi Pizza (ID 23), mostrar personalizador
-    if ((product.id === 22 || product.id === 23) && onCustomize) {
+    // Si es Pizza Margarita (ID 22) o Mazzi Pizza (ID 23), o Jueves Locos (999), mostrar personalizador
+    if ((product.id === 22 || product.id === 23 || product.id === 999) && onCustomize) {
       onCustomize(product);
       return;
     }

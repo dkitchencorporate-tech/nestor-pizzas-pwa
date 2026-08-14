@@ -52,8 +52,7 @@ export default function GuestRegistrationModal({ isOpen, order, onSkip, onSucces
             full_name: order.client_name,
             email: email,
             phone: order.client_phone,
-            address: order.delivery_address, // As a raw string for now
-            points: pointsEarned
+            address: order.delivery_address // As a raw string for now
           })
           .eq('id', data.user.id);
 

@@ -64,7 +64,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   
   const discount = pointsRedeemed && eligibleDiscount > 0 ? eligibleDiscount : 0;
   
-  const needsSmallOrderFee = deliveryMethod === 'delivery' && (subtotal - discount) < 10;
+  const needsSmallOrderFee = deliveryMethod === 'delivery' && (subtotal - discount) < 12;
   const smallOrderFee = needsSmallOrderFee && acceptSmallOrderFee ? 1.50 : 0;
   const finalTotal = Math.max(0, subtotal - discount) + smallOrderFee;
   
@@ -160,37 +160,19 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         }
       }));
 
-      // Insert Order
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user?.id || null,
-          total_amount: finalTotal,
-          status: 'pending',
-          client_name: clientName,
-          client_phone: clientPhone,
-          delivery_address: finalDeliveryAddress,
-          delivery_method: deliveryMethod,
-          points_earned: pointsEarned,
-          points_redeemed: pointsRedeemed ? 25 : 0,
-          discount_applied: pointsRedeemed ? eligibleDiscount : 0
-        })
-        .select()
-        .single();
+      // Insert Order and Items via secure RPC
+      const { data: orderId, error: checkoutError } = await supabase.rpc('process_checkout', {
+        p_user_id: user?.id || null,
+        p_client_name: clientName,
+        p_client_phone: clientPhone,
+        p_delivery_address: finalDeliveryAddress,
+        p_delivery_method: deliveryMethod,
+        p_items: orderItems,
+        p_points_redeemed: pointsRedeemed,
+        p_small_order_fee_accepted: acceptSmallOrderFee
+      });
 
-      if (orderError) throw orderError;
-
-      // Insert Items with the new order ID
-      const itemsWithOrderId = orderItems.map(item => ({
-        ...item,
-        order_id: orderData.id
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(itemsWithOrderId);
-
-      if (itemsError) throw itemsError;
+      if (checkoutError) throw checkoutError;
 
       // Si el usuario está autenticado, actualizar sus datos de perfil (los puntos ahora los manejan los triggers de base de datos)
       if (user && profile) {
@@ -214,11 +196,11 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         setKioskClientInfo(undefined);
       }
 
-      const orderDataForEmail = { id: orderData.id, total: finalTotal, clientName: clientName };
+      const orderDataForEmail = { id: orderId, total: finalTotal, clientName: clientName };
       if (user?.email) emailService.sendOrderConfirmation(user.email, orderDataForEmail);
       emailService.sendOrderToAdmin(orderDataForEmail);
 
-      onSuccess(orderData, !user);
+      onSuccess({ id: orderId }, !user);
     } catch (error) {
       console.error('Error procesando pedido:', error);
       alert('Hubo un error procesando el pedido. Por favor, intenta de nuevo.');
@@ -500,7 +482,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             <div className="mb-4 bg-orange-500/10 border border-orange-500/30 text-orange-400 p-3 sm:p-4 rounded-xl flex flex-col gap-2 transition-all">
               <div className="flex items-center gap-2 font-medium text-xs sm:text-sm">
                 <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <span>El pedido mínimo para envíos a domicilio gratuitos es de <strong>10.00 €</strong>.</span>
+                <span>El pedido mínimo para envíos a domicilio gratuitos es de <strong>12.00 €</strong>.</span>
               </div>
               <label className="flex items-center gap-3 mt-1 cursor-pointer group">
                 <input 

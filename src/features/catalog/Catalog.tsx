@@ -296,9 +296,14 @@ export default function Catalog() {
 
               {/* Grid de Productos de esta Categoría */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                
                 {catProducts.map(product => {
-                  return <ProductCard key={product.id} product={product} onCustomize={(prod) => setIngredientsProduct(prod)} />
+                  return <ProductCard key={product.id} product={product} onCustomize={(prod) => {
+                    if (prod.id === 999) {
+                      setIsPromoOpen(true);
+                    } else {
+                      setIngredientsProduct(prod);
+                    }
+                  }} />
                 })}
               </div>
             </div>
