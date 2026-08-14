@@ -193,8 +193,9 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           })
           .eq('id', user.id);
           
-        // Recargar perfil local
+        // Recargar perfil local y cargar pedidos para que el tracker funcione de inmediato
         useAuthStore.getState().fetchProfile(user.id);
+        useAuthStore.getState().fetchOrders();
       }
 
       // Clear kiosk data if used
