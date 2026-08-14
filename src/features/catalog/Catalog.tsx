@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { NESTOR_INGREDIENTS_OFICIAL } from '../../data/products';
 import { Product } from '../../types';
 import { supabase } from '../../lib/supabase';
+import PromoJuevesModal from '../../components/PromoJuevesModal';
 
 export default function Catalog() {
   const [activeCategory, setActiveCategory] = useState('TODOS');
@@ -14,6 +15,7 @@ export default function Catalog() {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaturationMode, setIsSaturationMode] = useState(false);
+  const [isPromoOpen, setIsPromoOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,7 +111,7 @@ export default function Catalog() {
     return (
       <div className="min-h-screen bg-[#0A0A0E]">
         <Header />
-        <Hero />
+        <Hero onOpenPromo={() => {}} />
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -135,7 +137,7 @@ export default function Catalog() {
   return (
     <>
       <Header />
-      <Hero />
+      <Hero onOpenPromo={() => setIsPromoOpen(true)} />
       
       {isSaturationMode && (
         <div className="bg-red-600 text-white font-bold text-center py-2 px-4 animate-pulse uppercase tracking-wider text-sm sticky top-[52px] sm:top-[60px] z-[45]">
@@ -306,6 +308,10 @@ export default function Catalog() {
 
       {ingredientsProduct && (
         <IngredientsModal product={ingredientsProduct} onClose={() => setIngredientsProduct(null)} />
+      )}
+
+      {isPromoOpen && (
+        <PromoJuevesModal onClose={() => setIsPromoOpen(false)} />
       )}
     </>
   );

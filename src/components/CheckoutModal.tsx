@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { SumUpPaymentModal } from './SumUpPaymentModal';
 import { isStoreOpen, generateAvailableTimeSlots } from '../utils/timeUtils';
 import { useHardwareBack } from '../utils/useHardwareBack';
+import { emailService } from '../lib/emailService';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -213,6 +214,10 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       if (kioskClientInfo) {
         setKioskClientInfo(undefined);
       }
+
+      const orderDataForEmail = { id: orderData.id, total: finalTotal, clientName: clientName };
+      if (user?.email) emailService.sendOrderConfirmation(user.email, orderDataForEmail);
+      emailService.sendOrderToAdmin(orderDataForEmail);
 
       onSuccess(orderData, !user);
     } catch (error) {

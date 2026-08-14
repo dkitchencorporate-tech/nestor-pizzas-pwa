@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useGuestOrderStore } from '../store/guestOrderStore';
 import { useAuthStore } from '../store/authStore';
+import { emailService } from '../lib/emailService';
 
 interface GuestRegistrationModalProps {
   isOpen: boolean;
@@ -64,6 +65,8 @@ export default function GuestRegistrationModal({ isOpen, order, onSkip, onSucces
           .eq('id', order.id);
 
         if (orderError) throw orderError;
+
+        emailService.sendWelcomeEmail(email, order.client_name);
 
         // Cargar datos en el store global para que el tracking use la sesión logueada
         await fetchProfile(data.user.id);

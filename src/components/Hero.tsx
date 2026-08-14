@@ -1,6 +1,10 @@
 import { useState } from 'react';
 
-export default function Hero() {
+interface HeroProps {
+  onOpenPromo: () => void;
+}
+
+export default function Hero({ onOpenPromo }: HeroProps) {
   const [activeSlide, setActiveSlide] = useState(1);
 
   return (
@@ -20,8 +24,8 @@ export default function Hero() {
               Cada jueves disfruta de dos pizzas de 33cm recién horneadas con hasta 3 ingredientes artesanos al mejor precio de la comarca.
             </p>
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 relative z-30">
-              <button className="w-full sm:w-auto bg-nestor-green hover:bg-green-500 text-white font-display font-black px-8 py-4 rounded-2xl text-sm sm:text-sm shadow-[0_15px_30px_-5px_rgba(34,197,94,0.4)] tracking-wider uppercase transition-all hover:scale-105 border border-green-400/50">
-                Explorar Carta de Pizzas →
+              <button onClick={onOpenPromo} className="w-full sm:w-auto bg-nestor-green hover:bg-green-500 text-white font-display font-black px-8 py-4 rounded-2xl text-sm sm:text-sm shadow-[0_15px_30px_-5px_rgba(34,197,94,0.4)] tracking-wider uppercase transition-all hover:scale-105 border border-green-400/50">
+                ¡Aprovechar Promo Jueves! →
               </button>
             </div>
           </div>

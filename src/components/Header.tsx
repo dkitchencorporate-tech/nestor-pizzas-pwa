@@ -1,7 +1,9 @@
 import { useAuthStore } from '../store/authStore';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function Header() {
   const { user, profile, openUserModal } = useAuthStore();
+  const { promptToInstall } = usePWAInstall();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#0A0A0E]/95 backdrop-blur-xl border-b border-green-500/40 shadow-2xl transition-all">
@@ -32,11 +34,11 @@ export default function Header() {
 
         {/* Botones */}
         <div className="flex items-center gap-3 sm:gap-2.5 ml-auto">
-          <button className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-nestor-gold to-yellow-400 text-black font-display font-bold text-sm shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:scale-105 transition-transform uppercase tracking-widest border border-yellow-300/50">
+          <button onClick={promptToInstall} className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-nestor-gold to-yellow-400 text-black font-display font-bold text-sm shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:scale-105 transition-transform uppercase tracking-widest border border-yellow-300/50">
             <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             <span>INSTALAR APP</span>
           </button>
-          <button className="md:hidden flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-xl bg-nestor-gold text-black shadow-[0_0_15px_rgba(250,204,21,0.4)] transition-all hover:scale-105 shrink-0">
+          <button onClick={promptToInstall} className="md:hidden flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-xl bg-nestor-gold text-black shadow-[0_0_15px_rgba(250,204,21,0.4)] transition-all hover:scale-105 shrink-0">
             <svg className="w-5 h-5 sm:w-4 sm:h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           </button>
 
