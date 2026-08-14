@@ -11,6 +11,8 @@ export default function AdminDashboard() {
   const { user, profile, signIn } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'kiosk' | 'catalog' | 'analytics'>('orders');
   const [isSaturated, setIsSaturated] = useState(false);
+  const [isStoreClosed, setIsStoreClosed] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Admin Auth State
   const [adminEmail, setAdminEmail] = useState('');
@@ -26,9 +28,12 @@ export default function AdminDashboard() {
     
     // Fetch initial state
     const fetchMode = async () => {
-      const { data } = await supabase.from('app_settings').select('*').eq('key', 'saturation_mode').single();
-      if (data && data.value === 'true') {
-        setIsSaturated(true);
+      const { data } = await supabase.from('app_settings').select('*').in('key', ['saturation_mode', 'store_closed']);
+      if (data) {
+        const sat = data.find(s => s.key === 'saturation_mode');
+        const closed = data.find(s => s.key === 'store_closed');
+        if (sat && sat.value === 'true') setIsSaturated(true);
+        if (closed && closed.value === 'true') setIsStoreClosed(true);
       }
     };
     fetchMode();
@@ -38,7 +43,15 @@ export default function AdminDashboard() {
     const newStatus = !isSaturated;
     setIsSaturated(newStatus);
     await supabase.from('app_settings').upsert({ key: 'saturation_mode', value: newStatus ? 'true' : 'false' });
-  };  const handleAdminLogin = async (e: React.FormEvent) => {
+  };
+  
+  const toggleStoreStatus = async () => {
+    const newStatus = !isStoreClosed;
+    setIsStoreClosed(newStatus);
+    await supabase.from('app_settings').upsert({ key: 'store_closed', value: newStatus ? 'true' : 'false' });
+  };
+  
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdminLoading(true);
     setAdminError('');
@@ -188,18 +201,36 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0E] text-white flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#0A0A0E] text-white flex flex-col md:flex-row font-sans relative">
       
+      {/* Mobile Toggle Button overlay if sidebar is closed */}
+      {!isSidebarOpen && (
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          className="absolute top-4 left-4 z-50 p-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white shadow-xl hover:bg-zinc-800 transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+      )}
+
       {/* Sidebar Menú */}
-      <aside className="w-full md:w-64 bg-[#14141E] border-r border-zinc-800 flex flex-col">
-        <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-            <span className="font-display font-black text-xl text-black">N</span>
+      <aside className={`${isSidebarOpen ? 'w-full md:w-64' : 'hidden'} bg-[#14141E] border-r border-zinc-800 flex flex-col transition-all duration-300 relative z-40`}>
+        <div className="p-6 border-b border-zinc-800 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center border border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.3)] p-0.5">
+              <img src="./assets/brand/logo_black_exact_2k.png" alt="Nestor Pizzas" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <h1 className="font-display font-black uppercase text-sm tracking-widest leading-none">Kitchen POS</h1>
+              <p className="text-[10px] text-green-400 font-mono mt-0.5">v2.0 Enterprise</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display font-black uppercase text-sm tracking-widest">Kitchen POS</h1>
-            <p className="text-[10px] text-green-400 font-mono">v2.0 Enterprise</p>
-          </div>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="p-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
@@ -236,22 +267,29 @@ export default function AdminDashboard() {
         </nav>
 
         {/* Global Controls */}
-        <div className="p-4 border-t border-zinc-800">
-          <div className="bg-[#1A1A24] rounded-xl p-4 border border-zinc-700/50">
-            <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Modo Saturación</h4>
+        <div className="p-4 border-t border-zinc-800 space-y-3">
+          <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Cierre de Emergencia</h4>
+            <button 
+              onClick={toggleStoreStatus}
+              className={`w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border shadow-lg ${isStoreClosed ? 'bg-red-600 text-white border-red-500 animate-pulse' : 'bg-green-500/10 text-green-500 border-green-500/30 hover:bg-green-500/20'}`}
+            >
+              {isStoreClosed ? 'TIENDA CERRADA (ABRIR)' : 'CERRAR TIENDA'}
+            </button>
+          </div>
+
+          <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Modo Saturación</h4>
             <button 
               onClick={toggleSaturationMode}
-              className={`w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${isSaturated ? 'bg-red-500/20 text-red-500 border-red-500/50' : 'bg-green-500/10 text-green-500 border-green-500/30 hover:bg-green-500/20'}`}
+              className={`w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${isSaturated ? 'bg-orange-500/20 text-orange-500 border-orange-500/50' : 'bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:bg-zinc-800'}`}
             >
               {isSaturated ? '🚨 Restaurar Flujo' : 'Activar (+1h Espera)'}
             </button>
-            <p className="text-[9px] text-gray-500 mt-2 text-center leading-tight">
-              Avisa a los clientes web que el tiempo de entrega superará 1 hora.
-            </p>
           </div>
           <button 
             onClick={() => window.location.href = '/'}
-            className="w-full mt-4 py-2 text-xs text-gray-500 hover:text-white transition-colors"
+            className="w-full mt-2 py-2 text-xs text-gray-500 hover:text-white transition-colors"
           >
             Volver a la Tienda
           </button>
