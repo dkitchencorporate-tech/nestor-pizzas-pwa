@@ -1,17 +1,28 @@
 import React, { useState, useMemo } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useGuestOrderStore } from '../store/guestOrderStore';
 
 export default function OrderTracking({ onBack }: { onBack: () => void }) {
-  const { orders } = useAuthStore();
+  const { orders, user } = useAuthStore();
+  const { guestOrder } = useGuestOrderStore();
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
 
   const activeOrder = useMemo(() => {
-    return (orders || []).find((o: any) => ['pending', 'cooking', 'delivering', 'ready'].includes(o?.status));
-  }, [orders]);
+    // Si hay un usuario logueado, usar sus órdenes. Si no, usar la orden de invitado.
+    if (user) {
+      return (orders || []).find((o: any) => ['pending', 'cooking', 'delivering', 'ready'].includes(o?.status));
+    } else {
+      return guestOrder && ['pending', 'cooking', 'delivering', 'ready'].includes(guestOrder.status) ? guestOrder : null;
+    }
+  }, [orders, guestOrder, user]);
 
   const historyOrders = useMemo(() => {
-    return (orders || []).filter((o: any) => ['delivered', 'cancelled'].includes(o?.status));
-  }, [orders]);
+    if (user) {
+      return (orders || []).filter((o: any) => ['delivered', 'cancelled'].includes(o?.status));
+    } else {
+      return guestOrder && ['delivered', 'cancelled'].includes(guestOrder.status) ? [guestOrder] : [];
+    }
+  }, [orders, guestOrder, user]);
 
   const getStatusIndex = (status: string) => {
     switch(status) {

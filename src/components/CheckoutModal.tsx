@@ -8,7 +8,7 @@ import { useHardwareBack } from '../utils/useHardwareBack';
 
 interface CheckoutModalProps {
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (orderData: any, isGuest: boolean) => void;
 }
 
 export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps) {
@@ -42,6 +42,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [pointsRedeemed, setPointsRedeemed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [geofenceError, setGeofenceError] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [minimumOrderError, setMinimumOrderError] = useState(false);
   const [acceptSmallOrderFee, setAcceptSmallOrderFee] = useState(false);
@@ -70,23 +71,14 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const canRedeem = userPoints >= 25 && eligibleDiscount > 0;
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
-  const handleCheckoutClick = () => {
-    if (needsSmallOrderFee && !acceptSmallOrderFee) {
-      return;
+  const validateGeofence = async (): Promise<boolean> => {
+    // Si el usuario introduce explícitamente el CP de Caniles, confiamos en la dirección
+    // y evitamos que el GPS bloquee la compra por imprecisiones.
+    if (deliveryMethod === 'delivery' && addressCP.trim() === '18810') {
+      return true;
     }
 
-    if (paymentMethod === 'online' || deliveryMethod === 'delivery') {
-      setShowPaymentModal(true);
-    } else {
-      processOrder();
-    }
-  };
-
-  const processOrder = async () => {
-    setIsProcessing(true);
-    
-    // Geofence Check: strict 10km radius for ALL orders (delivery and pickup)
-    const isWithinRange = await new Promise<boolean>((resolve) => {
+    return new Promise<boolean>((resolve) => {
       if (!navigator.geolocation) {
         setGeofenceError("Tu navegador no soporta geolocalización. Necesitamos validar tu ubicación para asegurar que podrás disfrutar de nuestras pizzas calientes.");
         resolve(false);
@@ -121,12 +113,32 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     });
+  };
 
-    if (!isWithinRange) {
-      setIsProcessing(false);
+  const handleCheckoutClick = async () => {
+    setPaymentError(null);
+    if (needsSmallOrderFee && !acceptSmallOrderFee) {
       return;
     }
 
+    setIsProcessing(true);
+    const isWithinRange = await validateGeofence();
+    setIsProcessing(false);
+
+    if (!isWithinRange) {
+      return;
+    }
+
+    if (paymentMethod === 'online' || deliveryMethod === 'delivery') {
+      setShowPaymentModal(true);
+    } else {
+      processOrder();
+    }
+  };
+
+  const processOrder = async () => {
+    setIsProcessing(true);
+    
     // Generate the final address string to save
     const finalDeliveryAddress = deliveryMethod === 'delivery' 
       ? `${addressStreet}, Nº ${addressNumber}, CP ${addressCP} Caniles${addressNotes ? '. Notas: ' + addressNotes : ''}`
@@ -202,7 +214,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         setKioskClientInfo(undefined);
       }
 
-      onSuccess();
+      onSuccess(orderData, !user);
     } catch (error) {
       console.error('Error procesando pedido:', error);
       alert('Hubo un error procesando el pedido. Por favor, intenta de nuevo.');
@@ -244,10 +256,18 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             <span className="text-[9px] sm:text-[10px] font-display font-bold text-green-500 uppercase tracking-widest block">Pasarela Oficial de Pedidos Caniles</span>
             <h3 className="font-display font-black text-xl sm:text-3xl text-white mt-0.5 uppercase">Resumen y Tramitación</h3>
           </div>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white text-xl font-bold p-2 bg-zinc-900 rounded-2xl border border-zinc-800 shrink-0">✕</button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white text-xl font-bold p-2 bg-zinc-900 rounded-2xl border border-zinc-800 shrink-0 z-10 relative">✕</button>
         </div>
 
         <div className="p-4 sm:p-6 overflow-y-auto space-y-5 sm:space-y-6 flex-1 text-sm sm:text-sm text-zinc-300 no-scrollbar">
+          
+          {paymentError && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-center animate-fade-in">
+              <span className="text-2xl mb-2 block">⚠️</span>
+              <p className="text-red-400 font-medium text-sm">{paymentError}</p>
+            </div>
+          )}
+
           {/* Artículos Seleccionados */}
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
@@ -514,8 +534,11 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
       <SumUpPaymentModal 
         isOpen={showPaymentModal} 
-        onClose={() => setShowPaymentModal(false)} 
-        onSuccess={processOrder} 
+        onClose={() => {
+          setShowPaymentModal(false);
+          setPaymentError('El pago fue cancelado o rechazado. Por favor, intenta con otro método de pago o elige Recogida en local.');
+        }} 
+        onSuccess={() => processOrder()} 
         amount={finalTotal} 
       />
     </div>
