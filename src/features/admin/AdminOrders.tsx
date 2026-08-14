@@ -65,11 +65,26 @@ export default function AdminOrders() {
     fetchOrders();
   };
 
+  // Calculate the start of the current "working day" (05:00 AM cutoff)
+  const getWorkingDayStart = () => {
+    const now = new Date();
+    if (now.getHours() < 5) {
+      now.setDate(now.getDate() - 1);
+    }
+    now.setHours(5, 0, 0, 0);
+    return now.getTime();
+  };
+
+  const workingDayStart = getWorkingDayStart();
+
   // Derived filtered arrays
   const pending = orders.filter(o => o.status === 'pending');
   const cooking = orders.filter(o => o.status === 'cooking');
   const ready = orders.filter(o => o.status === 'ready' || o.status === 'delivering');
-  const delivered = orders.filter(o => o.status === 'delivered' || o.status === 'cancelled');
+  const delivered = orders.filter(o => {
+    if (o.status !== 'delivered' && o.status !== 'cancelled') return false;
+    return new Date(o.created_at).getTime() >= workingDayStart;
+  });
 
   const getFilteredOrders = () => {
     switch (activeTab) {
