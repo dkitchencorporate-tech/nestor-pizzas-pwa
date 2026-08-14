@@ -23,7 +23,7 @@ export function usePWAInstall() {
 
   const promptToInstall = async () => {
     if (!installPrompt) {
-      alert('La aplicación ya está instalada o tu navegador no soporta esta función. En iOS, usa la opción "Añadir a la pantalla de inicio" del menú compartir de Safari.');
+      alert('La aplicación ya está instalada en este dispositivo o el navegador no soporta la instalación directa.\n\nNota: La App de Pedidos y el Panel de Administración (Kitchen POS) son la MISMA aplicación (PWA). Si ya instalaste "Néstor Pizzas", puedes usar ese mismo icono para entrar como administrador.\n\nEn iPhone/iPad: Abre Safari, pulsa "Compartir" y selecciona "Añadir a la pantalla de inicio".');
       return;
     }
 
