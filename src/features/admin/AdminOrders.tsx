@@ -5,23 +5,21 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'cooking' | 'ready' | 'delivered'>('pending');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [silencedCount, setSilencedCount] = useState<number>(0);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     fetchOrders();
 
-    // Setup audio
-    audioRef.current = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+    // Setup audio (fuerte y ruidoso)
+    audioRef.current = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
     audioRef.current.loop = true; 
     
     // Realtime subscription
     const channel = supabase.channel('realtime_orders')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
         console.log('Nuevo pedido recibido!', payload);
-        if (audioRef.current) {
-          audioRef.current.play().catch(e => console.log('Audio play error:', e));
-        }
         fetchOrders();
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
@@ -54,6 +52,12 @@ export default function AdminOrders() {
     }
   };
 
+  const handleSilence = () => {
+    stopAudio();
+    // Guardamos cuántos pendientes hay actualmente para no volver a sonar hasta que llegue uno nuevo
+    setSilencedCount(orders.filter(o => o.status === 'pending').length);
+  };
+
   const updateOrderStatus = async (id: string, status: string, estimatedTime?: string) => {
     stopAudio();
     const updateData: any = { status };
@@ -79,6 +83,20 @@ export default function AdminOrders() {
 
   // Derived filtered arrays
   const pending = orders.filter(o => o.status === 'pending');
+
+  useEffect(() => {
+    // Si hay más pendientes que los que hemos silenciado, significa que entró uno nuevo
+    if (pending.length > silencedCount) {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(e => console.log('Audio play error:', e));
+      }
+    } else if (pending.length === 0 && silencedCount > 0) {
+      // Resetear contador cuando ya no hay pendientes
+      setSilencedCount(0);
+      stopAudio();
+    }
+  }, [pending.length, silencedCount]);
+
   const cooking = orders.filter(o => o.status === 'cooking');
   const ready = orders.filter(o => o.status === 'ready' || o.status === 'delivering');
   const delivered = orders.filter(o => {
@@ -113,12 +131,12 @@ export default function AdminOrders() {
         <h2 className="text-xl sm:text-2xl font-display font-black uppercase text-white tracking-wide flex items-center gap-2">
           Gestor de <span className="text-green-500">Pedidos</span>
         </h2>
-        {pending.length > 0 && (
+        {pending.length > silencedCount && (
           <button 
-            onClick={stopAudio}
+            onClick={handleSilence}
             className="px-4 py-2 bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 rounded-lg text-sm font-bold uppercase animate-pulse shadow-[0_0_15px_rgba(250,204,21,0.3)]"
           >
-            Silenciar Alarma ({pending.length})
+            Silenciar Alarma ({pending.length - silencedCount})
           </button>
         )}
       </div>
@@ -167,7 +185,10 @@ export default function AdminOrders() {
             return (
               <div 
                 key={order.id} 
-                className={`bg-[#14141E] border rounded-2xl overflow-hidden transition-all duration-300 ${isExpanded ? 'border-zinc-500 shadow-xl' : 'border-zinc-800 hover:border-zinc-700'}`}
+                className={`bg-[#14141E] border rounded-2xl overflow-hidden transition-all duration-300 ${
+                  order.status === 'pending' ? 'border-red-500/80 shadow-[0_0_25px_rgba(239,68,68,0.5)] animate-pulse' : 
+                  isExpanded ? 'border-zinc-500 shadow-xl' : 'border-zinc-800 hover:border-zinc-700'
+                }`}
               >
                 {/* Accordion Header */}
                 <div 
