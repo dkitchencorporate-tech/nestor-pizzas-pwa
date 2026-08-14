@@ -8,6 +8,8 @@ export default function AdminOrders() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [silencedCount, setSilencedCount] = useState<number>(0);
   const [printingOrder, setPrintingOrder] = useState<any>(null);
+  const [isAudioArmed, setIsAudioArmed] = useState(false);
+  const [isOpeningAlarm, setIsOpeningAlarm] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -29,8 +31,28 @@ export default function AdminOrders() {
       })
       .subscribe();
 
+    // Opening time interval
+    const interval = setInterval(() => {
+      const now = new Date();
+      const day = now.getDay();
+      
+      // Mapeo simple de horas de apertura basado en tu timeUtils
+      const hoursMap: Record<number, string | null> = {
+        0: '20:00', 1: null, 2: null, 3: '20:30', 4: '20:00', 5: '20:00', 6: '20:00'
+      };
+      
+      const openTime = hoursMap[day];
+      if (openTime) {
+        const [openHour, openMin] = openTime.split(':').map(Number);
+        if (now.getHours() === openHour && now.getMinutes() === openMin) {
+          setIsOpeningAlarm(true);
+        }
+      }
+    }, 60000); // Revisa cada minuto
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(interval);
       if (audioRef.current) {
         audioRef.current.pause();
       }
@@ -54,8 +76,18 @@ export default function AdminOrders() {
     }
   };
 
+  const armAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play().then(() => {
+        audioRef.current?.pause();
+        setIsAudioArmed(true);
+      }).catch(e => console.log('Armado bloqueado', e));
+    }
+  };
+
   const handleSilence = () => {
     stopAudio();
+    setIsOpeningAlarm(false);
     // Guardamos cuántos pendientes hay actualmente para no volver a sonar hasta que llegue uno nuevo
     setSilencedCount(orders.filter(o => o.status === 'pending').length);
   };
@@ -95,17 +127,23 @@ export default function AdminOrders() {
   const pending = orders.filter(o => o.status === 'pending');
 
   useEffect(() => {
+    if (isOpeningAlarm) {
+      if (audioRef.current && audioRef.current.paused && isAudioArmed) {
+        audioRef.current.play().catch(e => console.log('Audio autoplay blocked', e));
+      }
+      return;
+    }
+
     // Si hay más pendientes que los que hemos silenciado, significa que entró uno nuevo
     if (pending.length > silencedCount) {
-      if (audioRef.current && audioRef.current.paused) {
-        audioRef.current.play().catch(e => console.log('Audio play error:', e));
+      if (audioRef.current && audioRef.current.paused && isAudioArmed) {
+        audioRef.current.play().catch(e => console.log('Audio autoplay blocked', e));
       }
-    } else if (pending.length === 0 && silencedCount > 0) {
-      // Resetear contador cuando ya no hay pendientes
-      setSilencedCount(0);
+    } else if (pending.length === 0) {
       stopAudio();
+      setSilencedCount(0);
     }
-  }, [pending.length, silencedCount]);
+  }, [pending.length, silencedCount, isOpeningAlarm, isAudioArmed]);
 
   const cooking = orders.filter(o => o.status === 'cooking');
   const ready = orders.filter(o => o.status === 'ready' || o.status === 'delivering');
@@ -134,7 +172,37 @@ export default function AdminOrders() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#0A0A0E] text-white overflow-hidden">
+    <div className="h-full flex flex-col bg-[#0A0A0E] relative">
+      {!isAudioArmed && (
+        <div className="absolute inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-24 h-24 bg-orange-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse border border-orange-500/50">
+            <span className="text-4xl">🔔</span>
+          </div>
+          <h2 className="text-3xl font-display font-black text-white uppercase tracking-wider mb-3">Recepción Bloqueada</h2>
+          <p className="text-gray-400 max-w-md mb-8">Por políticas de seguridad del navegador, necesitamos que hagas clic en este botón para poder emitir la alarma sonora cuando lleguen nuevos pedidos.</p>
+          <button 
+            onClick={armAudio}
+            className="bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-10 rounded-2xl uppercase tracking-widest shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-transform hover:scale-105"
+          >
+            Activar Alarma Sonora
+          </button>
+        </div>
+      )}
+
+      {isOpeningAlarm && (
+        <div className="absolute inset-x-0 top-0 z-40 bg-red-600 text-white p-4 shadow-2xl flex flex-col sm:flex-row items-center justify-between animate-pulse">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">⏰</span>
+            <div>
+              <h3 className="font-display font-black uppercase text-xl">¡Hora de Abrir la Pizzería!</h3>
+              <p className="font-medium text-sm">Ya es la hora oficial de apertura según el horario.</p>
+            </div>
+          </div>
+          <button onClick={handleSilence} className="mt-3 sm:mt-0 px-6 py-2 bg-black text-white rounded-xl font-bold uppercase hover:bg-zinc-900 border border-red-500/50">
+            Silenciar Alarma
+          </button>
+        </div>
+      )}
       
       {/* Header and Controls */}
       <div className="p-4 sm:p-6 border-b border-zinc-800 bg-[#14141E] z-10 shadow-md flex items-center justify-between">
@@ -257,6 +325,9 @@ export default function AdminOrders() {
                               <span className="font-black text-white w-6 shrink-0">{item.quantity}x</span>
                               <div className="flex-1 text-zinc-300">
                                 <span>{item.customization_details?.name || item.products?.name || 'Producto Desconocido'}</span>
+                                {item.customization_details?.notes && (
+                                  <p className="text-xs text-orange-400 mt-1 font-bold">📝 Notas: {item.customization_details.notes}</p>
+                                )}
                               </div>
                             </div>
                           ))}

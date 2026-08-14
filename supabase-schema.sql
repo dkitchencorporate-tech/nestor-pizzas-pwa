@@ -124,14 +124,19 @@ CREATE POLICY "Usuarios pueden actualizar su propio perfil" ON profiles FOR UPDA
 -- Políticas de Órdenes
 CREATE POLICY "Usuarios pueden ver sus propias órdenes" ON orders FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Invitados pueden leer órdenes anónimas" ON orders FOR SELECT USING (user_id IS NULL);
+CREATE POLICY "Admins pueden ver todo" ON orders FOR SELECT USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.is_admin = true));
 CREATE POLICY "Cualquiera puede insertar órdenes (kiosco/web)" ON orders FOR INSERT WITH CHECK (true);
-CREATE POLICY "Usuarios pueden actualizar sus órdenes" ON orders FOR UPDATE USING (auth.uid() = user_id OR user_id IS NULL);
+CREATE POLICY "Usuarios pueden actualizar sus órdenes" ON orders FOR UPDATE USING (auth.uid() = user_id OR user_id IS NULL) WITH CHECK (true);
+CREATE POLICY "Admins pueden actualizar todas las ordenes" ON orders FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.is_admin = true));
 
 CREATE POLICY "Usuarios pueden ver items de sus órdenes" ON order_items FOR SELECT USING (
     EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid())
 );
 CREATE POLICY "Invitados pueden leer items de órdenes anónimas" ON order_items FOR SELECT USING (
     EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id IS NULL)
+);
+CREATE POLICY "Admins pueden ver todos los items" ON order_items FOR SELECT USING (
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.is_admin = true)
 );
 CREATE POLICY "Cualquiera puede insertar items" ON order_items FOR INSERT WITH CHECK (true);
 

@@ -6,6 +6,7 @@ import AdminKiosk from '../features/admin/AdminKiosk';
 import AdminAnalytics from '../features/admin/AdminAnalytics';
 import AdminHistory from '../features/admin/AdminHistory';
 import { supabase } from '../lib/supabase';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function AdminDashboard() {
   const { user, profile, signIn } = useAuthStore();
@@ -13,6 +14,7 @@ export default function AdminDashboard() {
   const [isSaturated, setIsSaturated] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { promptToInstall } = usePWAInstall();
 
   // Admin Auth State
   const [adminEmail, setAdminEmail] = useState('');
@@ -264,6 +266,16 @@ export default function AdminDashboard() {
           >
             📊 Ventas y BD
           </button>
+
+          <div className="pt-4 mt-4 border-t border-zinc-800">
+            <button 
+              onClick={promptToInstall}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-nestor-gold to-yellow-400 text-black font-display font-bold text-sm shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:scale-105 transition-transform uppercase tracking-widest border border-yellow-300/50 justify-center"
+            >
+              <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              INSTALAR APP
+            </button>
+          </div>
         </nav>
 
         {/* Global Controls */}
