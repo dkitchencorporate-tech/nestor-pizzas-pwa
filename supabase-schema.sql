@@ -59,6 +59,7 @@ CREATE TABLE upsells (
 CREATE TABLE profiles (
     id UUID REFERENCES auth.users NOT NULL PRIMARY KEY,
     full_name TEXT,
+    email TEXT,
     phone TEXT,
     address TEXT,
     points INTEGER DEFAULT 0,

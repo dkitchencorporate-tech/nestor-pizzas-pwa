@@ -199,7 +199,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           .update({ 
             phone: clientPhone,
             address: JSON.stringify({ street: addressStreet, number: addressNumber, cp: addressCP, notes: addressNotes }),
-            full_name: clientName
+            full_name: clientName,
+            email: user.email
           })
           .eq('id', user.id);
           

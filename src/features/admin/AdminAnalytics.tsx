@@ -38,11 +38,11 @@ export default function AdminAnalytics() {
     }
 
     // Professional headers
-    const headers = ['ID Cliente', 'Nombre', 'Teléfono', 'Puntos', 'Fecha de Registro'];
+    const headers = ['ID Cliente', 'Nombre', 'Email', 'Teléfono', 'Puntos', 'Fecha de Registro'];
     
     const rows = users.map(u => {
       const date = new Date(u.created_at).toLocaleDateString('es-ES');
-      return `"${u.id.slice(0,8)}","${u.full_name || ''}","${u.phone || ''}","${u.points || 0}","${date}"`;
+      return `"${u.id.slice(0,8)}","${u.full_name || ''}","${u.email || ''}","${u.phone || ''}","${u.points || 0}","${date}"`;
     });
 
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
@@ -63,7 +63,7 @@ export default function AdminAnalytics() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#0A0A0E] overflow-y-auto print:bg-white print:text-black">
+    <div className="h-full flex flex-col bg-[#0A0A0E] overflow-y-auto print:h-auto print:overflow-visible print:bg-white print:text-black">
       <div className="p-6 print:hidden">
         <h2 className="text-2xl font-display font-black uppercase text-white tracking-wide mb-6">
           Analítica y <span className="text-green-500">Marketing</span>
@@ -116,6 +116,7 @@ export default function AdminAnalytics() {
               <tr>
                 <th className="px-4 py-3">ID / Auth</th>
                 <th className="px-4 py-3">Nombre</th>
+                <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Teléfono</th>
                 <th className="px-4 py-3">Puntos</th>
                 <th className="px-4 py-3">Registro</th>
@@ -126,6 +127,7 @@ export default function AdminAnalytics() {
                 <tr key={u.id} className="border-b border-zinc-800 hover:bg-zinc-800/20">
                   <td className="px-4 py-3 font-mono text-[10px]">{u.id.slice(0,8)}...</td>
                   <td className="px-4 py-3 text-white font-bold">{u.full_name || 'Sin nombre'}</td>
+                  <td className="px-4 py-3 text-gray-400">{u.email || 'Sin email'}</td>
                   <td className="px-4 py-3">{u.phone || 'Sin teléfono'}</td>
                   <td className="px-4 py-3 text-green-400 font-bold">{u.points} pts</td>
                   <td className="px-4 py-3 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
@@ -171,6 +173,7 @@ export default function AdminAnalytics() {
             <tr className="border-b-2 border-black">
               <th className="py-2">ID</th>
               <th className="py-2">Nombre Completo</th>
+              <th className="py-2">Email</th>
               <th className="py-2">Teléfono</th>
               <th className="py-2">Puntos</th>
               <th className="py-2 text-right">Registro</th>
@@ -181,6 +184,7 @@ export default function AdminAnalytics() {
               <tr key={u.id} className="border-b border-gray-200">
                 <td className="py-2 font-mono text-xs text-gray-600">{u.id.slice(0,8)}</td>
                 <td className="py-2 font-medium">{u.full_name || 'Sin nombre'}</td>
+                <td className="py-2 text-gray-600">{u.email || 'Sin email'}</td>
                 <td className="py-2">{u.phone || 'Sin teléfono'}</td>
                 <td className="py-2 font-bold text-green-700">{u.points || 0}</td>
                 <td className="py-2 text-right text-xs">{new Date(u.created_at).toLocaleDateString('es-ES')}</td>

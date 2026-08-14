@@ -88,6 +88,9 @@ export default function UserModal() {
     if (error) {
       setErrorMsg(error.message);
     } else {
+      if (data.user) {
+        await supabase.from('profiles').update({ email: email }).eq('id', data.user.id);
+      }
       setModalView('profile');
     }
   };
