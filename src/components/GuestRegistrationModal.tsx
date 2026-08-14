@@ -50,6 +50,7 @@ export default function GuestRegistrationModal({ isOpen, order, onSkip, onSucces
           .from('profiles')
           .update({
             full_name: order.client_name,
+            email: email,
             phone: order.client_phone,
             address: order.delivery_address, // As a raw string for now
             points: pointsEarned
