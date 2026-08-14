@@ -201,20 +201,20 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0E] text-white flex flex-col md:flex-row font-sans relative">
+    <div className="min-h-screen bg-[#0A0A0E] text-white flex flex-col md:flex-row font-sans relative print:bg-white print:text-black">
       
       {/* Mobile Toggle Button overlay if sidebar is closed */}
       {!isSidebarOpen && (
         <button 
           onClick={() => setIsSidebarOpen(true)}
-          className="absolute top-4 left-4 z-50 p-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white shadow-xl hover:bg-zinc-800 transition-colors"
+          className="absolute top-4 left-4 z-50 p-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white shadow-xl hover:bg-zinc-800 transition-colors print:hidden"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </button>
       )}
 
       {/* Sidebar Menú */}
-      <aside className={`${isSidebarOpen ? 'w-full md:w-64' : 'hidden'} bg-[#14141E] border-r border-zinc-800 flex flex-col transition-all duration-300 relative z-40`}>
+      <aside className={`${isSidebarOpen ? 'w-full md:w-64' : 'hidden'} bg-[#14141E] border-r border-zinc-800 flex flex-col transition-all duration-300 relative z-40 print:hidden`}>
         <div className="p-6 border-b border-zinc-800 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center border border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.3)] p-0.5">
@@ -287,17 +287,19 @@ export default function AdminDashboard() {
               {isSaturated ? '🚨 Restaurar Flujo' : 'Activar (+1h Espera)'}
             </button>
           </div>
-          <button 
-            onClick={() => window.location.href = '/'}
-            className="w-full mt-2 py-2 text-xs text-gray-500 hover:text-white transition-colors"
-          >
-            Volver a la Tienda
-          </button>
+          <div className="p-4 border-t border-zinc-800">
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-gray-400 font-bold hover:text-white hover:bg-zinc-800 transition-colors text-xs uppercase"
+            >
+              Volver a la Tienda
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 bg-[#0A0A0E] relative overflow-hidden">
+      <main className="flex-1 h-screen overflow-hidden relative print:h-auto print:overflow-visible print:block">
         {activeTab === 'orders' && <AdminOrders />}
         {activeTab === 'history' && <AdminHistory />}
         {activeTab === 'kiosk' && <AdminKiosk />}
