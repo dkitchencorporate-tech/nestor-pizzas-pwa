@@ -58,7 +58,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
       id: crypto.randomUUID(),
       productId: typeof product.id === 'number' ? product.id : 0,
       name: product.name,
-      price: finalPrice,
+      price: product.price,
       quantity,
       notes: notes.trim()
     });
