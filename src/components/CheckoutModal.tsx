@@ -170,7 +170,10 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           client_name: clientName,
           client_phone: clientPhone,
           delivery_address: finalDeliveryAddress,
-          delivery_method: deliveryMethod
+          delivery_method: deliveryMethod,
+          points_earned: pointsEarned,
+          points_redeemed: pointsRedeemed ? 25 : 0,
+          discount_applied: pointsRedeemed ? eligibleDiscount : 0
         })
         .select()
         .single();
@@ -189,16 +192,11 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
       if (itemsError) throw itemsError;
 
-      // Si el usuario está autenticado, sumarle los puntos y actualizar sus datos
+      // Si el usuario está autenticado, actualizar sus datos de perfil (los puntos ahora los manejan los triggers de base de datos)
       if (user && profile) {
-        const newPoints = profile.points + pointsEarned;
-        // Si canjeó puntos (25 pts), restarlos.
-        const finalPoints = pointsRedeemed ? newPoints - 25 : newPoints;
-        
         await supabase
           .from('profiles')
           .update({ 
-            points: finalPoints,
             phone: clientPhone,
             address: JSON.stringify({ street: addressStreet, number: addressNumber, cp: addressCP, notes: addressNotes }),
             full_name: clientName

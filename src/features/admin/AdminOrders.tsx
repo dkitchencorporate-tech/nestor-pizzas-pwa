@@ -295,8 +295,8 @@ export default function AdminOrders() {
                       </div>
                       <div className="flex gap-3 text-xs font-medium mt-1">
                         <span className={isDelivery ? 'text-blue-400' : 'text-purple-400'}>{isDelivery ? 'A Domicilio' : 'Recogida Local'}</span>
-                        <span className="text-zinc-500">•</span>
                         <span className="text-zinc-400">{new Date(order.created_at).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
+                        {order.discount_applied > 0 && <span className="text-green-500 font-bold ml-2">🎫 -{order.discount_applied}€ (VIP)</span>}
                         {order.status === 'cancelled' && <span className="text-red-500 font-bold ml-2">CANCELADO</span>}
                       </div>
                     </div>
@@ -331,6 +331,13 @@ export default function AdminOrders() {
                               </div>
                             </div>
                           ))}
+                          
+                          {order.discount_applied > 0 && (
+                            <div className="flex justify-between text-sm border-t border-zinc-800/50 pt-2 mt-2">
+                              <span className="font-bold text-green-400">Descuento Club VIP Aplicado:</span>
+                              <span className="font-bold text-green-400">-{order.discount_applied}€</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 

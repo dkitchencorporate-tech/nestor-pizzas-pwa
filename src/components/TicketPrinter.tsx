@@ -67,7 +67,17 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
       </div>
 
       <div className="ticket-total text-right mb-4">
-        <p className="text-3xl font-black uppercase border-t-2 border-black pt-2">
+        {order.discount_applied > 0 && (
+          <p className="text-xl font-bold uppercase border-t-2 border-black pt-2 mb-1">
+            SUBTOTAL: {(order.total_amount + order.discount_applied).toFixed(2)}€
+          </p>
+        )}
+        {order.discount_applied > 0 && (
+          <p className="text-lg font-bold uppercase mb-2">
+            DESC. CLUB VIP: -{order.discount_applied.toFixed(2)}€
+          </p>
+        )}
+        <p className={`text-3xl font-black uppercase ${order.discount_applied > 0 ? 'border-t-2 border-black border-dotted pt-2' : 'border-t-2 border-black pt-2'}`}>
           TOTAL: {order.total_amount?.toFixed(2)}€
         </p>
       </div>
