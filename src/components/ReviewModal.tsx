@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useHardwareBack } from '../utils/useHardwareBack';
+import { useAuthStore } from '../store/authStore';
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -12,9 +13,11 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [submitted, setSubmitted] = useState(false);
+  const { user, openUserModal, setModalView } = useAuthStore();
 
   if (!isOpen || !order) return null;
 
+  const isGuest = !user;
   const pointsEarned = Math.floor(order.total_amount / 10) * 4;
 
   const handleSubmit = () => {
@@ -53,14 +56,35 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
               <p className="text-zinc-400 text-sm mb-4">Esperamos que disfrutes muchísimo de tu comida.</p>
               
               {pointsEarned > 0 && (
-                <div className="bg-gradient-to-r from-zinc-900 to-zinc-900 border border-yellow-500/30 rounded-xl p-3 inline-flex items-center gap-2 shadow-sm">
-                  <span className="w-6 h-6 rounded bg-orange-600 text-white font-display font-bold flex items-center justify-center text-[10px]">VIP</span>
-                  <span className="text-sm font-bold text-white">Has ganado <strong className="text-yellow-400">{pointsEarned} ptos</strong></span>
+                <div className={`${isGuest ? 'bg-orange-500/10 border-orange-500/30' : 'bg-gradient-to-r from-zinc-900 to-zinc-900 border-yellow-500/30'} border rounded-xl p-4 shadow-sm mx-auto max-w-sm`}>
+                  <div className="flex items-center gap-3 justify-center mb-2">
+                    <span className="w-6 h-6 rounded bg-orange-600 text-white font-display font-bold flex items-center justify-center text-[10px]">VIP</span>
+                    <span className="text-sm font-bold text-white">
+                      {isGuest ? '¡Podrías haber ganado ' : 'Has ganado '}
+                      <strong className="text-yellow-400">{pointsEarned} ptos</strong>
+                      {isGuest ? '!' : ''}
+                    </span>
+                  </div>
+                  {isGuest && (
+                    <>
+                      <p className="text-xs text-zinc-400 mb-3">No pierdas tus puntos en tu próximo pedido.</p>
+                      <button 
+                        onClick={() => {
+                          onClose();
+                          setModalView('register');
+                          openUserModal();
+                        }}
+                        className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 rounded-lg uppercase tracking-wider text-xs transition-all"
+                      >
+                        Crear mi cuenta gratis
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-6 mt-6">
               <div className="text-center">
                 <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">¿Qué te ha parecido?</p>
                 <div className="flex items-center justify-center gap-2">

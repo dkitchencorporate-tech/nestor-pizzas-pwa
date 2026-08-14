@@ -10,7 +10,9 @@ import OrderTracking from './pages/OrderTracking';
 import NotificationManager from './components/NotificationManager';
 import { useCartStore } from './store/cartStore';
 import { useAuthStore } from './store/authStore';
+import { useGuestOrderStore } from './store/guestOrderStore';
 import ReviewModal from './components/ReviewModal';
+import GuestRegistrationModal from './components/GuestRegistrationModal';
 
 import { supabase } from './lib/supabase';
 
@@ -25,10 +27,16 @@ function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [reviewOrder, setReviewOrder] = useState<any>(null);
+  const [isGuestRegistrationOpen, setIsGuestRegistrationOpen] = useState(false);
+  const [guestOrderForRegistration, setGuestOrderForRegistration] = useState<any>(null);
   
   const cartItemsCount = useCartStore(state => state.items.length);
-  const orders = useAuthStore(state => state.orders);
-  const hasActiveOrder = (orders || []).some(o => ['pending', 'cooking', 'delivering', 'ready'].includes(o.status));
+  const { orders, user } = useAuthStore();
+  const guestOrder = useGuestOrderStore(state => state.guestOrder);
+  
+  const hasActiveOrder = user 
+    ? (orders || []).some(o => ['pending', 'cooking', 'delivering', 'ready'].includes(o.status))
+    : (guestOrder && ['pending', 'cooking', 'delivering', 'ready'].includes(guestOrder.status));
 
   // Check if URL is /admin on load
   if (currentView === 'splash' && window.location.pathname.startsWith('/admin')) {
@@ -176,10 +184,15 @@ function App() {
           {isCheckoutOpen && (
             <CheckoutModal 
               onClose={() => setIsCheckoutOpen(false)}
-              onSuccess={() => {
-                useCartStore.getState().clearCart();
+              onSuccess={(orderData, isGuest) => {
                 setIsCheckoutOpen(false);
-                setCurrentView('tracking');
+                if (isGuest) {
+                  setGuestOrderForRegistration(orderData);
+                  setIsGuestRegistrationOpen(true);
+                } else {
+                  useCartStore.getState().clearCart();
+                  setCurrentView('tracking');
+                }
               }}
             />
           )}
@@ -209,6 +222,21 @@ function App() {
         isOpen={isReviewOpen} 
         onClose={() => setIsReviewOpen(false)} 
         order={reviewOrder} 
+      />
+
+      <GuestRegistrationModal
+        isOpen={isGuestRegistrationOpen}
+        order={guestOrderForRegistration}
+        onSkip={() => {
+          setIsGuestRegistrationOpen(false);
+          useCartStore.getState().clearCart();
+          setCurrentView('tracking');
+        }}
+        onSuccess={() => {
+          setIsGuestRegistrationOpen(false);
+          useCartStore.getState().clearCart();
+          setCurrentView('tracking');
+        }}
       />
     </div>
   );
