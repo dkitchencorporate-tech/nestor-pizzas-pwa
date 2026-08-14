@@ -222,10 +222,9 @@ export default function AdminOrders() {
                         <div className="bg-[#14141E] p-4 rounded-xl border border-zinc-800">
                           <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Datos del Cliente</h4>
                           <p className="text-sm text-white font-bold mb-1">📞 {order.client_phone || 'Sin teléfono'}</p>
-                          {isDelivery && order.delivery_address && (
+                          {order.delivery_address && (
                             <p className="text-sm text-zinc-400 leading-relaxed">
-                              📍 {order.delivery_address.street} {order.delivery_address.number}<br/>
-                              {order.delivery_address.notes && <span className="text-yellow-500/80">Nota: {order.delivery_address.notes}</span>}
+                              📍 {typeof order.delivery_address === 'string' ? order.delivery_address : JSON.stringify(order.delivery_address)}
                             </p>
                           )}
                         </div>
