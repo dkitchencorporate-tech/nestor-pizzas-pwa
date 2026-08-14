@@ -92,6 +92,15 @@ CREATE TABLE order_items (
 );
 
 -- ==========================================
+-- TABLA: app_settings_global
+-- ==========================================
+CREATE TABLE app_settings_global (
+    id INTEGER PRIMARY KEY DEFAULT 1,
+    store_closed BOOLEAN DEFAULT false,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ==========================================
 -- SEGURIDAD (RLS - Row Level Security)
 -- ==========================================
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
@@ -119,3 +128,10 @@ CREATE POLICY "Usuarios pueden ver items de sus órdenes" ON order_items FOR SEL
     EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid())
 );
 CREATE POLICY "Cualquiera puede insertar items" ON order_items FOR INSERT WITH CHECK (true);
+
+-- ==========================================
+-- ACTIVAR REALTIME
+-- ==========================================
+-- ¡CRITICO! Estas tablas deben estar en el canal de realtime para que el TPV reciba notificaciones push.
+ALTER PUBLICATION supabase_realtime ADD TABLE orders;
+ALTER PUBLICATION supabase_realtime ADD TABLE app_settings_global;
