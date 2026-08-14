@@ -83,7 +83,6 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   };
 
   const processOrder = async () => {
-    setShowPaymentModal(false);
     setIsProcessing(true);
     
     // Geofence Check: strict 10km radius for ALL orders (delivery and pickup)
@@ -504,6 +503,13 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             </button>
           </div>
         </div>
+
+        {isProcessing && !showPaymentModal && (
+          <div className="absolute inset-0 z-[1200] bg-zinc-950/90 backdrop-blur-md flex flex-col items-center justify-center rounded-[2.5rem] animate-fade-in">
+            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-green-500 font-bold uppercase tracking-widest animate-pulse">Confirmando Pedido...</p>
+          </div>
+        )}
       </div>
 
       <SumUpPaymentModal 

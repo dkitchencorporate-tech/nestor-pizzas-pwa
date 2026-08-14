@@ -110,33 +110,33 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                     <div className="absolute top-[42px] left-[10%] right-[10%] h-1 bg-zinc-800 rounded-full"></div>
                     {/* Active Progress Bar */}
                     <div 
-                      className="absolute top-[42px] left-[10%] h-1 bg-green-500 rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                      className="absolute top-[42px] left-[10%] h-1 bg-green-500 rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)] animate-pulse"
                       style={{ width: `${statusIndex === 0 ? 0 : statusIndex === 1 ? 40 : 80}%` }}
                     ></div>
 
                     <div className="relative flex justify-between">
                       {/* Step 1: Pending */}
                       <div className="flex flex-col items-center relative z-10 w-1/3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all duration-500 ${statusIndex >= 0 ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.4)]' : 'bg-zinc-800 text-zinc-600'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all duration-500 ${statusIndex >= 0 ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.4)]' : 'bg-zinc-800 text-zinc-600'} ${statusIndex === 0 ? 'animate-bounce' : ''}`}>
                           ⏳
                         </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center ${statusIndex >= 0 ? 'text-yellow-400' : 'text-zinc-600'}`}>Recibido</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center transition-colors duration-500 ${statusIndex >= 0 ? 'text-yellow-400' : 'text-zinc-600'}`}>Recibido</span>
                       </div>
 
                       {/* Step 2: Cooking */}
                       <div className="flex flex-col items-center relative z-10 w-1/3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all duration-500 ${statusIndex >= 1 ? 'bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]' : 'bg-zinc-800 text-zinc-600'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all duration-500 ${statusIndex >= 1 ? 'bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]' : 'bg-zinc-800 text-zinc-600'} ${statusIndex === 1 ? 'animate-bounce' : ''}`}>
                           🔥
                         </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center ${statusIndex >= 1 ? 'text-orange-500' : 'text-zinc-600'}`}>Cocinando</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center transition-colors duration-500 ${statusIndex >= 1 ? 'text-orange-500' : 'text-zinc-600'}`}>Cocinando</span>
                       </div>
 
                       {/* Step 3: Delivering/Ready */}
                       <div className="flex flex-col items-center relative z-10 w-1/3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all duration-500 ${statusIndex >= 2 ? 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)]' : 'bg-zinc-800 text-zinc-600'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all duration-500 ${statusIndex >= 2 ? 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)]' : 'bg-zinc-800 text-zinc-600'} ${statusIndex === 2 ? 'animate-bounce' : ''}`}>
                           {activeOrder.delivery_method === 'delivery' ? '🛵' : '🛍️'}
                         </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center ${statusIndex >= 2 ? 'text-blue-400' : 'text-zinc-600'}`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center transition-colors duration-500 ${statusIndex >= 2 ? 'text-blue-400' : 'text-zinc-600'}`}>
                           {activeOrder.delivery_method === 'delivery' ? 'En Reparto' : 'Listo'}
                         </span>
                       </div>

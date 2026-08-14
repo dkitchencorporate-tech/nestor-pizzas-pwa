@@ -9,6 +9,8 @@ import UserModal from './components/UserModal';
 import OrderTracking from './pages/OrderTracking';
 import NotificationManager from './components/NotificationManager';
 import { useCartStore } from './store/cartStore';
+import { useAuthStore } from './store/authStore';
+import ReviewModal from './components/ReviewModal';
 
 import { supabase } from './lib/supabase';
 
@@ -21,8 +23,12 @@ function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isUpsellOpen, setIsUpsellOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [reviewOrder, setReviewOrder] = useState<any>(null);
   
   const cartItemsCount = useCartStore(state => state.items.length);
+  const orders = useAuthStore(state => state.orders);
+  const hasActiveOrder = (orders || []).some(o => ['pending', 'cooking', 'delivering', 'ready'].includes(o.status));
 
   // Check if URL is /admin on load
   if (currentView === 'splash' && window.location.pathname.startsWith('/admin')) {
@@ -44,7 +50,13 @@ function App() {
 
   useEffect(() => {
     const handleOpenTracking = () => setCurrentView('tracking');
+    const handleOrderDelivered = (e: any) => {
+      setReviewOrder(e.detail);
+      setIsReviewOpen(true);
+    };
+    
     window.addEventListener('open-tracking', handleOpenTracking);
+    window.addEventListener('order-delivered', handleOrderDelivered as EventListener);
     
     // Fetch Store Status
     const fetchStoreStatus = async () => {
@@ -65,6 +77,7 @@ function App() {
       
     return () => {
       window.removeEventListener('open-tracking', handleOpenTracking);
+      window.removeEventListener('order-delivered', handleOrderDelivered as EventListener);
       supabase.removeChannel(settingsChannel);
     };
   }, []);
@@ -178,6 +191,25 @@ function App() {
       {currentView === 'tracking' && (
         <OrderTracking onBack={() => setCurrentView('catalog')} />
       )}
+
+      {hasActiveOrder && currentView !== 'tracking' && currentView !== 'admin' && (
+        <button
+          onClick={() => setCurrentView('tracking')}
+          className="fixed bottom-24 right-4 sm:right-6 z-[900] w-14 h-14 sm:w-16 sm:h-16 bg-green-500 text-white rounded-full shadow-[0_0_20px_rgba(34,197,94,0.5)] flex items-center justify-center animate-bounce transition-transform hover:scale-110"
+        >
+          <span className="text-2xl sm:text-3xl">🛵</span>
+          <span className="absolute -top-1 -right-1 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-white"></span>
+          </span>
+        </button>
+      )}
+
+      <ReviewModal 
+        isOpen={isReviewOpen} 
+        onClose={() => setIsReviewOpen(false)} 
+        order={reviewOrder} 
+      />
     </div>
   );
 }
