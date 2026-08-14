@@ -60,6 +60,12 @@ export default function Header() {
               </>
             )}
           </div>
+          
+          {user && (
+            <button onClick={() => window.dispatchEvent(new Event('open-tracking'))} className="cursor-pointer flex bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/40 rounded-xl w-10 h-10 items-center justify-center transition-all shadow shrink-0 text-blue-400">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </button>
+          )}
         </div>
       </div>
 
