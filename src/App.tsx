@@ -6,11 +6,12 @@ import CartBar from './components/CartBar';
 import UpsellModal from './components/UpsellModal';
 import CheckoutModal from './components/CheckoutModal';
 import UserModal from './components/UserModal';
-import LiveOrderTracker from './components/LiveOrderTracker';
+import OrderTracking from './pages/OrderTracking';
+import NotificationManager from './components/NotificationManager';
 import { useCartStore } from './store/cartStore';
 
 function App() {
-  const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin'>('splash');
+  const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking'>('splash');
   const [isPreloaderFading, setIsPreloaderFading] = useState(false);
   
   // Modals state
@@ -38,6 +39,12 @@ function App() {
     }
   }, [currentView]);
 
+  useEffect(() => {
+    const handleOpenTracking = () => setCurrentView('tracking');
+    window.addEventListener('open-tracking', handleOpenTracking);
+    return () => window.removeEventListener('open-tracking', handleOpenTracking);
+  }, []);
+
   // Cart Auto-Clear (15 minutes inactivity)
   useEffect(() => {
     const checkCartTimeout = () => {
@@ -58,6 +65,7 @@ function App() {
 
   return (
     <div className="selection:bg-nestor-green selection:text-white">
+      <NotificationManager />
       {/* Preloader exacto original */}
       {currentView === 'splash' && (
         <div className={`fixed inset-0 z-[999] bg-[#0A0A0E] flex flex-col items-center justify-center transition-opacity duration-700 ${isPreloaderFading ? 'opacity-0' : 'opacity-100'}`}>
@@ -113,14 +121,17 @@ function App() {
               onSuccess={() => {
                 useCartStore.getState().clearCart();
                 setIsCheckoutOpen(false);
+                setCurrentView('tracking');
               }}
             />
           )}
           
           <UserModal />
-          
-          <LiveOrderTracker />
         </>
+      )}
+
+      {currentView === 'tracking' && (
+        <OrderTracking onBack={() => setCurrentView('catalog')} />
       )}
     </div>
   );
