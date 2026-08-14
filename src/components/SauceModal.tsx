@@ -29,7 +29,6 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
 
   const handleAddToCart = () => {
     if (!selectedSauce) {
-      alert('Por favor, selecciona una salsa.');
       return;
     }
 
@@ -44,7 +43,6 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
       quantity: 1
     });
 
-    alert(`${itemName} añadido al pedido.`);
     onClose();
   };
 
