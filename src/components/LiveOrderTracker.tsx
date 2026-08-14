@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useCartStore } from '../store/cartStore';
 
 export default function LiveOrderTracker() {
   const { orders } = useAuthStore();
+  const cartHasItems = useCartStore(state => state.items.length > 0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeliveryToast, setShowDeliveryToast] = useState(false);
   const [lastDeliveredOrder, setLastDeliveredOrder] = useState<any>(null);
@@ -82,10 +84,10 @@ export default function LiveOrderTracker() {
     <>
       {/* Floating Active Order Tracker */}
       {activeOrder && (
-        <div className={`fixed z-[1000] bottom-24 sm:bottom-6 right-4 sm:right-6 transition-all duration-300 transform ${isExpanded ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-90 hover:scale-100 hover:opacity-100'}`}>
+        <div className={`fixed z-[1000] left-1/2 -translate-x-1/2 transition-all duration-300 transform ${isExpanded ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-90 hover:scale-100 hover:opacity-100'} ${cartHasItems ? 'bottom-24 sm:bottom-28' : 'bottom-4 sm:bottom-6'}`}>
           
           {/* Expanded State */}
-          <div className={`bg-zinc-950 border ${isExpanded ? 'border-green-500/50' : 'border-zinc-800'} rounded-2xl shadow-2xl p-4 w-72 transition-all duration-300 overflow-hidden cursor-pointer`} onClick={() => setIsExpanded(!isExpanded)}>
+          <div className={`bg-zinc-950 border ${isExpanded ? 'border-green-500/50' : 'border-zinc-800'} rounded-[1.75rem] shadow-2xl p-4 w-[calc(100vw-2rem)] max-w-[420px] transition-all duration-300 overflow-hidden cursor-pointer mx-auto`} onClick={() => setIsExpanded(!isExpanded)}>
             <div className="flex items-center justify-between mb-2">
               <span className={`text-[10px] font-bold uppercase tracking-widest ${statusInfo?.color} animate-pulse`}>
                 • Tracking Activo
