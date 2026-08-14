@@ -8,6 +8,7 @@ export default function AdminHistory() {
   const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
     fetchHistory();
@@ -81,24 +82,81 @@ export default function AdminHistory() {
     }
   };
 
+  const downloadCSV = () => {
+    if (orders.length === 0) {
+      alert("No hay pedidos para exportar en este rango.");
+      return;
+    }
+
+    const headers = ['ID Pedido', 'Fecha', 'Hora', 'Tipo', 'Estado', 'Total (€)'];
+    
+    const rows = orders.map(order => {
+      const date = new Date(order.created_at);
+      const dateStr = date.toLocaleDateString('es-ES');
+      const timeStr = date.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+      const typeStr = order.delivery_method === 'delivery' ? 'Domicilio' : 'Local';
+      const statusStr = order.status === 'delivered' ? 'Completado' : 'Cancelado';
+      const total = order.total_amount;
+      
+      return `"${order.id.slice(0,8)}","${dateStr}","${timeStr}","${typeStr}","${statusStr}","${total}"`;
+    });
+
+    // Add BOM for Excel UTF-8 recognition
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const csvContent = headers.join(',') + "\n" + rows.join('\n');
+    
+    const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `informe_nestor_pizzas_${dateFilter}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="h-full flex flex-col bg-[#0A0A0E] text-white overflow-hidden">
+    <div className="h-full flex flex-col bg-[#0A0A0E] text-white overflow-hidden print:bg-white print:text-black">
       
       {/* Header and Controls */}
-      <div className="p-4 sm:p-6 border-b border-zinc-800 bg-[#14141E] z-10 shadow-md flex items-center justify-between">
+      <div className="p-4 sm:p-6 border-b border-zinc-800 bg-[#14141E] z-10 shadow-md flex items-center justify-between print:hidden">
         <h2 className="text-xl sm:text-2xl font-display font-black uppercase text-white tracking-wide flex items-center gap-2">
           Historial de <span className="text-zinc-500">Pedidos</span>
         </h2>
-        <button 
-          onClick={fetchHistory}
-          className="px-4 py-2 bg-zinc-800 text-white rounded-lg text-sm font-bold uppercase hover:bg-zinc-700 transition-colors"
-        >
-          Refrescar
-        </button>
+        <div className="flex gap-2">
+          <div className="relative">
+            <button 
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className="px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg text-sm font-bold uppercase hover:bg-blue-600/30 transition-colors flex items-center gap-2"
+            >
+              📊 Exportar
+            </button>
+            {showExportMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)}></div>
+                <div className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-50">
+                  <button onClick={() => { downloadCSV(); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-sm font-medium text-white border-b border-zinc-800">
+                    📥 Descargar Excel (CSV)
+                  </button>
+                  <button onClick={() => { window.print(); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-sm font-medium text-white">
+                    🖨️ Imprimir Informe (PDF)
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          <button 
+            onClick={fetchHistory}
+            className="px-4 py-2 bg-zinc-800 text-white rounded-lg text-sm font-bold uppercase hover:bg-zinc-700 transition-colors"
+          >
+            Refrescar
+          </button>
+        </div>
       </div>
 
       {/* Date Filters */}
-      <div className="flex overflow-x-auto no-scrollbar border-b border-zinc-800 bg-[#14141E] px-4 pt-2">
+      <div className="flex overflow-x-auto no-scrollbar border-b border-zinc-800 bg-[#14141E] px-4 pt-2 print:hidden">
         <button 
           onClick={() => setDateFilter('today')}
           className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${dateFilter === 'today' ? 'border-green-500 text-green-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
@@ -126,7 +184,7 @@ export default function AdminHistory() {
       </div>
 
       {/* Orders List Container */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar space-y-4 print:hidden">
         
         {loading ? (
           <div className="text-center py-20 bg-[#14141E] rounded-3xl border border-zinc-800">
@@ -231,6 +289,69 @@ export default function AdminHistory() {
         )}
         
       </div>
+
+      {/* Printable Report Section (Only visible when printing) */}
+      <div className="hidden print:block p-8 bg-white text-black min-h-screen w-full">
+        <div className="text-center mb-8 border-b-2 border-black pb-4">
+          <h1 className="text-3xl font-black uppercase mb-1">Néstor Pizzas</h1>
+          <h2 className="text-xl text-gray-600 font-bold">Informe Contable de Cierre</h2>
+          <p className="text-sm mt-2 text-gray-500">
+            Rango Analizado: {dateFilter.toUpperCase()} | Generado: {new Date().toLocaleString('es-ES')}
+          </p>
+        </div>
+
+        <div className="flex justify-between mb-8 gap-4">
+          <div className="p-4 border border-gray-300 rounded-lg text-center w-[30%]">
+            <p className="text-xs font-bold text-gray-500 uppercase">Total Pedidos</p>
+            <p className="text-2xl font-black">{orders.length}</p>
+          </div>
+          <div className="p-4 border border-gray-300 rounded-lg text-center w-[30%]">
+            <p className="text-xs font-bold text-gray-500 uppercase">Total Entregados</p>
+            <p className="text-2xl font-black text-green-700">
+              {orders.filter(o => o.status === 'delivered').length}
+            </p>
+          </div>
+          <div className="p-4 border border-gray-300 rounded-lg text-center w-[30%] bg-gray-50">
+            <p className="text-xs font-bold text-gray-500 uppercase">Facturación Total</p>
+            <p className="text-2xl font-black">
+              {orders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + Number(o.total_amount), 0).toFixed(2)}€
+            </p>
+          </div>
+        </div>
+
+        <table className="w-full text-left text-sm border-collapse">
+          <thead>
+            <tr className="border-b-2 border-black">
+              <th className="py-2">ID Ticket</th>
+              <th className="py-2">Fecha y Hora</th>
+              <th className="py-2">Tipo de Servicio</th>
+              <th className="py-2">Estado</th>
+              <th className="py-2 text-right">Total Cobrado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map(order => (
+              <tr key={order.id} className="border-b border-gray-200">
+                <td className="py-2 font-mono text-xs text-gray-600">{order.id.slice(0,8)}</td>
+                <td className="py-2">{new Date(order.created_at).toLocaleString('es-ES', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</td>
+                <td className="py-2 font-medium">{order.delivery_method === 'delivery' ? 'Domicilio' : 'Local'}</td>
+                <td className="py-2">
+                  <span className={order.status === 'delivered' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
+                    {order.status === 'delivered' ? 'Completado' : 'Cancelado'}
+                  </span>
+                </td>
+                <td className="py-2 text-right font-black">{order.total_amount}€</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        
+        <div className="mt-12 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">
+          <p>Documento generado automáticamente por el TPV de Néstor Pizzas.</p>
+          <p>Uso exclusivo para auditoría contable y gestión empresarial. Los datos de carácter personal han sido excluidos conforme a la RGPD.</p>
+        </div>
+      </div>
+
     </div>
   );
 }
