@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
+import TicketPrinter from '../../components/TicketPrinter';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'cooking' | 'ready' | 'delivered'>('pending');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [silencedCount, setSilencedCount] = useState<number>(0);
+  const [printingOrder, setPrintingOrder] = useState<any>(null);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -56,6 +58,14 @@ export default function AdminOrders() {
     stopAudio();
     // Guardamos cuántos pendientes hay actualmente para no volver a sonar hasta que llegue uno nuevo
     setSilencedCount(orders.filter(o => o.status === 'pending').length);
+  };
+
+  const handlePrint = (order: any) => {
+    setPrintingOrder(order);
+    // Esperamos a que el DOM se actualice antes de llamar a print()
+    setTimeout(() => {
+      window.print();
+    }, 300);
   };
 
   const updateOrderStatus = async (id: string, status: string, estimatedTime?: string) => {
@@ -265,6 +275,16 @@ export default function AdminOrders() {
                           )}
                         </div>
 
+                        {/* Print Button */}
+                        <div className="pb-4 mb-4 border-b border-zinc-800/80">
+                          <button 
+                            onClick={() => handlePrint(order)}
+                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                          >
+                            <span className="text-xl">🖨️</span> Imprimir Ticket (80mm)
+                          </button>
+                        </div>
+
                         {/* Actions Buttons based on status */}
                         <div className="pt-2">
                           {order.status === 'pending' && (
@@ -310,6 +330,9 @@ export default function AdminOrders() {
         )}
         
       </div>
+      
+      {/* Componente invisible para impresión térmica */}
+      {printingOrder && <TicketPrinter order={printingOrder} />}
     </div>
   );
 }

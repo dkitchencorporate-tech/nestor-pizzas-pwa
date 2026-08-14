@@ -99,3 +99,28 @@ body {
   10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
   20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
+@media print {
+  @page {
+    margin: 0;
+    size: 80mm auto;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #root, body, html {
+    background-color: white !important;
+  }
+  .ticket-printer-container, .ticket-printer-container * {
+    visibility: visible;
+  }
+  .ticket-printer-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    margin: 0;
+    padding: 0;
+    background-color: white !important;
+    color: black !important;
+  }
+}

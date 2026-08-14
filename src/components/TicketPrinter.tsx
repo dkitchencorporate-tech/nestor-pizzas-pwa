@@ -1,0 +1,85 @@
+import React from 'react';
+
+interface TicketPrinterProps {
+  order: any;
+}
+
+export default function TicketPrinter({ order }: TicketPrinterProps) {
+  if (!order) return null;
+
+  const isDelivery = order.delivery_method === 'delivery';
+
+  // Format date
+  const orderDate = new Date(order.created_at);
+  const formattedDate = orderDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const formattedTime = orderDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div id="ticket-printer-content" className="ticket-printer-container bg-white text-black font-mono">
+      <div className="ticket-header text-center">
+        <h1 className="text-3xl font-black uppercase mb-1 tracking-tighter">NESTOR PIZZAS</h1>
+        <p className="text-sm font-bold border-y-2 border-black py-1 my-2">
+          {formattedDate} - {formattedTime}
+        </p>
+        
+        <h2 className="text-2xl font-black border-b-2 border-black pb-2 mb-2 uppercase">
+          {isDelivery ? '¡A DOMICILIO!' : 'RECOGIDA LOCAL'}
+        </h2>
+      </div>
+
+      <div className="ticket-client text-left mb-4">
+        <p className="text-sm font-bold uppercase mb-1">Cliente:</p>
+        <p className="text-2xl font-black uppercase leading-none mb-1">{order.client_name || 'Sin Nombre'}</p>
+        <p className="text-xl font-bold">Tel: {order.client_phone}</p>
+        {isDelivery && order.delivery_address && (
+          <div className="mt-2 p-2 border-2 border-black font-bold text-xl leading-snug">
+            {order.delivery_address}
+          </div>
+        )}
+      </div>
+
+      <div className="ticket-items mb-4 border-t-2 border-black pt-2">
+        <table className="w-full text-left font-bold text-sm">
+          <thead>
+            <tr className="border-b-2 border-black">
+              <th className="w-1/6 pb-1">CANT</th>
+              <th className="w-4/6 pb-1">ARTÍCULO</th>
+              <th className="w-1/6 pb-1 text-right">EUROS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.order_items?.map((item: any, index: number) => (
+              <tr key={index} className="border-b border-dotted border-gray-400">
+                <td className="py-3 text-xl">{item.quantity}x</td>
+                <td className="py-3 text-lg leading-tight">
+                  <span className="uppercase block font-black">{item.products?.name}</span>
+                  {item.options && Object.keys(item.options).length > 0 && (
+                    <span className="text-sm font-normal text-gray-800 block italic mt-1">
+                      {Object.entries(item.options).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                    </span>
+                  )}
+                </td>
+                <td className="py-3 text-right text-lg">{(item.unit_price * item.quantity).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="ticket-total text-right mb-4">
+        <p className="text-3xl font-black uppercase border-t-2 border-black pt-2">
+          TOTAL: {order.total_amount?.toFixed(2)}€
+        </p>
+      </div>
+
+      <div className="ticket-footer text-center mt-8">
+        <p className="font-bold text-xs uppercase mb-1 text-gray-600">ID Pedido: #{order.id.slice(0, 8)}</p>
+        <p className="text-lg font-black italic border-t-2 border-black pt-2">¡Gracias por elegirnos!</p>
+      </div>
+      
+      {/* Spacer for paper cut mechanism to trigger properly */}
+      <div className="h-16"></div>
+      <div className="text-center text-[10px] text-gray-400">- FIN DEL TICKET -</div>
+    </div>
+  );
+}
