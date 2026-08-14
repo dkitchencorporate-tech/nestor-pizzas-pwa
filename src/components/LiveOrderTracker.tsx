@@ -37,29 +37,23 @@ export default function LiveOrderTracker() {
     }
   };
 
-  // Listen for the custom events dispatched by authStore
+  // Request notification permission on mount
   useEffect(() => {
-    const handleDelivered = (e: any) => {
-      setLastDeliveredOrder(e.detail);
-      setShowDeliveryToast(true);
-      playNotificationSound();
-      // Auto-hide after 8 seconds
-      setTimeout(() => setShowDeliveryToast(false), 8000);
-    };
-
-    const handleStatusChanged = (e: any) => {
-      playNotificationSound();
-    };
-
-    window.addEventListener('order-delivered', handleDelivered);
-    window.addEventListener('order-status-changed', handleStatusChanged);
-    return () => {
-      window.removeEventListener('order-delivered', handleDelivered);
-      window.removeEventListener('order-status-changed', handleStatusChanged);
-    };
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
   }, []);
 
-  if (!activeOrder && !showDeliveryToast) return null;
+  const triggerNativeNotification = (title: string, body: string) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, {
+        body,
+        icon: '/assets/brand/icon-192.png',
+        badge: '/assets/brand/icon-192.png',
+        vibrate: [200, 100, 200]
+      });
+    }
+  };
 
   const getStatusInfo = (status: string) => {
     switch(status) {
@@ -74,9 +68,36 @@ export default function LiveOrderTracker() {
       case 'cancelled':
         return { icon: '❌', label: 'PEDIDO CANCELADO', color: 'text-red-500', bg: 'bg-red-500', desc: 'Tu pedido ha sido cancelado.' };
       default: 
-        return { icon: '✅', label: 'COMPLETADO', color: 'text-green-400', bg: 'bg-green-400', desc: '' };
+        return { icon: '✅', label: 'COMPLETADO', color: 'text-green-400', bg: 'bg-green-400', desc: 'Pedido entregado.' };
     }
   };
+
+  // Listen for the custom events dispatched by authStore
+  useEffect(() => {
+    const handleDelivered = (e: any) => {
+      setLastDeliveredOrder(e.detail);
+      setShowDeliveryToast(true);
+      playNotificationSound();
+      triggerNativeNotification('¡Pedido Entregado!', 'Esperamos que lo disfrutes muchísimo. Gracias por confiar en Néstor Pizzas.');
+      // Auto-hide after 8 seconds
+      setTimeout(() => setShowDeliveryToast(false), 8000);
+    };
+
+    const handleStatusChanged = (e: any) => {
+      playNotificationSound();
+      const statusInfo = getStatusInfo(e.detail.status);
+      triggerNativeNotification('Actualización de Pedido', statusInfo.label + ': ' + statusInfo.desc);
+    };
+
+    window.addEventListener('order-delivered', handleDelivered);
+    window.addEventListener('order-status-changed', handleStatusChanged);
+    return () => {
+      window.removeEventListener('order-delivered', handleDelivered);
+      window.removeEventListener('order-status-changed', handleStatusChanged);
+    };
+  }, []);
+
+  if (!activeOrder && !showDeliveryToast) return null;
 
   const statusInfo = activeOrder ? getStatusInfo(activeOrder.status) : null;
 

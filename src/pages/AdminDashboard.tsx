@@ -4,11 +4,12 @@ import AdminOrders from '../features/admin/AdminOrders';
 import AdminCatalog from '../features/admin/AdminCatalog';
 import AdminKiosk from '../features/admin/AdminKiosk';
 import AdminAnalytics from '../features/admin/AdminAnalytics';
+import AdminHistory from '../features/admin/AdminHistory';
 import { supabase } from '../lib/supabase';
 
 export default function AdminDashboard() {
   const { user, profile, signIn } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'orders' | 'kiosk' | 'catalog' | 'analytics'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'kiosk' | 'catalog' | 'analytics'>('orders');
   const [isSaturated, setIsSaturated] = useState(false);
 
   // Admin Auth State
@@ -209,6 +210,12 @@ export default function AdminDashboard() {
             📋 Cocina (Pedidos)
           </button>
           <button 
+            onClick={() => setActiveTab('history')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'history' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+          >
+            🗄️ Historial
+          </button>
+          <button 
             onClick={() => setActiveTab('kiosk')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'kiosk' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
           >
@@ -252,10 +259,11 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 h-screen overflow-hidden bg-[#0A0A0E]">
+      <main className="flex-1 bg-[#0A0A0E] relative overflow-hidden">
         {activeTab === 'orders' && <AdminOrders />}
-        {activeTab === 'catalog' && <AdminCatalog />}
+        {activeTab === 'history' && <AdminHistory />}
         {activeTab === 'kiosk' && <AdminKiosk />}
+        {activeTab === 'catalog' && <AdminCatalog />}
         {activeTab === 'analytics' && <AdminAnalytics />}
       </main>
       
