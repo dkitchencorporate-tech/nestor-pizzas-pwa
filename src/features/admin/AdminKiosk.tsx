@@ -99,11 +99,16 @@ export default function AdminKiosk() {
 
     setIsProcessing(true);
     try {
-      const formattedItems = items.map(item => ({
+      const formattedItems = items.map((item, index) => ({
         product_id: item.productId,
         quantity: item.quantity,
         unit_price: item.price,
-        customization_details: { name: item.name, notes: item.notes, extras: item.extras }
+        customization_details: { 
+          name: item.name, 
+          notes: item.notes, 
+          extras: item.extras,
+          ...(index === 0 ? { is_tpv_order: true } : {})
+        }
       }));
 
       const { data, error } = await supabase.rpc('process_checkout', {
