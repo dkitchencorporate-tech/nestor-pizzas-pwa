@@ -312,11 +312,11 @@ export default function AdminDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 h-screen overflow-hidden relative print:h-auto print:overflow-visible print:block">
-        {activeTab === 'orders' && <AdminOrders />}
-        {activeTab === 'history' && <AdminHistory />}
-        {activeTab === 'kiosk' && <AdminKiosk />}
-        {activeTab === 'catalog' && <AdminCatalog />}
-        {activeTab === 'analytics' && <AdminAnalytics />}
+        <div className={activeTab === 'orders' ? 'block h-full' : 'hidden'}><AdminOrders /></div>
+        <div className={activeTab === 'history' ? 'block h-full' : 'hidden'}><AdminHistory /></div>
+        <div className={activeTab === 'kiosk' ? 'block h-full' : 'hidden'}><AdminKiosk /></div>
+        <div className={activeTab === 'catalog' ? 'block h-full' : 'hidden'}><AdminCatalog /></div>
+        <div className={activeTab === 'analytics' ? 'block h-full' : 'hidden'}><AdminAnalytics /></div>
       </main>
       
     </div>
