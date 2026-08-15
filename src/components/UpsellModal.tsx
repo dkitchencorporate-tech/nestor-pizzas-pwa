@@ -14,9 +14,9 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
   
   const [upsellsData, setUpsellsData] = useState<{ category: string; items: any[] }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [addedItems, setAddedItems] = useState<string[]>([]);
+  const [addedItems, setAddedItems] = useState<number[]>([]);
   
-  // Simulated shuffle just toggles re-render or re-fetches for now, but to keep the feature:
+  // Simulated shuffle just toggles re-render or re-fetches for now
   const [shuffleKey, setShuffleKey] = useState(0);
 
   useEffect(() => {
@@ -25,14 +25,23 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
 
   const fetchUpsells = async () => {
     setIsLoading(true);
+    // Fetch upsells inner joined with products
     const { data } = await supabase
       .from('upsells')
-      .select('*')
+      .select(`
+        id, category, sort_order, product_id,
+        products!inner (
+          id, name, price, description, is_active
+        )
+      `)
       .order('sort_order', { ascending: true });
 
     if (data) {
+      // Filter out inactive products
+      const activeUpsells = data.filter(u => u.products.is_active);
+
       // Group by category
-      const grouped = data.reduce((acc: any, item: any) => {
+      const grouped = activeUpsells.reduce((acc: any, item: any) => {
         const cat = acc.find((c: any) => c.category === item.category);
         if (cat) {
           cat.items.push(item);
@@ -47,16 +56,16 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
   };
 
   const handleAdd = (item: any) => {
+    const prod = item.products;
     addItem({
       id: crypto.randomUUID(),
-      // Usar un id numérico temporal alto para upsells para que no choque si no está en products
-      productId: parseInt(item.id.replace(/\D/g, '')) || 9999, 
-      name: item.name,
-      price: item.price,
+      productId: prod.id, 
+      name: prod.name,
+      price: prod.price,
       quantity: 1,
       notes: ''
     });
-    setAddedItems([...addedItems, item.id]);
+    setAddedItems([...addedItems, prod.id]);
   };
 
   const shuffleDynamicUpsells = () => {
@@ -97,15 +106,16 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {category.items.map(item => {
-                    const isAdded = addedItems.includes(item.id);
+                    const prod = item.products;
+                    const isAdded = addedItems.includes(prod.id);
                     return (
                       <div key={item.id} className="bg-zinc-800/50 border border-zinc-700/50 hover:border-yellow-500/50 rounded-2xl p-3 flex flex-col justify-between transition-all">
                         <div>
-                          <span className="font-bold text-white text-xs sm:text-sm block">{item.name}</span>
-                          {item.description && <span className="text-[10px] sm:text-[11px] text-zinc-400 block mt-0.5">{item.description}</span>}
+                          <span className="font-bold text-white text-xs sm:text-sm block">{prod.name}</span>
+                          {prod.description && <span className="text-[10px] sm:text-[11px] text-zinc-400 block mt-0.5 line-clamp-2">{prod.description}</span>}
                         </div>
                         <div className="flex items-center justify-between mt-3">
-                          <span className="font-bold text-green-400 text-sm">{item.price.toFixed(2).replace('.', ',')} €</span>
+                          <span className="font-bold text-green-400 text-sm">{prod.price.toFixed(2).replace('.', ',')} €</span>
                           <button 
                             onClick={() => handleAdd(item)}
                             disabled={isAdded}
