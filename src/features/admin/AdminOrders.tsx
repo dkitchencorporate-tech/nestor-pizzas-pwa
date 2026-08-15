@@ -260,12 +260,14 @@ export default function AdminOrders() {
           currentList.map(order => {
             const isExpanded = expandedOrderId === order.id;
             const isDelivery = order.delivery_method === 'delivery';
+            const isTPV = order.order_items?.[0]?.customization_details?.is_tpv_order === true;
 
             return (
               <div 
                 key={order.id} 
                 className={`bg-[#14141E] border rounded-2xl overflow-hidden transition-all duration-300 ${
                   order.status === 'pending' ? 'border-red-500/80 shadow-[0_0_25px_rgba(239,68,68,0.5)] animate-pulse' : 
+                  isTPV ? 'border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]' :
                   isExpanded ? 'border-zinc-500 shadow-xl' : 'border-zinc-800 hover:border-zinc-700'
                 }`}
               >
@@ -292,6 +294,11 @@ export default function AdminOrders() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-display font-black text-lg text-white uppercase">{order.client_name || 'Sin Nombre'}</span>
+                        {isTPV && (
+                          <span className="bg-blue-600/20 text-blue-400 font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-widest border border-blue-500/30 ml-2">
+                            TPV FÍSICO
+                          </span>
+                        )}
                         <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-mono uppercase tracking-widest">#{order.id.slice(0,5)}</span>
                       </div>
                       <div className="flex gap-3 text-xs font-medium mt-1">
