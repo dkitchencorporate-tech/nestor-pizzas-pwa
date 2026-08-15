@@ -31,6 +31,11 @@ export default function AdminUpsells() {
       supabase.from('products').select('*').order('name')
     ]);
     
+    if (upsellsRes.error) {
+      console.error('Error fetching upsells:', upsellsRes.error);
+      alert('Error cargando upsells: ' + upsellsRes.error.message);
+    }
+    
     if (upsellsRes.data) setUpsells(upsellsRes.data);
     if (productsRes.data) setProducts(productsRes.data);
     setIsLoading(false);
@@ -58,24 +63,31 @@ export default function AdminUpsells() {
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('¿Seguro que quieres borrar este upsell?')) return;
-    await supabase.from('upsells').delete().eq('id', id);
+    const { error } = await supabase.from('upsells').delete().eq('id', id);
+    if (error) {
+      alert('Error borrando upsell: ' + error.message);
+    }
     fetchData();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (currentUpsell) {
-      await supabase.from('upsells').update({
+      const { error } = await supabase.from('upsells').update({
         product_id: formData.product_id,
         category: formData.category,
         sort_order: formData.sort_order
       }).eq('id', currentUpsell.id);
+      
+      if (error) alert('Error actualizando: ' + error.message);
     } else {
-      await supabase.from('upsells').insert([{
+      const { error } = await supabase.from('upsells').insert([{
         product_id: formData.product_id,
         category: formData.category,
         sort_order: formData.sort_order
       }]);
+      
+      if (error) alert('Error creando: ' + error.message);
     }
     setIsEditing(false);
     fetchData();
