@@ -310,10 +310,28 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               </button>
             </div>
           ) : (
-            <div className="bg-gradient-to-r from-zinc-950 to-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="bg-gradient-to-r from-zinc-950 to-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <span className="font-bold text-white block text-sm">¿Tienes cuenta VIP?</span>
-                <span className="text-xs text-zinc-400 block">Inicia sesión para canjear o sumar puntos.</span>
+                <span className="text-xs text-zinc-400 block mt-0.5">Inicia sesión para canjear o sumar puntos.</span>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button 
+                  onClick={() => {
+                    useAuthStore.getState().openUserModal('login');
+                  }}
+                  className="flex-1 sm:flex-none px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase rounded-xl transition-colors border border-zinc-700"
+                >
+                  Iniciar Sesión
+                </button>
+                <button 
+                  onClick={() => {
+                    useAuthStore.getState().openUserModal('register');
+                  }}
+                  className="flex-1 sm:flex-none px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-bold uppercase rounded-xl transition-colors shadow-lg shadow-yellow-500/20"
+                >
+                  Registrarse
+                </button>
               </div>
             </div>
           )}
