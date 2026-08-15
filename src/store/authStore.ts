@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
-type ViewType = 'login' | 'register' | 'profile' | 'edit-profile' | 'orders' | 'legal' | 'legal-doc' | 'delete-account' | 'delete-success' | 'forgot-password';
+type ViewType = 'login' | 'register' | 'profile' | 'edit-profile' | 'orders' | 'legal' | 'legal-doc' | 'delete-account' | 'delete-success' | 'forgot-password' | 'check-email';
 
 interface AuthState {
   user: User | null;
