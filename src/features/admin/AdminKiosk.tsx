@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useKioskCartStore, KioskClientInfo } from '../../store/kioskCartStore';
 
@@ -29,18 +29,40 @@ export default function AdminKiosk() {
     getTotal 
   } = useKioskCartStore();
 
+  const [view, setView] = useState<'client' | 'catalog'>('client');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<KioskClientInfo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>('');
   
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Modal para crear cliente
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
+  const [newClientAddress, setNewClientAddress] = useState('');
+  const [isCreatingClient, setIsCreatingClient] = useState(false);
+
   useEffect(() => {
     loadCatalog();
+
+    // Suscripción a cambios en productos y categorías para mantener sincronizado
+    const channel = supabase.channel('kiosk_catalog_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        console.log('Catálogo actualizado. Recargando...');
+        loadCatalog();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+        loadCatalog();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadCatalog = async () => {
@@ -50,10 +72,7 @@ export default function AdminKiosk() {
         supabase.from('products').select('*').eq('is_active', true).order('name')
       ]);
 
-      if (catRes.data) {
-        setCategories(catRes.data);
-        if (catRes.data.length > 0) setActiveCategory(catRes.data[0].id);
-      }
+      if (catRes.data) setCategories(catRes.data);
       if (prodRes.data) setProducts(prodRes.data);
     } catch (error) {
       console.error('Error loading catalog:', error);
@@ -77,25 +96,59 @@ export default function AdminKiosk() {
     }
   };
 
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClientPhone || !newClientName) return alert('Nombre y teléfono obligatorios');
+
+    setIsCreatingClient(true);
+    try {
+      const { data: newId, error } = await supabase.rpc('create_kiosk_client', {
+        p_full_name: newClientName,
+        p_phone: newClientPhone,
+        p_address: newClientAddress
+      });
+
+      if (error) throw error;
+
+      // Asignar cliente y pasar al catálogo
+      setClientInfo({
+        id: newId,
+        full_name: newClientName,
+        phone: newClientPhone,
+        address: newClientAddress,
+        is_registered: false
+      });
+      setIsCreateModalOpen(false);
+      setView('catalog');
+    } catch (error: any) {
+      console.error('Error creando cliente:', error);
+      alert(error.message || 'Error al crear cliente.');
+    } finally {
+      setIsCreatingClient(false);
+    }
+  };
+
   const selectClient = (client: KioskClientInfo) => {
     setClientInfo(client);
     setSearchQuery('');
     setSearchResults([]);
+    setView('catalog');
   };
 
-  const setGuestClient = () => {
-    setClientInfo({
-      full_name: 'Cliente Local',
-      phone: searchQuery || '000000000',
-      is_registered: false
-    });
-    setSearchQuery('');
-    setSearchResults([]);
+  const skipClientAssignment = () => {
+    setClientInfo(undefined); // Sin cliente asignado
+    setView('catalog');
   };
 
   const handleProcessOrder = async () => {
     if (items.length === 0) return alert('El carrito está vacío.');
-    if (!clientInfo) return alert('Debes seleccionar un cliente primero.');
+    
+    // Validar si requiere cliente
+    if (!clientInfo && deliveryMethod !== 'local') {
+      alert('Debes asignar un cliente para pedidos de Recogida o Domicilio.');
+      setView('client');
+      return;
+    }
 
     setIsProcessing(true);
     try {
@@ -112,13 +165,13 @@ export default function AdminKiosk() {
       }));
 
       const { data, error } = await supabase.rpc('process_checkout', {
-        p_user_id: clientInfo.id || null,
-        p_client_name: clientInfo.full_name || 'Cliente Local',
-        p_client_phone: clientInfo.phone || '000000000',
-        p_delivery_address: clientInfo.address || 'Local',
+        p_user_id: clientInfo?.id || null,
+        p_client_name: clientInfo?.full_name || 'Mesa / Local',
+        p_client_phone: clientInfo?.phone || '000000000',
+        p_delivery_address: clientInfo?.address || 'Local',
         p_delivery_method: deliveryMethod,
         p_items: formattedItems,
-        p_points_redeemed: false, // En esta versión simplificamos sin canje automático
+        p_points_redeemed: false,
         p_small_order_fee_accepted: true
       });
 
@@ -126,6 +179,7 @@ export default function AdminKiosk() {
 
       alert('¡Pedido procesado correctamente!');
       clearCart();
+      setView('client'); // Volver al inicio para el siguiente cliente
     } catch (error: any) {
       console.error('Error processing order:', error);
       alert(error.message || 'Error al procesar el pedido.');
@@ -134,169 +188,276 @@ export default function AdminKiosk() {
     }
   };
 
-  const currentProducts = products.filter(p => p.category_id === activeCategory);
+  // Referencias para el scroll a las categorías
+  const categoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  const scrollToCategory = (categoryId: string) => {
+    categoryRefs.current[categoryId]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
-    <div className="h-full flex gap-4 p-4 bg-[#0A0A0E] text-white">
-      {/* 1. PANEL IZQUIERDO: CLIENTE */}
-      <div className="w-[300px] flex flex-col gap-4">
-        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-4 flex-1">
-          <h3 className="font-bold text-sm text-gray-400 uppercase tracking-widest mb-4">1. Asignar Cliente</h3>
-          
-          {!clientInfo ? (
-            <div className="space-y-4">
+    <div className="h-full flex bg-[#0A0A0E] text-white overflow-hidden relative">
+      
+      {/* ============================================================ */}
+      {/* VISTA 1: ASIGNACIÓN DE CLIENTE */}
+      {/* ============================================================ */}
+      {view === 'client' && (
+        <div className="w-full h-full flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-[#14141E] border border-zinc-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center">
+            <h2 className="text-3xl font-display font-black uppercase tracking-widest text-white mb-2">Nuevo Ticket</h2>
+            <p className="text-gray-400 mb-8 text-center text-sm">Selecciona cómo se entregará el pedido y a quién.</p>
+            
+            <div className="w-full grid grid-cols-3 gap-3 mb-8">
+              {(['local', 'pickup', 'delivery'] as const).map(method => (
+                <button 
+                  key={method}
+                  onClick={() => setDeliveryMethod(method)}
+                  className={`py-4 px-3 rounded-2xl text-sm font-bold flex flex-col items-center justify-center gap-2 transition-all border ${deliveryMethod === method ? 'bg-green-500/20 text-green-400 border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-zinc-900 border-zinc-800 text-gray-400 hover:bg-zinc-800'}`}
+                >
+                  <span className="text-2xl">{method === 'local' ? '🍴' : method === 'pickup' ? '🛍️' : '🛵'}</span>
+                  <span>{method === 'local' ? 'Local / Mesa' : method === 'pickup' ? 'Recogida' : 'Domicilio'}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="w-full bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl">
+              <h3 className="font-bold text-sm text-gray-400 uppercase tracking-widest mb-4 text-center">Asignar Cliente</h3>
               <form onSubmit={handleSearch} className="flex gap-2">
                 <input 
                   type="text" 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Teléfono, Nombre, Domicilio..."
-                  className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white"
+                  placeholder="Buscar por Teléfono, Nombre o Dirección..."
+                  className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-lg focus:outline-none focus:border-green-500 transition-colors"
                 />
-                <button type="submit" disabled={isSearching} className="bg-green-600 hover:bg-green-500 text-white px-3 rounded-lg">
-                  🔍
+                <button type="submit" disabled={isSearching} className="bg-green-600 hover:bg-green-500 text-white px-6 rounded-xl font-bold transition-all">
+                  🔍 Buscar
                 </button>
               </form>
 
               {searchResults.length > 0 && (
-                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                <div className="mt-4 space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                   {searchResults.map((c, i) => (
-                    <div key={i} onClick={() => selectClient(c)} className="bg-zinc-800/50 hover:bg-zinc-700 p-3 rounded-xl cursor-pointer border border-zinc-700">
-                      <div className="flex justify-between items-start">
-                        <p className="font-bold text-sm">{c.full_name || 'Desconocido'}</p>
+                    <div key={i} onClick={() => selectClient(c)} className="bg-zinc-800/80 hover:bg-zinc-700 p-4 rounded-xl cursor-pointer border border-zinc-700 flex items-center justify-between transition-all">
+                      <div>
+                        <p className="font-bold text-lg text-white">{c.full_name || 'Sin Nombre'}</p>
+                        <p className="text-sm text-gray-400 font-mono mt-0.5">{c.phone}</p>
+                        {c.address && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{c.address}</p>}
+                      </div>
+                      <div className="flex flex-col items-end">
                         {c.is_registered ? (
-                          <span className="bg-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded-full">App</span>
+                          <span className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full font-bold">USUARIO APP</span>
                         ) : (
-                          <span className="bg-gray-500/20 text-gray-400 text-[10px] px-2 py-0.5 rounded-full">Historial</span>
+                          <span className="bg-gray-500/20 text-gray-400 text-xs px-3 py-1 rounded-full font-bold">MOSTRADOR</span>
+                        )}
+                        {c.is_registered && c.points !== undefined && (
+                          <span className="text-yellow-400 text-xs font-bold mt-2 font-mono">{c.points} pts</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400">{c.phone}</p>
-                      {c.address && <p className="text-[10px] text-gray-500 mt-1 line-clamp-1">{c.address}</p>}
                     </div>
                   ))}
                 </div>
               )}
 
               {searchQuery && searchResults.length === 0 && !isSearching && (
-                <button onClick={setGuestClient} className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 p-3 rounded-xl text-sm transition-all text-left">
-                  <p className="font-bold text-white">Crear Cliente Rápido</p>
-                  <p className="text-xs text-gray-400 mt-1">Usar "{searchQuery}" como teléfono</p>
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-xl relative">
-              <button onClick={() => setClientInfo(undefined)} className="absolute top-2 right-2 text-gray-500 hover:text-white">✕</button>
-              <h4 className="font-bold text-green-400 text-lg">{clientInfo.full_name || 'Cliente Local'}</h4>
-              <p className="text-sm text-gray-300">{clientInfo.phone}</p>
-              {clientInfo.address && <p className="text-xs text-gray-400 mt-1">{clientInfo.address}</p>}
-              
-              {clientInfo.is_registered && (
-                <div className="mt-3 pt-3 border-t border-green-500/20 flex justify-between items-center">
-                  <span className="text-xs text-green-500/70 uppercase font-bold tracking-wider">Fidelidad</span>
-                  <span className="font-mono font-bold text-yellow-400">{clientInfo.points || 0} pts</span>
+                <div className="mt-4 text-center p-6 bg-zinc-800/50 rounded-xl border border-dashed border-zinc-600">
+                  <p className="text-zinc-400 mb-4">No se encontró a nadie con "{searchQuery}"</p>
+                  <button onClick={() => { setNewClientPhone(searchQuery); setIsCreateModalOpen(true); }} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                    ➕ Crear Cliente Nuevo
+                  </button>
                 </div>
               )}
             </div>
-          )}
 
-          <div className="mt-6 pt-6 border-t border-zinc-800 space-y-2">
-            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Método de Entrega</h4>
-            {(['local', 'pickup', 'delivery'] as const).map(method => (
-              <button 
-                key={method}
-                onClick={() => setDeliveryMethod(method)}
-                className={`w-full py-2.5 px-3 rounded-lg text-sm font-bold flex justify-between items-center transition-all border ${deliveryMethod === method ? 'bg-white text-black border-white' : 'bg-zinc-900 border-zinc-800 text-gray-400 hover:bg-zinc-800'}`}
-              >
-                <span>{method === 'local' ? '🍴 Local / Mesa' : method === 'pickup' ? '🛍️ Recogida' : '🛵 Domicilio'}</span>
-                {deliveryMethod === method && <span>✓</span>}
+            {deliveryMethod === 'local' && (
+              <button onClick={skipClientAssignment} className="mt-6 w-full py-4 text-gray-400 hover:text-white font-bold tracking-wider text-sm transition-colors border border-transparent hover:border-zinc-800 rounded-xl">
+                Continuar sin asignar cliente (Solo Mesa) ➔
               </button>
-            ))}
+            )}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* 2. PANEL CENTRAL: PRODUCTOS */}
-      <div className="flex-1 bg-[#14141E] border border-zinc-800 rounded-2xl flex flex-col overflow-hidden">
-        <div className="flex overflow-x-auto p-2 border-b border-zinc-800 bg-zinc-900/50 hide-scrollbar shrink-0">
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`px-4 py-3 rounded-xl whitespace-nowrap font-bold text-sm transition-all ${activeCategory === cat.id ? 'bg-green-500 text-white shadow-lg' : 'text-gray-400 hover:bg-zinc-800 hover:text-white'}`}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-        
-        <div className="flex-1 p-4 overflow-y-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {currentProducts.map(product => (
-              <button
-                key={product.id}
-                onClick={() => addItem({ productId: product.id, name: product.name, price: product.price, quantity: 1 })}
-                className="bg-[#1A1A24] border border-zinc-800 hover:border-green-500/50 p-4 rounded-xl flex flex-col text-left transition-all hover:bg-zinc-800 group"
-              >
-                <span className="font-bold text-white text-sm leading-tight mb-2 group-hover:text-green-400">{product.name}</span>
-                <span className="font-mono text-green-500 font-bold mt-auto">{product.price.toFixed(2)}€</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. PANEL DERECHO: TICKET */}
-      <div className="w-[350px] bg-[#14141E] border border-zinc-800 rounded-2xl flex flex-col overflow-hidden relative">
-        <div className="p-4 border-b border-zinc-800 bg-zinc-900/50 flex justify-between items-center shrink-0">
-          <h3 className="font-bold text-sm text-white uppercase tracking-widest">Ticket Actual</h3>
-          <button onClick={clearCart} className="text-xs text-red-400 hover:text-red-300">Vaciar</button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
-          {items.map(item => (
-            <div key={item.id} className="bg-[#1A1A24] border border-zinc-800 p-3 rounded-xl flex justify-between items-center group">
-              <div className="flex-1 pr-2">
-                <p className="text-sm font-bold text-white line-clamp-1">{item.name}</p>
-                <p className="text-xs text-gray-500">{item.price.toFixed(2)}€/u</p>
-              </div>
-              <div className="flex items-center gap-3 bg-zinc-900 rounded-lg p-1 border border-zinc-800">
-                <button onClick={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeItem(item.id)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors">
-                  {item.quantity > 1 ? '−' : '🗑️'}
+      {/* ============================================================ */}
+      {/* VISTA 2: CATÁLOGO Y TICKET */}
+      {/* ============================================================ */}
+      {view === 'catalog' && (
+        <div className="w-full h-full flex gap-4 p-4">
+          
+          {/* PANEL IZQUIERDO: CATÁLOGO CON SCROLL CONTINUO */}
+          <div className="flex-1 bg-[#14141E] border border-zinc-800 rounded-3xl flex flex-col overflow-hidden">
+            
+            {/* Header de la vista con botón para volver atrás */}
+            <div className="p-4 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-4">
+                <button onClick={() => setView('client')} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                 </button>
-                <span className="w-4 text-center font-bold text-sm">{item.quantity}</span>
-                <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors">+</button>
+                <h2 className="font-display font-black text-xl tracking-widest text-white uppercase">Menú</h2>
+              </div>
+              
+              {/* Categorías Sticky en Horizontal */}
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => scrollToCategory(cat.id)}
+                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-bold text-sm whitespace-nowrap transition-colors"
+                  >
+                    {cat.name}
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
-          {items.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-zinc-600 opacity-50 p-6 text-center">
-              <span className="text-4xl mb-4">🛒</span>
-              <p className="text-sm font-bold">Carrito vacío</p>
-              <p className="text-xs mt-1">Selecciona productos del centro</p>
+            
+            {/* Scroll de Productos agrupados por Categoría */}
+            <div className="flex-1 overflow-y-auto p-6 scroll-smooth custom-scrollbar">
+              <div className="max-w-5xl mx-auto space-y-12 pb-24">
+                {categories.map(cat => {
+                  const catProducts = products.filter(p => p.category_id === cat.id);
+                  if (catProducts.length === 0) return null;
+                  return (
+                    <div key={cat.id} ref={el => categoryRefs.current[cat.id] = el} className="scroll-mt-6">
+                      <h3 className="font-display font-black text-2xl uppercase tracking-widest text-green-500 mb-6 flex items-center gap-4">
+                        {cat.name}
+                        <div className="flex-1 h-px bg-zinc-800"></div>
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {catProducts.map(product => (
+                          <button
+                            key={product.id}
+                            onClick={() => addItem({ productId: product.id, name: product.name, price: product.price, quantity: 1 })}
+                            className="bg-[#1A1A24] border border-zinc-800 hover:border-green-500 hover:bg-zinc-800 p-5 rounded-2xl flex flex-col text-left transition-all group shadow-lg"
+                          >
+                            <span className="font-bold text-white text-base leading-tight mb-4 group-hover:text-green-400">{product.name}</span>
+                            <span className="font-mono text-green-500 font-bold text-lg mt-auto">{product.price.toFixed(2)}€</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          )}
-        </div>
-
-        <div className="p-4 border-t border-zinc-800 bg-zinc-900/80 shrink-0">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-gray-400 text-sm font-bold uppercase">Total</span>
-            <span className="text-3xl font-display font-black text-green-500">{getTotal().toFixed(2)}€</span>
           </div>
-          
-          <button
-            onClick={handleProcessOrder}
-            disabled={isProcessing || items.length === 0 || !clientInfo}
-            className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all ${isProcessing ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : items.length === 0 || !clientInfo ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 text-white shadow-[0_0_20px_rgba(22,163,74,0.4)]'}`}
-          >
-            {isProcessing ? 'Procesando...' : 'ENVIAR A COCINA'}
-          </button>
-          
-          {!clientInfo && items.length > 0 && (
-            <p className="text-[10px] text-red-400 text-center mt-3 animate-pulse uppercase tracking-wider font-bold">Falta asignar cliente (Paso 1)</p>
-          )}
+
+          {/* PANEL DERECHO: TICKET Y CLIENTE */}
+          <div className="w-[400px] flex flex-col gap-4">
+            
+            {/* Info del Cliente */}
+            <div className="bg-[#14141E] border border-zinc-800 rounded-3xl p-5 flex flex-col shadow-xl shrink-0">
+              <div className="flex justify-between items-start mb-3">
+                <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${deliveryMethod === 'local' ? 'bg-green-500/20 text-green-400' : deliveryMethod === 'pickup' ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}`}>
+                  {deliveryMethod === 'local' ? '🍴 Local/Mesa' : deliveryMethod === 'pickup' ? '🛍️ Recogida' : '🛵 Domicilio'}
+                </span>
+                <button onClick={() => setView('client')} className="text-xs text-zinc-400 hover:text-white underline">Cambiar</button>
+              </div>
+              
+              {clientInfo ? (
+                <div>
+                  <h4 className="font-bold text-white text-lg">{clientInfo.full_name}</h4>
+                  <p className="text-zinc-400 font-mono text-sm">{clientInfo.phone}</p>
+                  {clientInfo.address && <p className="text-zinc-500 text-xs mt-1">{clientInfo.address}</p>}
+                </div>
+              ) : (
+                <div>
+                  <h4 className="font-bold text-zinc-500 text-lg">Mesa Sin Asignar</h4>
+                  <p className="text-zinc-600 text-xs">Pedido Anónimo</p>
+                </div>
+              )}
+            </div>
+
+            {/* Ticket de Compra */}
+            <div className="bg-[#14141E] border border-zinc-800 rounded-3xl flex-1 flex flex-col shadow-xl overflow-hidden">
+              <div className="p-5 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
+                <h3 className="font-bold text-sm text-white uppercase tracking-widest">Ticket Actual</h3>
+                <button onClick={clearCart} className="text-xs text-red-400 hover:text-red-300 font-bold">Vaciar</button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+                {items.map(item => (
+                  <div key={item.id} className="bg-zinc-900/80 border border-zinc-800 p-4 rounded-2xl flex justify-between items-center">
+                    <div className="flex-1 pr-3">
+                      <p className="text-sm font-bold text-white">{item.name}</p>
+                      <p className="text-xs text-zinc-500">{item.price.toFixed(2)}€/u</p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-[#1A1A24] rounded-xl p-1 border border-zinc-700">
+                      <button onClick={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeItem(item.id)} className="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors font-bold text-lg">
+                        {item.quantity > 1 ? '−' : '×'}
+                      </button>
+                      <span className="w-4 text-center font-bold text-white">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors font-bold text-lg">+</button>
+                    </div>
+                  </div>
+                ))}
+                
+                {items.length === 0 && (
+                  <div className="h-full flex flex-col items-center justify-center text-zinc-600 opacity-50 p-6 text-center">
+                    <span className="text-5xl mb-4">🛒</span>
+                    <p className="text-base font-bold">El ticket está vacío</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-5 border-t border-zinc-800 bg-zinc-900">
+                <div className="flex justify-between items-center mb-5">
+                  <span className="text-zinc-400 text-sm font-bold uppercase tracking-widest">Total Pagar</span>
+                  <span className="text-4xl font-display font-black text-green-500">{getTotal().toFixed(2)}€</span>
+                </div>
+                
+                <button
+                  onClick={handleProcessOrder}
+                  disabled={isProcessing || items.length === 0}
+                  className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-base transition-all ${isProcessing || items.length === 0 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 text-white shadow-[0_0_25px_rgba(22,163,74,0.4)] hover:shadow-[0_0_35px_rgba(22,163,74,0.6)]'}`}
+                >
+                  {isProcessing ? 'Procesando...' : 'ENVIAR A COCINA'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL CREAR CLIENTE KIOSKO */}
+      {/* ============================================================ */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#14141E] border border-zinc-800 p-8 rounded-3xl w-full max-w-md shadow-2xl relative">
+            <button onClick={() => setIsCreateModalOpen(false)} className="absolute top-6 right-6 text-zinc-500 hover:text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 className="text-2xl font-display font-black text-white uppercase tracking-widest mb-6">Nuevo Cliente</h2>
+            <form onSubmit={handleCreateClient} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Nombre Completo</label>
+                <input type="text" required value={newClientName} onChange={e => setNewClientName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Teléfono (Se usará de ID)</label>
+                <input type="tel" required value={newClientPhone} onChange={e => setNewClientPhone(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dirección (Opcional si es recogida)</label>
+                <textarea rows={2} value={newClientAddress} onChange={e => setNewClientAddress(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1"></textarea>
+              </div>
+              <button type="submit" disabled={isCreatingClient} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl mt-4 transition-all uppercase tracking-widest text-sm">
+                {isCreatingClient ? 'Guardando...' : 'Guardar y Continuar'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ESTILOS GLOBALES PARA EL TPV */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #52525b; }
+      `}} />
     </div>
   );
 }

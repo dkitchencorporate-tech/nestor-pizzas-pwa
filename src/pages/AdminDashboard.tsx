@@ -209,7 +209,7 @@ export default function AdminDashboard() {
       {!isSidebarOpen && (
         <button 
           onClick={() => setIsSidebarOpen(true)}
-          className="absolute top-4 left-4 z-50 p-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white shadow-xl hover:bg-zinc-800 transition-colors print:hidden"
+          className="absolute bottom-4 left-4 z-50 p-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white shadow-2xl hover:bg-zinc-800 transition-colors print:hidden"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </button>
