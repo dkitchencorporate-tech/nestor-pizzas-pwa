@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { useHardwareBack } from '../utils/useHardwareBack';
-import { NESTOR_UPSELLS } from '../data/products';
 import { useCartStore } from '../store/cartStore';
 
 interface UpsellModalProps {
@@ -12,14 +11,46 @@ interface UpsellModalProps {
 export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModalProps) {
   const addItem = useCartStore(state => state.addItem);
   useHardwareBack(true, onClose);
+  
+  const [upsellsData, setUpsellsData] = useState<{ category: string; items: any[] }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [addedItems, setAddedItems] = useState<string[]>([]);
-  // Simulated shuffle
+  
+  // Simulated shuffle just toggles re-render or re-fetches for now, but to keep the feature:
   const [shuffleKey, setShuffleKey] = useState(0);
+
+  useEffect(() => {
+    fetchUpsells();
+  }, [shuffleKey]);
+
+  const fetchUpsells = async () => {
+    setIsLoading(true);
+    const { data } = await supabase
+      .from('upsells')
+      .select('*')
+      .order('sort_order', { ascending: true });
+
+    if (data) {
+      // Group by category
+      const grouped = data.reduce((acc: any, item: any) => {
+        const cat = acc.find((c: any) => c.category === item.category);
+        if (cat) {
+          cat.items.push(item);
+        } else {
+          acc.push({ category: item.category, items: [item] });
+        }
+        return acc;
+      }, []);
+      setUpsellsData(grouped);
+    }
+    setIsLoading(false);
+  };
 
   const handleAdd = (item: any) => {
     addItem({
       id: crypto.randomUUID(),
-      productId: parseInt(item.id.replace('u', '100')), // Fake numeric ID for upsells
+      // Usar un id numérico temporal alto para upsells para que no choque si no está en products
+      productId: parseInt(item.id.replace(/\D/g, '')) || 9999, 
       name: item.name,
       price: item.price,
       quantity: 1,
@@ -51,41 +82,49 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 text-sm sm:text-sm font-medium text-zinc-300 max-h-[52vh] no-scrollbar space-y-6" key={shuffleKey}>
-          {NESTOR_UPSELLS.map(category => (
-            <div key={category.category}>
-              <h4 className="font-display font-bold text-sm text-white uppercase tracking-wider mb-3 border-b border-zinc-800 pb-2">
-                {category.category}
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {category.items.map(item => {
-                  const isAdded = addedItems.includes(item.id);
-                  return (
-                    <div key={item.id} className="bg-zinc-800/50 border border-zinc-700/50 hover:border-yellow-500/50 rounded-2xl p-3 flex flex-col justify-between transition-all">
-                      <div>
-                        <span className="font-bold text-white text-xs sm:text-sm block">{item.name}</span>
-                        <span className="text-[10px] sm:text-[11px] text-zinc-400 block mt-0.5">{item.desc}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="font-bold text-green-400 text-sm">{item.price.toFixed(2).replace('.', ',')} €</span>
-                        <button 
-                          onClick={() => handleAdd(item)}
-                          disabled={isAdded}
-                          className={`px-3 py-1.5 rounded-xl font-display font-bold text-[10px] sm:text-[11px] uppercase tracking-wider transition-all shadow-sm ${
-                            isAdded 
-                              ? 'bg-zinc-800 text-green-500 border border-zinc-700 cursor-not-allowed' 
-                              : 'bg-green-500 hover:bg-green-400 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)]'
-                          }`}
-                        >
-                          {isAdded ? 'Añadido ✓' : '+ Añadir'}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 text-sm sm:text-sm font-medium text-zinc-300 max-h-[52vh] no-scrollbar space-y-6">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-10">
+              <div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
-          ))}
+          ) : upsellsData.length === 0 ? (
+            <div className="text-center py-10 text-gray-500">No hay sugerencias configuradas en este momento.</div>
+          ) : (
+            upsellsData.map(category => (
+              <div key={category.category}>
+                <h4 className="font-display font-bold text-sm text-white uppercase tracking-wider mb-3 border-b border-zinc-800 pb-2">
+                  {category.category}
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {category.items.map(item => {
+                    const isAdded = addedItems.includes(item.id);
+                    return (
+                      <div key={item.id} className="bg-zinc-800/50 border border-zinc-700/50 hover:border-yellow-500/50 rounded-2xl p-3 flex flex-col justify-between transition-all">
+                        <div>
+                          <span className="font-bold text-white text-xs sm:text-sm block">{item.name}</span>
+                          {item.description && <span className="text-[10px] sm:text-[11px] text-zinc-400 block mt-0.5">{item.description}</span>}
+                        </div>
+                        <div className="flex items-center justify-between mt-3">
+                          <span className="font-bold text-green-400 text-sm">{item.price.toFixed(2).replace('.', ',')} €</span>
+                          <button 
+                            onClick={() => handleAdd(item)}
+                            disabled={isAdded}
+                            className={`px-3 py-1.5 rounded-xl font-display font-bold text-[10px] sm:text-[11px] uppercase tracking-wider transition-all shadow-sm ${
+                              isAdded 
+                                ? 'bg-zinc-800 text-green-500 border border-zinc-700 cursor-not-allowed' 
+                                : 'bg-green-500 hover:bg-green-400 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)]'
+                            }`}
+                          >
+                            {isAdded ? 'Añadido ✓' : '+ Añadir'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Footer */}
