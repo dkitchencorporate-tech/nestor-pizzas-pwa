@@ -208,11 +208,11 @@ export default function UserModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 overflow-y-auto no-scrollbar">
+    <div className="fixed inset-0 z-[1200] flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 overflow-y-auto no-scrollbar">
       <div className="bg-[#1A1A24] border border-green-500/30 rounded-3xl shadow-2xl w-full max-w-lg sm:max-w-xl overflow-hidden relative max-h-[85vh] sm:max-h-[90vh] animate-fade-in-up">
         
         {/* Botón Cerrar */}
-        <button onClick={closeUserModal} className="absolute top-4 right-4 bg-[#14141E] text-gray-400 hover:text-white p-2 rounded-xl border border-white/5 hover:border-red-500/50 transition-all z-[100] cursor-pointer">
+        <button onClick={closeUserModal} className="absolute top-4 right-4 bg-[#14141E] text-gray-400 hover:text-white p-2 rounded-xl border border-white/5 hover:border-red-500/50 transition-all z-[1200] cursor-pointer">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
 
