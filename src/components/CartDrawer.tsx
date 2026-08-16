@@ -67,14 +67,14 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
               <div key={item.id} className="flex gap-4 bg-[#14141E] p-4 rounded-2xl border border-zinc-800">
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-white uppercase">{item.name}</h3>
+                    <h3 className="font-bold text-white uppercase">{tDynamic(item.name)}</h3>
                     <button onClick={() => removeItem(item.id)} className="text-red-500 p-1 hover:bg-red-500/10 rounded">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                   </div>
                   
                   {item.extraDescription && (
-                    <p className="text-xs text-gray-400 mt-1">{item.extraDescription}</p>
+                    <p className="text-xs text-gray-400 mt-1">{tDynamic(item.extraDescription)}</p>
                   )}
                   {item.notes && (
                     <p className="text-xs text-yellow-500 mt-1 italic">"{item.notes}"</p>

@@ -7,7 +7,9 @@ interface Product {
   id: number;
   category: string;
   name: string;
+  name_en?: string;
   desc: string;
+  description_en?: string;
   price: number;
   badge: string;
   img?: string;
@@ -41,9 +43,12 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onCustomize }: ProductCardProps) {
-  const { t, tDynamic } = useI18nStore();
+  const { t, tDynamic, language } = useI18nStore();
   const [showSauceModal, setShowSauceModal] = useState(false);
   const [showAddToCartModal, setShowAddToCartModal] = useState(false);
+
+  const displayName = language === 'en' && product.name_en ? product.name_en : product.name;
+  const displayDesc = language === 'en' && product.description_en ? product.description_en : product.desc;
 
   const handleAdd = () => {
     // Si es Pizza Margarita (ID 22) o Mazzi Pizza (ID 23), o Jueves Locos (999), mostrar personalizador
@@ -90,13 +95,12 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
           </span>
         </div>
 
-        {/* Textos */}
         <div className="p-5 flex flex-col flex-1 gap-3">
           <div className="flex-1">
             <h3 className="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wide leading-tight group-hover:text-green-400 transition-colors">
-              {tDynamic(product.name)}
+              {displayName || tDynamic(product.name)}
             </h3>
-            {highlightIngredients(tDynamic(product.desc || ''))}
+            {highlightIngredients(displayDesc || tDynamic(product.desc || ''))}
           </div>
 
           {/* Botón de pedido */}

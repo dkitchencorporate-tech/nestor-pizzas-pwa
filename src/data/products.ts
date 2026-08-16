@@ -1,7 +1,7 @@
-
 export interface Category {
     id: string;
     name: string;
+    name_en?: string;
     subtitle: string | null;
     desc: string;
 }
@@ -10,16 +10,23 @@ export interface Product {
     id: number;
     category: string;
     name: string;
+    name_en?: string;
     desc: string;
+    description_en?: string;
     price: number;
     badge: string;
     img: string;
+    subcategory?: string;
+    isGroup?: boolean;
+    subProducts?: any[];
 }
 
 export interface UpsellItem {
     id: string;
     name: string;
+    name_en?: string;
     desc: string;
+    description_en?: string;
     price: number;
 }
 

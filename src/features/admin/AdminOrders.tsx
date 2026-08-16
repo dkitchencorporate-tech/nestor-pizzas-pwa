@@ -298,7 +298,12 @@ export default function AdminOrders() {
                         <span className="font-display font-black text-lg text-white uppercase">{order.client_name || t('no_name')}</span>
                         {isTPV && (
                           <span className="bg-blue-600/20 text-blue-400 font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-widest border border-blue-500/30 ml-2">
-                            {t('tpv_physical')}
+                            TPV
+                          </span>
+                        )}
+                        {order.payment_status === 'FAILED' && (
+                          <span className="bg-red-600/20 text-red-500 font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-widest border border-red-500/30 ml-2 animate-pulse">
+                            PAGO FALLIDO
                           </span>
                         )}
                         <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-mono uppercase tracking-widest">#{order.id.slice(0,5)}</span>
