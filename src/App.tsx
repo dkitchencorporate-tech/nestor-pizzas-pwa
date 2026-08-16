@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react';
-import Catalog from './features/catalog/Catalog';
-import AdminDashboard from './pages/AdminDashboard';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import CartDrawer from './components/CartDrawer';
 import CartBar from './components/CartBar';
 import UpsellModal from './components/UpsellModal';
 import CheckoutModal from './components/CheckoutModal';
 import UserModal from './components/UserModal';
-import OrderTracking from './pages/OrderTracking';
 import NotificationManager from './components/NotificationManager';
 import { useCartStore } from './store/cartStore';
 import { useAuthStore } from './store/authStore';
@@ -14,6 +11,10 @@ import { useGuestOrderStore } from './store/guestOrderStore';
 import ReviewModal from './components/ReviewModal';
 import GuestRegistrationModal from './components/GuestRegistrationModal';
 import { useI18nStore } from './store/i18nStore';
+
+const Catalog = lazy(() => import('./features/catalog/Catalog'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const OrderTracking = lazy(() => import('./pages/OrderTracking'));
 
 import { supabase } from './lib/supabase';
 
@@ -107,7 +108,11 @@ function App() {
   }, []);
 
   if (currentView === 'admin') {
-    return <AdminDashboard />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">Cargando Administración...</div>}>
+        <AdminDashboard />
+      </Suspense>
+    );
   }
 
   return (
@@ -136,7 +141,9 @@ function App() {
       {/* Main Catalog View */}
       {currentView === 'catalog' && (
         <>
-          <Catalog />
+          <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">Cargando Catálogo...</div>}>
+            <Catalog />
+          </Suspense>
 
           {/* Store Closed Modal */}
           {isStoreClosed && (
@@ -204,7 +211,9 @@ function App() {
       )}
 
       {currentView === 'tracking' && (
-        <OrderTracking onBack={() => setCurrentView('catalog')} />
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">Cargando Seguimiento...</div>}>
+          <OrderTracking onBack={() => setCurrentView('catalog')} />
+        </Suspense>
       )}
 
       {hasActiveOrder && currentView !== 'tracking' && currentView !== 'admin' && (
