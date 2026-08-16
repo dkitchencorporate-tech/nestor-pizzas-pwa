@@ -22,7 +22,7 @@ export const useGuestOrderStore = create<GuestOrderState>()(
       clearGuestOrder: () => {
         set({ guestOrder: null });
         if (guestSubscription) {
-          supabase.removeChannel(guestSubscription);
+          clearInterval(guestSubscription);
           guestSubscription = null;
         }
       },
@@ -30,26 +30,31 @@ export const useGuestOrderStore = create<GuestOrderState>()(
         const order = get().guestOrder;
         if (!order) return;
         
-        if (guestSubscription) {
-          supabase.removeChannel(guestSubscription);
-        }
-
-        guestSubscription = supabase.channel(`public:guest_order:${order.id}`)
-          .on('postgres_changes', { 
-            event: 'UPDATE', 
-            schema: 'public', 
-            table: 'orders',
-            filter: `id=eq.${order.id}`
-          }, (payload) => {
-            set({ guestOrder: payload.new });
-            
-            // Emit events
-            window.dispatchEvent(new CustomEvent('order-status-changed', { detail: payload.new }));
-            if (payload.new.status === 'delivered') {
-              window.dispatchEvent(new CustomEvent('order-delivered', { detail: payload.new }));
+        // Polling every 5 seconds securely via RPC
+        const intervalId = setInterval(async () => {
+          const { data, error } = await supabase.rpc('get_guest_order_status', { p_order_id: order.id });
+          
+          if (!error && data) {
+            const currentOrder = get().guestOrder;
+            if (currentOrder && currentOrder.status !== data.status) {
+              const updatedOrder = {
+                ...currentOrder,
+                status: data.status,
+                estimated_ready_at: data.estimated_ready_at
+              };
+              
+              set({ guestOrder: updatedOrder });
+              
+              // Emit events
+              window.dispatchEvent(new CustomEvent('order-status-changed', { detail: updatedOrder }));
+              if (data.status === 'delivered') {
+                window.dispatchEvent(new CustomEvent('order-delivered', { detail: updatedOrder }));
+              }
             }
-          })
-          .subscribe();
+          }
+        }, 5000);
+
+        guestSubscription = intervalId;
       }
     }),
     {
