@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useI18nStore } from '../store/i18nStore';
 import AdminOrders from '../features/admin/AdminOrders';
 import AdminCatalog from '../features/admin/AdminCatalog';
 import AdminKiosk from '../features/admin/AdminKiosk';
@@ -9,6 +10,7 @@ import { supabase } from '../lib/supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function AdminDashboard() {
+  const { t } = useI18nStore();
   const { user, profile, signIn } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'kiosk' | 'catalog' | 'analytics'>('orders');
   const [isSaturated, setIsSaturated] = useState(false);
@@ -60,7 +62,7 @@ export default function AdminDashboard() {
     try {
       await signIn(adminEmail.trim(), adminPassword);
     } catch (err: any) {
-      setAdminError(err.message || 'Error de inicio de sesión');
+      setAdminError(err.message || t('login_error'));
     } finally {
       setAdminLoading(false);
     }
@@ -68,7 +70,7 @@ export default function AdminDashboard() {
 
   const handleResetPassword = async () => {
     if (!adminEmail) {
-      setAdminError('Por favor, ingresa tu email en el campo superior para restablecer la contraseña.');
+      setAdminError(t('enter_email_to_reset'));
       return;
     }
     setAdminError('');
@@ -80,7 +82,7 @@ export default function AdminDashboard() {
     if (error) {
       setAdminError(error.message);
     } else {
-      setAdminError('✅ Te hemos enviado un correo con instrucciones.');
+      setAdminError(t('email_sent_instructions'));
     }
   };
 
@@ -96,8 +98,8 @@ export default function AdminDashboard() {
             <div className="w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
             </div>
-            <h1 className="text-2xl font-display font-black uppercase tracking-wider text-white">Acceso Restringido</h1>
-            <p className="text-sm text-gray-400 mt-2">Portal exclusivo de administración Kitchen POS</p>
+            <h1 className="text-2xl font-display font-black uppercase tracking-wider text-white">{t('restricted_access')}</h1>
+            <p className="text-sm text-gray-400 mt-2">{t('admin_portal_title')}</p>
           </div>
 
           <form onSubmit={handleAdminLogin} className="space-y-4">
@@ -108,7 +110,7 @@ export default function AdminDashboard() {
             )}
             
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Email Autorizado</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t('email')}</label>
               <input 
                 type="email" 
                 value={adminEmail}
@@ -120,7 +122,7 @@ export default function AdminDashboard() {
             </div>
             
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contraseña</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{t('password')}</label>
               <div className="relative w-full">
                 <input 
                   type={showPassword ? "text" : "password"} 
@@ -148,10 +150,15 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} className="w-4 h-4 rounded border-zinc-700 text-green-500 bg-[#0A0A0E] focus:ring-green-500 focus:ring-offset-black" />
-                <span className="text-xs text-gray-400 font-medium">Recordarme</span>
+                <span className="text-xs text-gray-400 font-medium">{t('remember_me')}</span>
               </label>
-              <button type="button" onClick={handleResetPassword} disabled={isResetting} className="text-xs text-green-500 hover:text-green-400 font-bold uppercase transition-colors">
-                {isResetting ? 'Enviando...' : '¿Olvidaste tu contraseña?'}
+              <button 
+                type="button" 
+                onClick={handleResetPassword} 
+                disabled={isResetting || !adminEmail} 
+                className="text-sm text-zinc-500 hover:text-green-500 transition-colors w-full text-center disabled:opacity-50"
+              >
+                {isResetting ? t('sending') : t('forgot_password')}
               </button>
             </div>
 
@@ -160,12 +167,12 @@ export default function AdminDashboard() {
               disabled={adminLoading}
               className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 px-4 rounded-xl uppercase tracking-wider transition-all mt-4 disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(22,163,74,0.3)]"
             >
-              {adminLoading ? 'Comprobando...' : 'Entrar al Sistema'}
+              {adminLoading ? t('loading') : t('sign_in')}
             </button>
             
             <div className="relative flex py-5 items-center">
                 <div className="flex-grow border-t border-zinc-800"></div>
-                <span className="flex-shrink-0 mx-4 text-zinc-500 text-xs font-medium">O TAMBIÉN</span>
+                <span className="flex-shrink-0 mx-4 text-zinc-500 text-xs font-medium uppercase">{t('or_also')}</span>
                 <div className="flex-grow border-t border-zinc-800"></div>
             </div>
 
@@ -186,7 +193,7 @@ export default function AdminDashboard() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
-              Continuar con Google
+              {t('continue_with_google')}
             </button>
           </form>
         </div>
@@ -196,7 +203,7 @@ export default function AdminDashboard() {
           className="mt-8 text-gray-500 hover:text-white transition-colors text-sm flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-          Volver a la tienda pública
+          {t('back_to_shop')}
         </button>
       </div>
     );
@@ -240,31 +247,31 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('orders')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'orders' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
           >
-            📋 Cocina (Pedidos)
+            📋 {t('orders')}
           </button>
           <button 
             onClick={() => setActiveTab('history')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'history' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
           >
-            🗄️ Historial
+            🗄️ {t('history')}
           </button>
           <button 
             onClick={() => setActiveTab('kiosk')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'kiosk' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
           >
-            🍕 TPV (Local)
+            🍕 {t('kiosk')}
           </button>
           <button 
             onClick={() => setActiveTab('catalog')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'catalog' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
           >
-            ⚙️ Kill-Switch (Carta)
+            ⚙️ {t('catalog')}
           </button>
           <button 
             onClick={() => setActiveTab('analytics')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'analytics' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
           >
-            📊 Ventas y BD
+            📊 {t('analytics')}
           </button>
 
           <div className="pt-4 mt-4 border-t border-zinc-800">
@@ -273,7 +280,7 @@ export default function AdminDashboard() {
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-nestor-gold to-yellow-400 text-black font-display font-bold text-sm shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:scale-105 transition-transform uppercase tracking-widest border border-yellow-300/50 justify-center"
             >
               <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-              INSTALAR APP
+              {t('install_app')}
             </button>
           </div>
         </nav>
@@ -281,17 +288,17 @@ export default function AdminDashboard() {
         {/* Global Controls */}
         <div className="p-4 border-t border-zinc-800 space-y-3">
           <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
-            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Cierre de Emergencia</h4>
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('emergency_closure')}</h4>
             <button 
               onClick={toggleStoreStatus}
               className={`w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border shadow-lg ${isStoreClosed ? 'bg-red-600 text-white border-red-500 animate-pulse' : 'bg-green-500/10 text-green-500 border-green-500/30 hover:bg-green-500/20'}`}
             >
-              {isStoreClosed ? 'TIENDA CERRADA (ABRIR)' : 'CERRAR TIENDA'}
+              {isStoreClosed ? t('store_closed_open') : t('close_store')}
             </button>
           </div>
 
           <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
-            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Modo Saturación</h4>
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('saturation_mode')}</h4>
             <button 
               onClick={toggleSaturationMode}
               className={`w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${isSaturated ? 'bg-orange-500/20 text-orange-500 border-orange-500/50' : 'bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:bg-zinc-800'}`}

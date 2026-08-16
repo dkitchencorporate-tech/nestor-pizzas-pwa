@@ -59,13 +59,13 @@ export default function Header() {
           <button 
             onClick={() => toggleLang()} 
             className="flex items-center justify-center w-10 h-10 sm:h-9 sm:w-10 rounded-xl bg-[#14141E] hover:bg-[#1E1E2C] border border-green-500/40 shadow transition-all shrink-0 hover:scale-105"
-            title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+            title={lang === 'es' ? t('switch_lang_en') : t('switch_lang_es')}
           >
             {lang === 'es' ? <UKFlag /> : <ESFlag />}
           </button>
           <button onClick={promptToInstall} className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-nestor-gold to-yellow-400 text-black font-display font-bold text-sm shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:scale-105 transition-transform uppercase tracking-widest border border-yellow-300/50">
             <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            <span>INSTALAR APP</span>
+            <span>{t('install_app')}</span>
           </button>
           <button onClick={promptToInstall} className="md:hidden flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-xl bg-nestor-gold text-black shadow-[0_0_15px_rgba(250,204,21,0.4)] transition-all hover:scale-105 shrink-0">
             <svg className="w-5 h-5 sm:w-4 sm:h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -81,7 +81,7 @@ export default function Header() {
               <>
                 <div className="w-6 h-6 sm:w-6 sm:h-6 rounded-lg bg-green-500/20 text-green-400 border border-green-500/40 flex items-center justify-center font-display font-bold text-xs sm:text-[10px] shrink-0">👤</div>
                 <span className="hidden sm:inline text-sm font-bold text-white uppercase truncate max-w-[120px]">
-                  HOLA, {profile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'USUARIO'}
+                  {t('hello')} {profile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || t('user')}
                 </span>
               </>
             ) : (

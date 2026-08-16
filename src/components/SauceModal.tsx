@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Product } from '../data/products';
 import { useCartStore } from '../store/cartStore';
+import { useI18nStore } from '../store/i18nStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
 
 interface SauceModalProps {
@@ -23,6 +24,7 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
   const [selectedSauce, setSelectedSauce] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const addItem = useCartStore(state => state.addItem);
+  const { t, tDynamic } = useI18nStore();
 
   const sauceObject = SAUCES.find(s => s.id === selectedSauce);
   const finalPrice = product.price + (sauceObject?.extraCost || 0);
@@ -32,8 +34,8 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
       return;
     }
 
-    const itemName = `${product.name} (Salsa: ${sauceObject?.name})`;
-    const itemNotes = notes.trim() ? `Notas: ${notes.trim()}` : undefined;
+    const itemName = `${product.name} (${t('sauce_label')}: ${tDynamic(sauceObject?.name || '')})`;
+    const itemNotes = notes.trim() ? `${t('notes_label')}: ${notes.trim()}` : undefined;
 
     addItem({
       id: crypto.randomUUID(),
@@ -64,8 +66,8 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
-          <h2 className="font-display font-black text-2xl text-white uppercase tracking-wider pr-10">{product.name}</h2>
-          <p className="text-gray-400 mt-1 text-sm">{product.desc}</p>
+          <h2 className="font-display font-black text-2xl text-white uppercase tracking-wider pr-10">{tDynamic(product.name)}</h2>
+          <p className="text-gray-400 mt-1 text-sm">{product.desc ? tDynamic(product.desc) : ''}</p>
         </div>
 
         {/* Body */}
@@ -74,7 +76,7 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
           <div>
             <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm flex items-center gap-2">
               <span className="bg-green-500 w-2 h-2 rounded-full inline-block"></span>
-              Elige tu salsa (Obligatorio)
+              {t('choose_sauce')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {SAUCES.map(sauce => (
@@ -87,7 +89,7 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
                       : 'bg-zinc-900 border-zinc-800 text-gray-300 hover:border-green-500/50 hover:bg-zinc-800'
                   }`}
                 >
-                  <div className="font-bold text-sm">{sauce.name}</div>
+                  <div className="font-bold text-sm">{tDynamic(sauce.name.toUpperCase())}</div>
                   {sauce.extraCost > 0 && (
                     <div className="text-xs text-green-400 mt-0.5">+{sauce.extraCost.toFixed(2).replace('.', ',')} €</div>
                   )}
@@ -100,11 +102,11 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
           <div>
             <h3 className="text-white font-bold mb-3 uppercase tracking-wider text-sm flex items-center gap-2">
               <span className="bg-zinc-600 w-2 h-2 rounded-full inline-block"></span>
-              Notas adicionales (Opcional)
+              {t('additional_notes')}
             </h3>
             <textarea
               className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white text-sm focus:outline-none focus:border-green-500 transition-colors"
-              placeholder="Ej. Sin mucha sal, bien hechas..."
+              placeholder={t('sauce_notes_placeholder')}
               rows={2}
               value={notes}
               onChange={e => setNotes(e.target.value)}
@@ -126,7 +128,7 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
                 : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
             }`}
           >
-            AÑADIR <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+            {t('add_btn')} <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
           </button>
         </div>
       </div>

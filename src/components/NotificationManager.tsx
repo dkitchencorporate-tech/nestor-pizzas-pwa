@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
+import { useI18nStore } from '../store/i18nStore';
 
 export default function NotificationManager() {
+  const { t } = useI18nStore();
   // Request notification permission on mount
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -62,30 +64,30 @@ export default function NotificationManager() {
   const getStatusInfo = (status: string) => {
     switch(status) {
       case 'pending': 
-        return { label: 'PEDIDO RECIBIDO', desc: 'Estamos confirmando tu pedido.' };
+        return { label: t('status_pending_title'), desc: t('status_pending_desc') };
       case 'cooking': 
-        return { label: 'COCINANDO', desc: 'Tu comida está en el horno.' };
+        return { label: t('status_cooking_title'), desc: t('status_cooking_desc') };
       case 'delivering': 
-        return { label: 'EN REPARTO', desc: 'El repartidor va en camino.' };
+        return { label: t('status_delivering_title'), desc: t('status_delivering_desc') };
       case 'ready':
-        return { label: 'LISTO PARA RECOGER', desc: 'Tu pedido está listo en el local.' };
+        return { label: t('status_ready_title'), desc: t('status_ready_desc') };
       case 'cancelled':
-        return { label: 'PEDIDO RECHAZADO', desc: 'Lamentablemente tu pedido ha sido cancelado o rechazado.' };
+        return { label: t('status_cancelled_title'), desc: t('status_cancelled_desc') };
       default: 
-        return { label: 'COMPLETADO', desc: 'Pedido entregado.' };
+        return { label: t('status_completed_title'), desc: t('status_completed_desc') };
     }
   };
 
   useEffect(() => {
     const handleDelivered = (e: any) => {
       playAlertSound();
-      triggerNativeNotification('¡Pedido Entregado!', 'Esperamos que lo disfrutes muchísimo. Gracias por confiar en Néstor Pizzas.');
+      triggerNativeNotification(t('order_delivered_title'), t('order_delivered_desc'));
     };
 
     const handleStatusChanged = (e: any) => {
       playAlertSound();
       const statusInfo = getStatusInfo(e.detail.status);
-      triggerNativeNotification('Actualización de Pedido', statusInfo.label + ': ' + statusInfo.desc);
+      triggerNativeNotification(t('order_update_title'), statusInfo.label + ': ' + statusInfo.desc);
     };
 
     window.addEventListener('order-delivered', handleDelivered);

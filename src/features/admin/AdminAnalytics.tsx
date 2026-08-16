@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MarketingCampaignModal } from './components/MarketingCampaignModal';
+import { User } from '../../types';
+import { useI18nStore } from '../../store/i18nStore';
 
 export default function AdminAnalytics() {
-  const [users, setUsers] = useState<any[]>([]);
+  const { t } = useI18nStore();
+  const [users, setUsers] = useState<User[]>([]);
   const [todaySales, setTodaySales] = useState(0);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMarketingModal, setShowMarketingModal] = useState(false);
@@ -40,7 +43,7 @@ export default function AdminAnalytics() {
     }
 
     // Professional headers
-    const headers = ['ID Cliente', 'Nombre', 'Email', 'Teléfono', 'Puntos', 'Fecha de Registro'];
+    const headers = [t('client_id'), t('name'), t('email'), t('phone'), t('points'), t('registration_date')];
     
     const rows = users.map(u => {
       const date = new Date(u.created_at).toLocaleDateString('es-ES');
@@ -131,9 +134,9 @@ export default function AdminAnalytics() {
               {users.map(u => (
                 <tr key={u.id} className="border-b border-zinc-800 hover:bg-zinc-800/20">
                   <td className="px-4 py-3 font-mono text-[10px]">{u.id.slice(0,8)}...</td>
-                  <td className="px-4 py-3 text-white font-bold">{u.full_name || 'Sin nombre'}</td>
-                  <td className="px-4 py-3 text-gray-400">{u.email || 'Sin email'}</td>
-                  <td className="px-4 py-3">{u.phone || 'Sin teléfono'}</td>
+                  <td className="px-4 py-3 text-white font-bold">{u.full_name || t('no_name')}</td>
+                  <td className="px-4 py-3 text-gray-400">{u.email || t('no_email')}</td>
+                  <td className="px-4 py-3">{u.phone || t('no_phone')}</td>
                   <td className="px-4 py-3 text-green-400 font-bold">{u.points} pts</td>
                   <td className="px-4 py-3 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
                 </tr>
@@ -188,9 +191,9 @@ export default function AdminAnalytics() {
             {users.map(u => (
               <tr key={u.id} className="border-b border-gray-200">
                 <td className="py-2 font-mono text-xs text-gray-600">{u.id.slice(0,8)}</td>
-                <td className="py-2 font-medium">{u.full_name || 'Sin nombre'}</td>
-                <td className="py-2 text-gray-600">{u.email || 'Sin email'}</td>
-                <td className="py-2">{u.phone || 'Sin teléfono'}</td>
+                <td className="py-2 font-medium">{u.full_name || t('no_name')}</td>
+                <td className="py-2 text-gray-600">{u.email || t('no_email')}</td>
+                <td className="py-2">{u.phone || t('no_phone')}</td>
                 <td className="py-2 font-bold text-green-700">{u.points || 0}</td>
                 <td className="py-2 text-right text-xs">{new Date(u.created_at).toLocaleDateString('es-ES')}</td>
               </tr>

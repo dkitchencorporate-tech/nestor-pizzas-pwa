@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useHardwareBack } from '../utils/useHardwareBack';
 import { useAuthStore } from '../store/authStore';
+import { useI18nStore } from '../store/i18nStore';
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [submitted, setSubmitted] = useState(false);
   const { user, openUserModal, setModalView } = useAuthStore();
+  const { t } = useI18nStore();
 
   if (!isOpen || !order) return null;
 
@@ -43,8 +45,8 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
             <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30">
               <span className="text-4xl">💚</span>
             </div>
-            <h3 className="text-2xl font-display font-black text-white mb-2 uppercase">¡Gracias por tu reseña!</h3>
-            <p className="text-zinc-400 text-sm">Tus comentarios nos ayudan a mejorar cada día.</p>
+            <h3 className="text-2xl font-display font-black text-white mb-2 uppercase">{t('thanks_for_review')}</h3>
+            <p className="text-zinc-400 text-sm">{t('review_help_improve')}</p>
           </div>
         ) : (
           <div className="p-6 sm:p-8">
@@ -52,22 +54,22 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-orange-500/20 text-orange-400 mb-4 border border-orange-500/30">
                 <span className="text-3xl">🍕</span>
               </div>
-              <h2 className="text-3xl font-display font-black text-white uppercase tracking-wider mb-2">¡Pedido Entregado!</h2>
-              <p className="text-zinc-400 text-sm mb-4">Esperamos que disfrutes muchísimo de tu comida.</p>
+              <h2 className="text-3xl font-display font-black text-white uppercase tracking-wider mb-2">{t('order_delivered_title')}</h2>
+              <p className="text-zinc-400 text-sm mb-4">{t('hope_enjoy_food')}</p>
               
               {pointsEarned > 0 && (
                 <div className={`${isGuest ? 'bg-orange-500/10 border-orange-500/30' : 'bg-gradient-to-r from-zinc-900 to-zinc-900 border-yellow-500/30'} border rounded-xl p-4 shadow-sm mx-auto max-w-sm`}>
                   <div className="flex items-center gap-3 justify-center mb-2">
                     <span className="w-6 h-6 rounded bg-orange-600 text-white font-display font-bold flex items-center justify-center text-[10px]">VIP</span>
                     <span className="text-sm font-bold text-white">
-                      {isGuest ? '¡Podrías haber ganado ' : 'Has ganado '}
-                      <strong className="text-yellow-400">{pointsEarned} ptos</strong>
+                      {isGuest ? t('could_have_earned') : t('you_earned')}
+                      <strong className="text-yellow-400">{pointsEarned}{t('points_abbr')}</strong>
                       {isGuest ? '!' : ''}
                     </span>
                   </div>
                   {isGuest && (
                     <>
-                      <p className="text-xs text-zinc-400 mb-3">No pierdas tus puntos en tu próximo pedido.</p>
+                      <p className="text-xs text-zinc-400 mb-3">{t('dont_lose_points_next_order')}</p>
                       <button 
                         onClick={() => {
                           onClose();
@@ -76,7 +78,7 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
                         }}
                         className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 rounded-lg uppercase tracking-wider text-xs transition-all"
                       >
-                        Crear mi cuenta gratis
+                        {t('create_free_account')}
                       </button>
                     </>
                   )}
@@ -86,7 +88,7 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
 
             <div className="space-y-6 mt-6">
               <div className="text-center">
-                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">¿Qué te ha parecido?</p>
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('what_did_you_think')}</p>
                 <div className="flex items-center justify-center gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -114,13 +116,13 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
                   disabled={rating === 0}
                   className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-sm transition-all shadow-[0_0_20px_rgba(22,163,74,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Enviar Valoración
+                  {t('submit_rating')}
                 </button>
                 <button 
                   onClick={onClose}
                   className="w-full bg-transparent hover:bg-zinc-900 text-zinc-500 font-bold py-3.5 rounded-xl uppercase tracking-wider text-sm transition-all border border-zinc-800"
                 >
-                  Cerrar
+                  {t('close')}
                 </button>
               </div>
             </div>

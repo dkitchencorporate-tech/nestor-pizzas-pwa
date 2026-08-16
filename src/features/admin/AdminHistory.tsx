@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useI18nStore } from '../../store/i18nStore';
 
 type DateFilter = 'today' | 'yesterday' | '7days' | '30days';
 
 export default function AdminHistory() {
+  const { t } = useI18nStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
@@ -84,11 +86,11 @@ export default function AdminHistory() {
 
   const downloadCSV = () => {
     if (orders.length === 0) {
-      alert("No hay pedidos para exportar en este rango.");
+      alert(t('no_orders_to_export'));
       return;
     }
 
-    const headers = ['ID Pedido', 'Fecha', 'Hora', 'Tipo', 'Estado', 'Total (€)'];
+    const headers = [t('order_id'), t('date'), t('time'), t('type'), t('status'), t('total_euros')];
     
     const rows = orders.map(order => {
       const date = new Date(order.created_at);
@@ -222,7 +224,7 @@ export default function AdminHistory() {
                     
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-display font-black text-lg text-white uppercase">{order.client_name || 'Sin Nombre'}</span>
+                        <span className="font-display font-black text-lg text-white uppercase">{order.client_name || t('no_name')}</span>
                         <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-mono uppercase tracking-widest">#{order.id.slice(0,5)}</span>
                       </div>
                       <div className="flex gap-3 text-xs font-medium mt-1">

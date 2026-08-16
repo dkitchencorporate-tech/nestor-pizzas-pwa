@@ -23,6 +23,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
   const [groupQuantities, setGroupQuantities] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState('');
   const addItem = useCartStore(state => state.addItem);
+  const { t, tDynamic } = useI18nStore();
 
   const finalPrice = product.isGroup && product.subProducts
     ? Object.entries(groupQuantities).reduce((acc, [id, qty]) => {
@@ -79,13 +80,13 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
         <div className="p-5 pt-6 sm:pt-6 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] flex items-start justify-between shrink-0">
           <div>
             <h2 className="font-display font-black text-xl text-white uppercase tracking-wider pr-4">
-              {product.name}
+              {tDynamic(product.name)}
             </h2>
             {!product.isGroup && (
               <p className="text-green-400 font-bold mt-1 text-lg">{product.price.toFixed(2).replace('.', ',')} €</p>
             )}
             {product.isGroup && (
-              <p className="text-zinc-400 text-sm mt-1">{product.desc || 'Elige tus opciones'}</p>
+              <p className="text-zinc-400 text-sm mt-1">{product.desc ? tDynamic(product.desc) : t('choose_options')}</p>
             )}
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors bg-zinc-900 hover:bg-zinc-800 p-2 rounded-xl shrink-0">
@@ -98,12 +99,12 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
           
           {product.isGroup && product.subProducts ? (
             <div className="flex flex-col gap-3">
-              <label className="text-xs text-gray-400 uppercase tracking-wider font-bold">Opciones disponibles</label>
+              <label className="text-xs text-gray-400 uppercase tracking-wider font-bold">{t('available_options')}</label>
               <div className="space-y-2">
                 {product.subProducts.map(sub => (
                   <div key={sub.id} className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-3">
                     <div className="flex flex-col">
-                      <span className="text-white font-bold text-sm">{sub.name}</span>
+                      <span className="text-white font-bold text-sm">{tDynamic(sub.name)}</span>
                       <span className="text-green-400 font-bold text-sm">{sub.price.toFixed(2).replace('.', ',')} €</span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -124,7 +125,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <label className="text-xs text-gray-400 uppercase tracking-wider font-bold">Cantidad</label>
+              <label className="text-xs text-gray-400 uppercase tracking-wider font-bold">{t('quantity')}</label>
               <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-2">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -147,13 +148,13 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
           {/* Notes */}
           <div className="flex flex-col gap-2">
             <label className="text-xs text-gray-400 uppercase tracking-wider font-bold flex justify-between">
-              Notas para cocina 
-              <span className="text-zinc-600 font-normal lowercase tracking-normal">(opcional)</span>
+              {t('notes_for_kitchen')}
+              <span className="text-zinc-600 font-normal lowercase tracking-normal">{t('optional')}</span>
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ej: Extra fría, sin hielo..."
+              placeholder={t('notes_placeholder')}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-white placeholder-zinc-600 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 resize-none h-20 text-sm custom-scrollbar transition-all"
             ></textarea>
           </div>
@@ -163,7 +164,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
         {/* Footer */}
         <div className="p-5 border-t border-zinc-800 bg-[#0A0A0E] flex items-center justify-between gap-4 shrink-0">
           <div>
-            <div className="text-gray-400 text-[10px] mb-1 uppercase tracking-wider font-bold">Total</div>
+            <div className="text-gray-400 text-[10px] mb-1 uppercase tracking-wider font-bold">{t('total')}</div>
             <div className="text-white font-display font-black text-xl">
               {finalPrice.toFixed(2).replace('.', ',')} €
             </div>
@@ -173,7 +174,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
             disabled={product.isGroup ? finalPrice === 0 : false}
             className="px-6 py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            AÑADIR AL PEDIDO
+            {t('add_to_order')}
           </button>
         </div>
       </div>
