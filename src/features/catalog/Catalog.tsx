@@ -11,7 +11,7 @@ import NotificationManager from '../../components/NotificationManager';
 import { useI18nStore } from '../../store/i18nStore';
 
 export default function Catalog() {
-  const { t } = useI18nStore();
+  const { t, tDynamic } = useI18nStore();
   const [activeCategory, setActiveCategory] = useState('TODOS');
   const [ingredientsProduct, setIngredientsProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
@@ -195,7 +195,7 @@ export default function Catalog() {
                       : 'category-pill px-5 py-2.5 rounded-2xl bg-[#14141E] text-gray-300 hover:text-white border border-zinc-700 hover:border-green-400 whitespace-nowrap shrink-0 transition-all'
                     }
                   >
-                    {cat === 'TODOS' ? t('full_menu') : cat} ({count})
+                    {cat === 'TODOS' ? t('full_menu') : tDynamic(cat)} ({count})
                   </button>
                 )
               })}
@@ -271,8 +271,8 @@ export default function Catalog() {
                       <div className="flex items-center gap-3">
                         <div className="w-1 h-8 rounded-full bg-green-500"></div>
                         <div>
-                          <span className="text-[10px] font-mono font-bold text-green-400 uppercase tracking-widest">NUESTROS INGREDIENTES</span>
-                          <p className="text-white font-display font-black text-base sm:text-lg uppercase tracking-wide leading-none mt-0.5">Carta oficial de toppings disponibles</p>
+                          <span className="text-[10px] font-mono font-bold text-green-400 uppercase tracking-widest">{t('our_ingredients_title')}</span>
+                          <p className="text-white font-display font-black text-base sm:text-lg uppercase tracking-wide leading-none mt-0.5">{t('our_ingredients_subtitle')}</p>
                         </div>
                       </div>
 
@@ -281,13 +281,13 @@ export default function Catalog() {
                         {NESTOR_INGREDIENTS_OFICIAL.map(ing => (
                           <span key={ing} className="inline-flex items-center gap-1.5 bg-[#1A1A24] border border-zinc-700/70 text-gray-300 text-xs font-semibold px-3 py-1.5 rounded-lg hover:border-green-500/50 hover:text-white transition-colors cursor-default">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-400/80 shrink-0"></span>
-                            {ing}
+                            {tDynamic(ing)}
                           </span>
                         ))}
                       </div>
 
                       <p className="text-[11px] text-zinc-500 font-medium">
-                        Disponibles para pizzas al gusto y Mazzi Pizzas — pregunta disponibilidad de extras
+                        {t('ingredients_note')}
                       </p>
                     </div>
                   </div>
@@ -298,17 +298,17 @@ export default function Catalog() {
               <div className="py-10 my-2 text-center space-y-2">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/30 mb-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                  <span className="text-green-400 font-mono font-bold text-[11px] uppercase tracking-widest">{catProducts.length} VARIEDADES</span>
+                  <span className="text-green-400 font-mono font-bold text-[11px] uppercase tracking-widest">{catProducts.length} {t('varieties')}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-white uppercase tracking-tight leading-none">
-                    {cat.name}
+                    {tDynamic(cat.name)}
                   </h2>
                   {cat.subtitle && (
-                    <span className="text-green-400 font-mono text-sm font-bold">{cat.subtitle}</span>
+                    <span className="text-green-400 font-mono text-sm font-bold">{tDynamic(cat.subtitle)}</span>
                   )}
                 </div>
-                <p className="text-sm text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed pt-1">{cat.desc}</p>
+                <p className="text-sm text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed pt-1">{tDynamic(cat.desc)}</p>
                 <div className="w-16 h-0.5 bg-green-500/50 mx-auto mt-4 rounded-full"></div>
               </div>
 

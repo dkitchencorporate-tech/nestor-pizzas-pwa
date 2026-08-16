@@ -56,6 +56,12 @@ const dictionary: Translations = {
   closed_desc: { es: 'Lo sentimos mucho, pero en este momento no podemos aceptar nuevos pedidos por un cierre de emergencia o asuntos de fuerza mayor.', en: 'We are very sorry, but we cannot accept new orders at this time due to an emergency closure or force majeure.' },
   closed_btn: { es: 'Entendido, volveré más tarde', en: 'Understood, I will check back later' },
 
+  // Dynamic Catalog UI
+  our_ingredients_title: { es: 'NUESTROS INGREDIENTES', en: 'OUR INGREDIENTS' },
+  our_ingredients_subtitle: { es: 'Carta oficial de toppings disponibles', en: 'Official list of available toppings' },
+  ingredients_note: { es: 'Disponibles para pizzas al gusto y Mazzi Pizzas — pregunta disponibilidad de extras', en: 'Available for custom pizzas and Mazzi Pizzas — ask for extras availability' },
+  varieties: { es: 'VARIEDADES', en: 'VARIETIES' },
+
   // Hero
   promo_title: { es: 'JUEVES LOCOS', en: 'CRAZY THURSDAYS' },
   promo_subtitle: { es: '2 PIZZAS X 11,00 €', en: '2 PIZZAS FOR 11.00 €' },
@@ -104,11 +110,78 @@ const dictionary: Translations = {
   desserts: { es: 'Postres', en: 'Desserts' },
 };
 
+const dynamicDictionary: Record<string, string> = {
+  // Categories
+  'PROMOCIONES': 'PROMOTIONS',
+  'NUESTRAS PIZZAS': 'OUR PIZZAS',
+  'PIZZAS BLANCAS': 'WHITE PIZZAS',
+  'NUESTRAS PATATAS': 'OUR FRIES',
+  'NUESTRAS BURGUERS': 'OUR BURGERS',
+  'SECRET BURGUER': 'SECRET BURGER',
+  'ALGO MÁS': 'SOMETHING ELSE',
+  'BEBIDAS': 'DRINKS',
+  'POR INGREDIENTES': 'CUSTOM PIZZAS',
+  'POSTRES': 'DESSERTS',
+  'SALSAS': 'SAUCES',
+  
+  // Ingredients / Products
+  'ACEITUNAS NEGRAS': 'BLACK OLIVES',
+  'CEBOLLA': 'ONION',
+  'CHAMPIÑÓN': 'MUSHROOM',
+  'PIMIENTO ROJO': 'RED PEPPER',
+  'PIMIENTO VERDE': 'GREEN PEPPER',
+  'MAÍZ': 'CORN',
+  'ATÚN': 'TUNA',
+  'GAMBAS': 'PRAWNS',
+  'DELICIAS DE MAR': 'CRAB STICKS',
+  'BACON': 'BACON',
+  'CARNE KEBAB': 'KEBAB MEAT',
+  'JAMÓN SERRANO': 'SERRANO HAM',
+  'JAMÓN YORK': 'YORK HAM',
+  'PEPERONI': 'PEPPERONI',
+  'POLLO': 'CHICKEN',
+  'SALAMI': 'SALAMI',
+  'SALCHICHAS': 'SAUSAGES',
+  'TERNERA': 'BEEF',
+  'EXTRA MOZZARELLA': 'EXTRA MOZZARELLA',
+  'ROQUEFORT': 'ROQUEFORT',
+  'QUESO DE CABRA': 'GOAT CHEESE',
+  'HUEVO': 'EGG',
+  'PIÑA': 'PINEAPPLE',
+  'ALLOLI GRATINADO': 'GRATIN AIOLI',
+  'SALSA BARBACOA': 'BBQ SAUCE',
+  'SALSA CHEDDAR': 'CHEDDAR SAUCE',
+  'SALSA KEBAB': 'KEBAB SAUCE',
+  'SALSA PICANTE': 'SPICY SAUCE',
+  'SALSA CARBONARA': 'CARBONARA SAUCE',
+  'SALSA BOLOÑESA': 'BOLOGNESE SAUCE',
+  'POLLO AL CURRY': 'CURRY CHICKEN',
+  'PULLED PORK': 'PULLED PORK',
+  'DOBLE CHEDDAR': 'DOUBLE CHEDDAR',
+  'HAMBURGUESA ARTESANA': 'ARTISAN BURGER',
+  'CINCO QUESOS': 'FIVE CHEESES',
+  'MOZZARELLA': 'MOZZARELLA',
+  'TOMATE': 'TOMATO',
+  'NATA': 'CREAM',
+  'PATATAS GAJOS': 'POTATO WEDGES',
+  'PIZZA MARGARITA': 'MARGHERITA PIZZA',
+  'MAZZI PIZZA': 'MAZZI PIZZA',
+  'PATATAS': 'FRIES',
+  'NUEVO': 'NEW',
+  'PICANTE': 'SPICY',
+  'VEGANO': 'VEGAN',
+  'VEGETARIANO': 'VEGETARIAN',
+  'CERVEZAS': 'BEERS',
+  'REFRESCOS': 'SOFT DRINKS',
+  'AGUAS': 'WATER',
+};
+
 interface I18nState {
   lang: Language;
   setLang: (lang: Language) => void;
   toggleLang: () => void;
   t: (key: string) => string;
+  tDynamic: (text: string) => string;
 }
 
 export const useI18nStore = create<I18nState>()(
@@ -120,6 +193,40 @@ export const useI18nStore = create<I18nState>()(
       t: (key) => {
         const lang = get().lang;
         return dictionary[key]?.[lang] || key;
+      },
+      tDynamic: (text) => {
+        if (!text) return text;
+        const lang = get().lang;
+        if (lang === 'es') return text;
+        
+        const upperText = text.toUpperCase();
+        
+        // Match exact first
+        if (dynamicDictionary[upperText]) {
+          const translated = dynamicDictionary[upperText];
+          if (text === upperText) return translated;
+          if (text[0] === text[0].toUpperCase()) {
+            return translated.charAt(0) + translated.slice(1).toLowerCase();
+          }
+          return translated.toLowerCase();
+        }
+        
+        // Text replacement for descriptions
+        let translatedText = text;
+        // Sort keys by length descending to replace longer phrases first
+        const keys = Object.keys(dynamicDictionary).sort((a, b) => b.length - a.length);
+        
+        keys.forEach(esWord => {
+          const regex = new RegExp(`(?<=\\b|\\s|^)(${esWord})(?=\\b|\\s|$)`, 'gi');
+          translatedText = translatedText.replace(regex, (match) => {
+            const enWord = dynamicDictionary[esWord];
+            if (match === match.toUpperCase()) return enWord;
+            if (match[0] === match[0].toUpperCase()) return enWord.charAt(0) + enWord.slice(1).toLowerCase();
+            return enWord.toLowerCase();
+          });
+        });
+        
+        return translatedText;
       },
     }),
     {
