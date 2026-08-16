@@ -41,7 +41,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onCustomize }: ProductCardProps) {
-  const { t } = useI18nStore();
+  const { t, tDynamic } = useI18nStore();
   const [showSauceModal, setShowSauceModal] = useState(false);
   const [showAddToCartModal, setShowAddToCartModal] = useState(false);
 
@@ -80,7 +80,7 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
           {/* Badge */}
           {product.badge && (
             <span className="absolute top-3 left-3 z-20 bg-black border-2 border-green-500 text-white font-display font-black text-[10px] sm:text-xs uppercase tracking-wider px-3 py-1.5 rounded-xl shadow-2xl leading-none">
-              {product.badge}
+              {tDynamic(product.badge)}
             </span>
           )}
 
@@ -94,9 +94,9 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
         <div className="p-5 flex flex-col flex-1 gap-3">
           <div className="flex-1">
             <h3 className="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wide leading-tight group-hover:text-green-400 transition-colors">
-              {product.name}
+              {tDynamic(product.name)}
             </h3>
-            {highlightIngredients(product.desc || '')}
+            {highlightIngredients(tDynamic(product.desc || ''))}
           </div>
 
           {/* Botón de pedido */}
