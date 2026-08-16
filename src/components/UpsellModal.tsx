@@ -14,6 +14,7 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
   const { t, tDynamic } = useI18nStore();
   useHardwareBack(true, onClose);
   const [isLoading, setIsLoading] = useState(true);
+  const [upsellsData, setUpsellsData] = useState<any[]>([]);
   const [addedItems, setAddedItems] = useState<number[]>([]);
   
   // Simulated shuffle just toggles re-render or re-fetches for now
