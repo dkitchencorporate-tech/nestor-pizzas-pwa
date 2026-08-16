@@ -171,7 +171,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         p_delivery_method: deliveryMethod,
         p_items: orderItems,
         p_points_redeemed: pointsRedeemed,
-        p_small_order_fee_accepted: acceptSmallOrderFee
+        p_small_order_fee_accepted: acceptSmallOrderFee,
+        p_ip_address: 'client' // La BD usa x-forwarded-for internamente; este campo es una referencia adicional
       });
 
       if (checkoutError) throw checkoutError;
@@ -203,9 +204,16 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       emailService.sendOrderToAdmin(orderDataForEmail);
 
       onSuccess({ id: orderId }, !user);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error procesando pedido:', error);
-      alert('Hubo un error procesando el pedido. Por favor, intenta de nuevo.');
+      const friendlyMsg = error?.message?.includes('Manipulación') 
+        ? 'Error de integridad en el pedido. Por favor, recarga la página e inténtalo de nuevo.'
+        : error?.message?.includes('Demasiados pedidos')
+        ? 'Has realizado demasiados pedidos en poco tiempo. Espera unos minutos.'
+        : error?.message?.includes('ya no está disponible')
+        ? `Un artículo de tu carrito ya no está disponible. Por favor, retíralo e inténtalo de nuevo.`
+        : 'Hubo un error procesando el pedido. Por favor, inténtalo de nuevo.';
+      setPaymentError(friendlyMsg);
     } finally {
       setIsProcessing(false);
     }

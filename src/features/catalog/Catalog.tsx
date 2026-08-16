@@ -105,9 +105,20 @@ export default function Catalog() {
     };
   }, []);
 
-  // Lógica Temporal (OVERRIDE MODO DEV: TRUE)
-  const isWeekend = true;
-  const isSecretBurguerDay = true;
+  // Lógica de días en horario de España (UTC+2 verano)
+  const getSpainDay = () => {
+    const now = new Date();
+    // Ajustar a UTC+2 (CEST) para España en verano
+    const spainOffset = 2 * 60;
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const spainTime = new Date(utc + spainOffset * 60000);
+    return spainTime.getDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
+  };
+  const todayDay = getSpainDay();
+  // Fin de semana operativo: Viernes (5), Sábado (6), Domingo (0)
+  const isWeekend = [0, 5, 6].includes(todayDay);
+  // Secret Burguer: Solo Viernes (5) y Sábado (6)
+  const isSecretBurguerDay = [5, 6].includes(todayDay);
 
   // Categorías a mostrar (filtrando por lógica temporal si la hubiera)
   const displayCategories = ['TODOS', ...categories

@@ -143,9 +143,11 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
           <button onClick={onClose} className="w-full lg:w-auto bg-zinc-900 hover:bg-yellow-500 hover:text-black text-zinc-300 font-display font-bold px-4 py-3 sm:py-3.5 rounded-2xl text-[11px] sm:text-sm uppercase transition-all border border-zinc-800 flex items-center justify-center gap-2 shadow">
             <span>{t('keep_browsing')}</span>
           </button>
-          <button onClick={shuffleDynamicUpsells} className="w-full lg:w-auto bg-zinc-800 hover:bg-zinc-700 text-yellow-500 font-display font-bold px-4 py-3 sm:py-3.5 rounded-2xl text-[11px] sm:text-sm uppercase transition-all border border-zinc-700 flex items-center justify-center gap-2">
-            <span>{t('view_recommendations')}</span>
-          </button>
+          {upsellsData.length > 0 && (
+            <button onClick={shuffleDynamicUpsells} className="w-full lg:w-auto bg-zinc-800 hover:bg-zinc-700 text-yellow-500 font-display font-bold px-4 py-3 sm:py-3.5 rounded-2xl text-[11px] sm:text-sm uppercase transition-all border border-zinc-700 flex items-center justify-center gap-2">
+              <span>{t('view_recommendations')}</span>
+            </button>
+          )}
           <button onClick={() => { onClose(); onProceedToCheckout(); }} className="w-full lg:w-auto bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-display font-bold px-5 py-3 sm:py-3.5 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-[11px] sm:text-sm transition-all flex items-center justify-center gap-2">
             <span>{t('payment_gateway')}</span>
           </button>
