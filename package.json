@@ -35,6 +35,7 @@
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.0.5",
     "autoprefixer": "^10.5.4",
+    "dompurify": "^3.4.13",
     "dotenv": "^17.4.2",
     "pg": "^8.23.0",
     "postcss": "^8.5.26",
@@ -46,6 +47,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.3"
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/dompurify": "^3.0.5"
   }
 }
