@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { MarketingCampaignModal } from './components/MarketingCampaignModal';
 
 export default function AdminAnalytics() {
   const [users, setUsers] = useState<any[]>([]);
   const [todaySales, setTodaySales] = useState(0);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showMarketingModal, setShowMarketingModal] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -85,7 +87,10 @@ export default function AdminAnalytics() {
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-white text-lg">Base de Datos de Clientes</h3>
           <div className="flex gap-2 relative">
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition-colors shadow-lg">
+            <button 
+              onClick={() => setShowMarketingModal(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition-colors shadow-lg"
+            >
               📧 Enviar Publicidad (Resend)
             </button>
             <button 
@@ -198,7 +203,12 @@ export default function AdminAnalytics() {
           <p>Uso estrictamente confidencial para fines de marketing y gestión empresarial.</p>
         </div>
       </div>
-
+      
+      <MarketingCampaignModal 
+        isOpen={showMarketingModal} 
+        onClose={() => setShowMarketingModal(false)} 
+        userCount={users.length} 
+      />
     </div>
   );
 }
