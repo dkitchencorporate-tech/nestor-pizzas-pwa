@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useI18nStore } from '../../store/i18nStore';
+import { formatAddress } from '../../utils/addressUtils';
 
 type DateFilter = 'today' | 'yesterday' | '7days' | '30days';
 
@@ -271,8 +272,8 @@ export default function AdminHistory() {
                           <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Datos del Cliente</h4>
                           <p className="text-sm text-white font-bold mb-1">📞 {order.client_phone || 'Sin teléfono'}</p>
                           {order.delivery_address && (
-                            <p className="text-sm text-zinc-400 leading-relaxed">
-                              📍 {typeof order.delivery_address === 'string' ? order.delivery_address : JSON.stringify(order.delivery_address)}
+                            <p className="text-sm text-zinc-400 mt-1">
+                              📍 {formatAddress(order.delivery_address as any)}
                             </p>
                           )}
                         </div>

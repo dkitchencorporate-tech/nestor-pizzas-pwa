@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import TicketPrinter from '../../components/TicketPrinter';
 import { useI18nStore } from '../../store/i18nStore';
 import DOMPurify from 'dompurify';
+import { formatAddress } from '../../utils/addressUtils';
 
 export default function AdminOrders() {
   const { t, tDynamic } = useI18nStore();
@@ -371,8 +372,8 @@ export default function AdminOrders() {
                           <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('client_details')}</h4>
                           <p className="text-sm text-white font-bold mb-1">📱 {order.client_phone || t('no_phone')}</p>
                           {order.delivery_address && (
-                            <p className="text-sm text-zinc-400 leading-relaxed">
-                              📍 {typeof order.delivery_address === 'string' ? order.delivery_address : JSON.stringify(order.delivery_address)}
+                            <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
+                              📍 {formatAddress(order.delivery_address as string)}
                             </p>
                           )}
                         </div>
