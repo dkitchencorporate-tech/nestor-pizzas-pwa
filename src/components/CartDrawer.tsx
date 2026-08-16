@@ -1,5 +1,6 @@
 import { useCartStore } from '../store/cartStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
+import { useI18nStore } from '../store/i18nStore';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -10,9 +11,10 @@ interface CartDrawerProps {
 export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerProps) {
   useHardwareBack(isOpen, onClose);
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCartStore();
+  const { t } = useI18nStore();
 
   const handleClearCart = () => {
-    if (window.confirm("¿Estás seguro de que quieres vaciar todo tu pedido?")) {
+    if (window.confirm(t('clear_cart_confirm'))) {
       clearCart();
     }
   };
@@ -34,11 +36,11 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
             <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)]">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
             </div>
-            <h2 className="font-display font-black text-2xl text-white uppercase tracking-wider">Tu Pedido</h2>
+            <h2 className="font-display font-black text-2xl text-white uppercase tracking-wider">{t('your_order')}</h2>
           </div>
           <div className="flex items-center gap-2">
             {items.length > 0 && (
-              <button onClick={handleClearCart} className="p-2 bg-red-500/10 rounded-full text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Vaciar carrito">
+              <button onClick={handleClearCart} className="p-2 bg-red-500/10 rounded-full text-red-500 hover:bg-red-500 hover:text-white transition-colors" title={t('empty_cart_btn')}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
               </button>
             )}
@@ -56,8 +58,8 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
                 <span className="absolute inset-0 flex items-center justify-center text-3xl opacity-50">🍕</span>
               </div>
               <div className="text-center space-y-2">
-                <p className="font-display font-black text-xl text-white uppercase tracking-widest">Carrito Vacío</p>
-                <p className="font-medium text-sm text-zinc-400 px-4">Tu estómago ruge... ¡Es hora de añadir algo delicioso!</p>
+                <p className="font-display font-black text-xl text-white uppercase tracking-widest">{t('empty_cart_title')}</p>
+                <p className="font-medium text-sm text-zinc-400 px-4">{t('empty_cart_desc')}</p>
               </div>
             </div>
           ) : (
@@ -100,20 +102,25 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
               </div>
             ))
           )}
-        </div>
-
-        <div className="p-6 bg-[#14141E] border-t border-zinc-800">
-          <div className="flex justify-between items-end mb-6">
-            <span className="text-gray-400 font-medium">Total Pedido</span>
-            <span className="font-display font-black text-4xl text-white">{getTotal().toFixed(2)}€</span>
-          </div>
-          <button 
-            onClick={onCheckout}
-            disabled={items.length === 0}
-            className="w-full bg-green-500 disabled:bg-zinc-700 disabled:text-zinc-500 hover:bg-green-400 text-black font-black text-xl py-4 rounded-2xl uppercase tracking-widest shadow-[0_0_20px_rgba(34,197,94,0.4)] disabled:shadow-none transition-all"
-          >
-            PAGAR AHORA
-          </button>
+          {/* Footer actions */}
+          {items.length > 0 && (
+            <div className="p-6 border-t border-zinc-800 bg-[#0A0A0E] shadow-[0_-20px_40px_rgba(0,0,0,0.8)] z-10">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-gray-400 font-medium text-lg">{t('total')}</span>
+                <span className="font-display font-black text-3xl text-white">{getTotal().toFixed(2).replace('.', ',')} €</span>
+              </div>
+              
+              <button 
+                onClick={() => {
+                  onClose();
+                  onCheckout();
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-display font-black py-4 rounded-xl text-lg uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transform hover:-translate-y-1"
+              >
+                {t('process_order')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -14,9 +14,20 @@ export default function Header() {
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({top:0,behavior:'smooth'})}>
           <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-black border border-green-500/60 p-1 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.3)] relative">
             <img src="./assets/brand/logo_black_exact_2k.png" alt="Néstor Pizzas Logo Oficial 2K Fondo Negro" className="w-full h-full object-contain" />
-            <button onClick={toggleLang} className="absolute -bottom-2 -right-2 text-xl drop-shadow-md hover:scale-110 transition-transform bg-[#0C0C12] rounded-full p-1 border border-zinc-700 z-50">
-              {lang === 'es' ? '🇬🇧' : '🇪🇸'}
-            </button>
+            <div className="absolute -bottom-3 -right-3 flex items-center bg-[#0C0C12] rounded-full p-1 border border-zinc-700 shadow-xl z-50">
+              <button 
+                onClick={() => lang !== 'es' && toggleLang()} 
+                className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${lang === 'es' ? 'opacity-100 scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100'}`}
+              >
+                🇪🇸
+              </button>
+              <button 
+                onClick={() => lang !== 'en' && toggleLang()} 
+                className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${lang === 'en' ? 'opacity-100 scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100'}`}
+              >
+                🇬🇧
+              </button>
+            </div>
           </div>
           <div className="hidden sm:block">
             <div className="flex items-center gap-2">

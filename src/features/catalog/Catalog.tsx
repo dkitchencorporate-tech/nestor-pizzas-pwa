@@ -7,8 +7,11 @@ import { NESTOR_INGREDIENTS_OFICIAL } from '../../data/products';
 import { Product } from '../../types';
 import { supabase } from '../../lib/supabase';
 import PromoJuevesModal from '../../components/PromoJuevesModal';
+import NotificationManager from '../../components/NotificationManager';
+import { useI18nStore } from '../../store/i18nStore';
 
 export default function Catalog() {
+  const { t } = useI18nStore();
   const [activeCategory, setActiveCategory] = useState('TODOS');
   const [ingredientsProduct, setIngredientsProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
@@ -156,7 +159,7 @@ export default function Catalog() {
       
       {isSaturationMode && (
         <div className="bg-red-600 text-white font-bold text-center py-2 px-4 animate-pulse uppercase tracking-wider text-sm sticky top-[52px] sm:top-[60px] z-[45]">
-          ⚠️ MODO SATURACIÓN ACTIVO: Los pedidos tardarán más de 1 hora. Disculpen las molestias.
+          {t('saturation_mode')}
         </div>
       )}
 
@@ -192,7 +195,7 @@ export default function Catalog() {
                       : 'category-pill px-5 py-2.5 rounded-2xl bg-[#14141E] text-gray-300 hover:text-white border border-zinc-700 hover:border-green-400 whitespace-nowrap shrink-0 transition-all'
                     }
                   >
-                    {cat === 'TODOS' ? 'MENÚ COMPLETO' : cat} ({count})
+                    {cat === 'TODOS' ? t('full_menu') : cat} ({count})
                   </button>
                 )
               })}
@@ -207,23 +210,23 @@ export default function Catalog() {
           
           <div className="flex whitespace-nowrap animate-marquee items-center">
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-gray-300 uppercase tracking-wide flex items-center gap-2">
-                  <span className="text-yellow-400 text-sm">🔥</span> OFERTA FLASH: Instala la App hoy y llévate una ración de PATATAS GRATIS en tu primer pedido
+                  {t('flash_offer')}
               </span>
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-green-500 uppercase tracking-wide flex items-center gap-2">
-                  ⏱️ LA OFERTA TERMINA EN: <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">05:43:21</span>
+                  {t('offer_ends')} <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">05:43:21</span>
               </span>
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-gray-300 uppercase tracking-wide flex items-center gap-2">
-                  <span className="text-red-500 text-sm">⚡</span> ¡GANA UNA PIZZA! Regístrate, compártelo con 5 amigos y tu próxima pizza te sale GRATIS (pedidos &gt;15€)
+                  {t('win_pizza')}
               </span>
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-green-500 uppercase tracking-wide flex items-center gap-2">
-                  ⏱️ LA OFERTA TERMINA EN: <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">05:43:21</span>
+                  {t('offer_ends')} <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">05:43:21</span>
               </span>
               {/* Duplicate for infinite scroll loop */}
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-gray-300 uppercase tracking-wide flex items-center gap-2">
-                  <span className="text-yellow-400 text-sm">🔥</span> OFERTA FLASH: Instala la App hoy y llévate una ración de PATATAS GRATIS en tu primer pedido
+                  {t('flash_offer')}
               </span>
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-green-500 uppercase tracking-wide flex items-center gap-2">
-                  ⏱️ LA OFERTA TERMINA EN: <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">05:43:21</span>
+                  {t('offer_ends')} <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">05:43:21</span>
               </span>
           </div>
         </div>

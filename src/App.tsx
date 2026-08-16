@@ -13,10 +13,12 @@ import { useAuthStore } from './store/authStore';
 import { useGuestOrderStore } from './store/guestOrderStore';
 import ReviewModal from './components/ReviewModal';
 import GuestRegistrationModal from './components/GuestRegistrationModal';
+import { useI18nStore } from './store/i18nStore';
 
 import { supabase } from './lib/supabase';
 
 function App() {
+  const { t } = useI18nStore();
   const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking'>('splash');
   const [isPreloaderFading, setIsPreloaderFading] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
@@ -125,8 +127,8 @@ function App() {
             </div>
           </div>
           <div className="mt-12 text-center animate-pulse">
-            <h2 className="text-green-500 font-display font-black text-2xl tracking-widest uppercase">Encendiendo motores...</h2>
-            <p className="text-gray-400 text-sm font-medium mt-2">Preparando la mejor pizza</p>
+            <h2 className="text-green-500 font-display font-black text-2xl tracking-widest uppercase">{t('splash_title')}</h2>
+            <p className="text-gray-400 text-sm font-medium mt-2">{t('splash_desc')}</p>
           </div>
         </div>
       )}
@@ -143,16 +145,16 @@ function App() {
                 <span className="text-5xl">🔒</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-display font-black text-white uppercase tracking-wider mb-4">
-                Cerrado Temporalmente
+                {t('closed_title')}
               </h2>
               <p className="text-zinc-400 max-w-md mx-auto text-sm sm:text-base leading-relaxed mb-8">
-                Lo sentimos mucho, pero en este momento no podemos aceptar nuevos pedidos por un cierre de emergencia o asuntos de fuerza mayor.
+                {t('closed_desc')}
               </p>
               <button 
-                onClick={() => window.location.reload()}
-                className="bg-transparent border border-zinc-700 hover:bg-zinc-800 text-white font-bold py-3 px-8 rounded-xl uppercase tracking-wider text-sm transition-all"
+                onClick={() => setIsStoreClosed(false)}
+                className="bg-white hover:bg-gray-100 text-black font-display font-bold px-8 py-4 rounded-xl transition-all hover:scale-105"
               >
-                Actualizar Página
+                {t('closed_btn')}
               </button>
             </div>
           )}
