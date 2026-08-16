@@ -185,7 +185,8 @@ export default function AdminKiosk() {
         p_delivery_method: deliveryMethod,
         p_items: formattedItems,
         p_points_redeemed: false,
-        p_small_order_fee_accepted: true
+        p_small_order_fee_accepted: true,
+        p_ip_address: 'kiosk'
       });
 
       if (error) throw error;
