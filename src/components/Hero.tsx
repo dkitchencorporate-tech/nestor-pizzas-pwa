@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useAuthStore } from '../store/authStore';
+import { useI18nStore } from '../store/i18nStore';
 
 interface HeroProps {
   onOpenPromo: () => void;
@@ -6,6 +8,7 @@ interface HeroProps {
 
 export default function Hero({ onOpenPromo }: HeroProps) {
   const [activeSlide, setActiveSlide] = useState(1);
+  const { t } = useI18nStore();
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-8 pt-6">
@@ -18,14 +21,17 @@ export default function Hero({ onOpenPromo }: HeroProps) {
               <span className="animate-pulse">🔥 PROMOCIÓN EXCLUSIVA CANILES</span>
             </div>
             <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight leading-none uppercase drop-shadow-lg">
-              JUEVES LOCOS:<br/><span className="text-nestor-gold drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]">2 PIZZAS X 11,00 €</span>
+              {t('promo_title')}:<br/><span className="text-nestor-gold drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]">{t('promo_subtitle')}</span>
             </h2>
             <p className="text-sm sm:text-base text-gray-300 font-normal leading-relaxed max-w-xl mx-auto sm:mx-0">
-              Cada jueves disfruta de dos pizzas de 33cm recién horneadas con hasta 3 ingredientes artesanos al mejor precio de la comarca.
+              {t('promo_desc')}
             </p>
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 relative z-30">
-              <button onClick={onOpenPromo} className="w-full sm:w-auto bg-nestor-green hover:bg-green-500 text-white font-display font-black px-8 py-4 rounded-2xl text-sm sm:text-sm shadow-[0_15px_30px_-5px_rgba(34,197,94,0.4)] tracking-wider uppercase transition-all hover:scale-105 border border-green-400/50">
-                ¡Aprovechar Promo Jueves! →
+              <button 
+                onClick={onOpenPromo}
+                className="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-display font-black px-8 py-4 rounded-2xl text-sm sm:text-sm shadow-[0_15px_30px_-5px_rgba(34,197,94,0.4)] tracking-wider uppercase transition-all hover:scale-105 border border-green-400/50"
+              >
+                {t('promo_btn') === 'promo_btn' ? '¡Aprovechar Promo Jueves! →' : t('promo_btn')}
               </button>
             </div>
           </div>
@@ -48,8 +54,11 @@ export default function Hero({ onOpenPromo }: HeroProps) {
               ¡Regístrate ahora! Comparte tu código con 5 amigos y en tu próximo pedido superior a 15€, te regalamos una Pizza Familiar.
             </p>
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 relative z-30">
-              <button className="w-full sm:w-auto bg-red-600 hover:bg-red-500 text-white font-display font-black px-8 py-4 rounded-2xl text-sm sm:text-sm shadow-[0_15px_30px_-5px_rgba(220,38,38,0.4)] tracking-wider uppercase transition-all hover:scale-105 border border-red-400/50">
-                Regístrate y Gana →
+              <button 
+                onClick={() => useAuthStore.getState().openUserModal('register')}
+                className="w-full sm:w-auto bg-red-600 hover:bg-red-500 text-white font-display font-black px-8 py-4 rounded-2xl text-sm sm:text-sm shadow-[0_15px_30px_-5px_rgba(220,38,38,0.4)] tracking-wider uppercase transition-all hover:scale-105 border border-red-400/50"
+              >
+                {t('register')}
               </button>
             </div>
           </div>

@@ -1,9 +1,11 @@
 import { useAuthStore } from '../store/authStore';
 import { usePWAInstall } from '../hooks/usePWAInstall';
+import { useI18nStore } from '../store/i18nStore';
 
 export default function Header() {
   const { user, profile, openUserModal } = useAuthStore();
   const { promptToInstall } = usePWAInstall();
+  const { lang, toggleLang, t } = useI18nStore();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#0A0A0E]/95 backdrop-blur-xl border-b border-green-500/40 shadow-2xl transition-all">
@@ -12,8 +14,8 @@ export default function Header() {
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({top:0,behavior:'smooth'})}>
           <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-black border border-green-500/60 p-1 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.3)] relative">
             <img src="./assets/brand/logo_black_exact_2k.png" alt="Néstor Pizzas Logo Oficial 2K Fondo Negro" className="w-full h-full object-contain" />
-            <button className="absolute -bottom-2 -right-2 text-xl drop-shadow-md hover:scale-110 transition-transform bg-[#0C0C12] rounded-full p-1 border border-zinc-700 z-50">
-              🇬🇧
+            <button onClick={toggleLang} className="absolute -bottom-2 -right-2 text-xl drop-shadow-md hover:scale-110 transition-transform bg-[#0C0C12] rounded-full p-1 border border-zinc-700 z-50">
+              {lang === 'es' ? '🇬🇧' : '🇪🇸'}
             </button>
           </div>
           <div className="hidden sm:block">
@@ -44,7 +46,7 @@ export default function Header() {
 
           <a href="tel:+34679761987" className="flex bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/40 rounded-xl w-10 h-10 sm:w-auto sm:px-3.5 sm:py-2 text-sm font-display font-bold items-center justify-center gap-1.5 shadow transition-all shrink-0">
             <svg className="w-5 h-5 sm:w-3.5 sm:h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-            <span className="hidden sm:inline">Llamar</span>
+            <span className="hidden sm:inline">{t('contact')}</span>
           </a>
           
           <div onClick={() => openUserModal()} className="cursor-pointer flex bg-[#14141E] hover:bg-[#1E1E2C] border border-green-500/40 rounded-xl w-10 h-10 sm:w-auto sm:px-3 sm:py-1.5 items-center justify-center gap-2 transition-all shadow shrink-0">
@@ -58,7 +60,7 @@ export default function Header() {
             ) : (
               <>
                 <div className="w-6 h-6 sm:w-6 sm:h-6 rounded-lg bg-green-500/20 text-green-400 border border-green-500/40 flex items-center justify-center font-display font-bold text-xs sm:text-[10px] shrink-0">🔑</div>
-                <span className="hidden sm:inline text-sm font-bold text-white uppercase">ENTRAR</span>
+                <span className="hidden sm:inline text-sm font-bold text-white uppercase">{t('login')}</span>
               </>
             )}
           </div>

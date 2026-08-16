@@ -93,5 +93,17 @@ export const emailService = {
     } catch (error) {
       console.error('Error enviando correo de bienvenida:', error);
     }
+  },
+
+  /**
+   * Envía una campaña de marketing a todos los usuarios
+   */
+  sendMarketingCampaign: async (subject: string, message: string, userCount: number) => {
+    // Aquí se integraría la API de Resend o EmailJS para envíos masivos.
+    // Dado que requiere validación de backend/Edge Functions, lo simulamos para el frontend.
+    console.log(`Campaña "${subject}" enviada a ${userCount} usuarios.`);
+    
+    // Simular un pequeño retardo de red
+    return new Promise(resolve => setTimeout(resolve, 1500));
   }
 };
