@@ -1,4 +1,5 @@
 import { useCartStore } from '../store/cartStore';
+import { useI18nStore } from '../store/i18nStore';
 
 interface CartBarProps {
   onOpenUpsell: () => void;
@@ -7,6 +8,7 @@ interface CartBarProps {
 export default function CartBar({ onOpenUpsell }: CartBarProps) {
   const items = useCartStore(state => state.items);
   const getTotal = useCartStore(state => state.getTotal);
+  const { t } = useI18nStore();
   
   if (items.length === 0) return null;
 
@@ -33,14 +35,14 @@ export default function CartBar({ onOpenUpsell }: CartBarProps) {
         </div>
         {/* Price */}
         <div>
-          <span className="text-[9px] font-bold text-green-400/80 uppercase tracking-[0.15em] block leading-none">Comanda</span>
+          <span className="text-[9px] font-bold text-green-400/80 uppercase tracking-[0.15em] block leading-none">{t('order_label')}</span>
           <span className="font-display font-black text-xl sm:text-2xl text-white leading-tight">{total.toFixed(2).replace('.', ',')} €</span>
         </div>
       </div>
 
       {/* Right: CTA */}
       <div className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 h-full px-5 py-3 font-display font-black text-sm uppercase tracking-wider text-white shadow-[inset_-1px_0_0_rgba(255,255,255,0.1)] whitespace-nowrap">
-        <span>Tramitar</span>
+        <span>{t('process_order')}</span>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/>
         </svg>

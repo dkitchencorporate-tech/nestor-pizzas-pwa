@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import SauceModal from './SauceModal';
 import AddToCartModal from './AddToCartModal';
+import { useI18nStore } from '../store/i18nStore';
 
 interface Product {
   id: number;
@@ -40,6 +41,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onCustomize }: ProductCardProps) {
+  const { t } = useI18nStore();
   const [showSauceModal, setShowSauceModal] = useState(false);
   const [showAddToCartModal, setShowAddToCartModal] = useState(false);
 
@@ -103,7 +105,7 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
             className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-green-600 hover:to-green-700 text-white font-display font-black py-3.5 rounded-2xl text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg hover:shadow-[0_10px_25px_-5px_rgba(22,163,74,0.4)] flex items-center justify-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
-            <span>PEDIR AHORA</span>
+            <span>{t('order_now')}</span>
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { useCartStore } from '../store/cartStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
+import { useI18nStore } from '../store/i18nStore';
 
 export default function UserModal() {
   const { isUserModalOpen, closeUserModal, userModalView, setModalView, setLegalDoc, activeLegalDoc, user, profile, logout, orders } = useAuthStore();
@@ -671,15 +672,19 @@ export default function UserModal() {
           )}
 
           {userModalView === 'check-email' && (
-            <div className="space-y-4 text-center pb-4 py-6">
-              <div className="w-20 h-20 mx-auto bg-blue-500/10 rounded-full flex items-center justify-center border-2 border-blue-500/50 mb-4 animate-bounce">
-                <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            <div className="p-8 text-center space-y-6">
+              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-4xl">📧</span>
               </div>
-              <h3 className="text-xl font-display font-black text-white uppercase mb-2">Confirma tu Email</h3>
-              <p className="text-sm text-gray-300 leading-relaxed">Hemos enviado un enlace de confirmación a <strong>{email}</strong>. Por favor, revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.</p>
-              
-              <button onClick={() => setModalView('login')} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-6 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-                Volver a Iniciar Sesión
+              <h2 className="text-3xl font-display font-black text-white uppercase tracking-wider">{t('check_email')}</h2>
+              <p className="text-zinc-400 leading-relaxed max-w-sm mx-auto">
+                {t('check_email_desc')}
+              </p>
+              <button
+                onClick={() => setModalView('login')}
+                className="w-full border-2 border-zinc-700 hover:border-green-500 text-white font-bold py-4 rounded-xl mt-8 transition-colors"
+              >
+                {t('login')}
               </button>
             </div>
           )}
