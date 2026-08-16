@@ -5,6 +5,7 @@ import KioskSauceModal from '../../components/KioskSauceModal';
 import KioskIngredientsModal from '../../components/KioskIngredientsModal';
 import KioskPromoJuevesModal from '../../components/KioskPromoJuevesModal';
 import { CartItem } from '../../store/cartStore';
+import { formatAddress } from '../../utils/addressUtils';
 interface Category {
   id: string;
   name: string;
@@ -287,7 +288,7 @@ export default function AdminKiosk() {
                       <div>
                         <p className="font-bold text-lg text-white">{c.full_name || 'Sin Nombre'}</p>
                         <p className="text-sm text-gray-400 font-mono mt-0.5">{c.phone}</p>
-                        {c.address && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{c.address}</p>}
+                        {c.address && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{formatAddress(c.address)}</p>}
                       </div>
                       <div className="flex flex-col items-end">
                         {c.is_registered ? (
@@ -402,7 +403,7 @@ export default function AdminKiosk() {
                 <div>
                   <h4 className="font-bold text-white text-lg">{clientInfo.full_name}</h4>
                   <p className="text-zinc-400 font-mono text-sm">{clientInfo.phone}</p>
-                  {clientInfo.address && <p className="text-zinc-500 text-xs mt-1">{clientInfo.address}</p>}
+                  {clientInfo.address && <p className="text-zinc-500 text-xs mt-1">{formatAddress(clientInfo.address)}</p>}
                 </div>
               ) : (
                 <div>

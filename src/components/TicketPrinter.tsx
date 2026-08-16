@@ -1,5 +1,6 @@
 import React from 'react';
 import { useI18nStore } from '../store/i18nStore';
+import { formatAddress } from '../utils/addressUtils';
 
 interface TicketPrinterProps {
   order: any;
@@ -35,7 +36,7 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
         <p className="text-xl font-bold">{t('ticket_phone')} {order.client_phone}</p>
         {isDelivery && order.delivery_address && (
           <div className="mt-2 p-2 border-2 border-black font-bold text-xl leading-snug">
-            {order.delivery_address}
+            {formatAddress(order.delivery_address as string)}
           </div>
         )}
       </div>
