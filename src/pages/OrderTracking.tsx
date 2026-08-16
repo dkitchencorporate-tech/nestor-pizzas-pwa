@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useGuestOrderStore } from '../store/guestOrderStore';
+import { useI18nStore } from '../store/i18nStore';
 
 export default function OrderTracking({ onBack }: { onBack: () => void }) {
+  const { t } = useI18nStore();
   const { orders, user } = useAuthStore();
   const { guestOrder } = useGuestOrderStore();
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
@@ -57,8 +59,8 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
           </button>
           <div className="text-center">
-            <h1 className="font-display font-black uppercase text-lg tracking-widest text-white">Mis Pedidos</h1>
-            <p className="text-[10px] text-green-500 font-mono tracking-widest uppercase">Néstor Pizzas</p>
+            <h1 className="font-display font-black uppercase text-lg tracking-widest text-white">{t('my_orders')}</h1>
+            <p className="text-[10px] text-green-500 font-mono tracking-widest uppercase">{t('brand_name')}</p>
           </div>
           <div className="w-10"></div> {/* Spacer for centering */}
         </div>
@@ -69,13 +71,13 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
             onClick={() => setActiveTab('active')}
             className={`flex-1 pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'active' ? 'border-green-500 text-green-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
           >
-            En Curso
+            {t('in_progress')}
           </button>
           <button 
             onClick={() => setActiveTab('history')}
             className={`flex-1 pb-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'history' ? 'border-green-500 text-green-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
           >
-            Historial
+            {t('history')}
           </button>
         </div>
       </header>
@@ -90,13 +92,13 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                 <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-4xl">🍕</span>
                 </div>
-                <h2 className="text-xl font-display font-black text-white uppercase mb-2">No hay pedidos en curso</h2>
-                <p className="text-zinc-500 text-sm mb-8">¿Tienes hambre? Revisa nuestro menú y pide algo delicioso.</p>
+                <h2 className="text-xl font-display font-black text-white uppercase mb-2">{t('no_active_orders')}</h2>
+                <p className="text-zinc-500 text-sm mb-8">{t('hungry_check_menu')}</p>
                 <button 
                   onClick={onBack}
                   className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-xl uppercase tracking-wider text-sm transition-all shadow-[0_0_20px_rgba(22,163,74,0.3)]"
                 >
-                  Ver Menú
+                  {t('view_menu')}
                 </button>
               </div>
             ) : (
@@ -106,12 +108,12 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                 <div className="p-6 border-b border-zinc-800 bg-green-500/5">
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <span className="text-[10px] text-green-500 font-bold tracking-widest uppercase bg-green-500/10 px-2 py-1 rounded">Tracking Activo</span>
+                      <span className="text-[10px] text-green-500 font-bold tracking-widest uppercase bg-green-500/10 px-2 py-1 rounded">{t('active_tracking')}</span>
                       <h2 className="text-2xl font-display font-black text-white uppercase mt-2">ID: {activeOrder.id.slice(0,8)}</h2>
                     </div>
                     <div className="text-right">
                       <span className="text-2xl font-black text-white">{activeOrder.total_amount}€</span>
-                      <p className="text-xs text-zinc-500 font-medium uppercase mt-1">{activeOrder.delivery_method === 'delivery' ? 'A Domicilio' : 'Recogida Local'}</p>
+                      <p className="text-xs text-zinc-500 font-medium uppercase mt-1">{activeOrder.delivery_method === 'delivery' ? t('delivery_method_home') : t('delivery_method_pickup')}</p>
                     </div>
                   </div>
 
@@ -131,7 +133,7 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all duration-500 ${statusIndex >= 0 ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.4)]' : 'bg-zinc-800 text-zinc-600'} ${statusIndex === 0 ? 'animate-bounce' : ''}`}>
                           ⏳
                         </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center transition-colors duration-500 ${statusIndex >= 0 ? 'text-yellow-400' : 'text-zinc-600'}`}>Recibido</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center transition-colors duration-500 ${statusIndex >= 0 ? 'text-yellow-400' : 'text-zinc-600'}`}>{t('status_received')}</span>
                       </div>
 
                       {/* Step 2: Cooking */}
@@ -139,7 +141,7 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all duration-500 ${statusIndex >= 1 ? 'bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]' : 'bg-zinc-800 text-zinc-600'} ${statusIndex === 1 ? 'animate-bounce' : ''}`}>
                           🔥
                         </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center transition-colors duration-500 ${statusIndex >= 1 ? 'text-orange-500' : 'text-zinc-600'}`}>Cocinando</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center transition-colors duration-500 ${statusIndex >= 1 ? 'text-orange-500' : 'text-zinc-600'}`}>{t('status_cooking')}</span>
                       </div>
 
                       {/* Step 3: Delivering/Ready */}
@@ -148,7 +150,7 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                           {activeOrder.delivery_method === 'delivery' ? '🛵' : '🛍️'}
                         </div>
                         <span className={`text-[10px] font-bold uppercase tracking-wider mt-3 text-center transition-colors duration-500 ${statusIndex >= 2 ? 'text-blue-400' : 'text-zinc-600'}`}>
-                          {activeOrder.delivery_method === 'delivery' ? 'En Reparto' : 'Listo'}
+                          {activeOrder.delivery_method === 'delivery' ? t('status_delivering_title') : t('status_ready')}
                         </span>
                       </div>
                     </div>
@@ -156,16 +158,16 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                   
                   <div className="mt-8 bg-[#0A0A0E] rounded-2xl p-4 border border-zinc-800 text-center">
                     <p className="text-sm text-zinc-300">
-                      {statusIndex === 0 && 'Estamos confirmando tu pedido y pronto empezaremos a prepararlo.'}
-                      {statusIndex === 1 && 'Tu comida está en el horno preparándose con mucho mimo.'}
-                      {statusIndex === 2 && activeOrder.delivery_method === 'delivery' && '¡El repartidor va de camino a tu casa!'}
-                      {statusIndex === 2 && activeOrder.delivery_method === 'pickup' && '¡Tu pedido está listo! Ya puedes pasar a recogerlo.'}
+                      {statusIndex === 0 && t('tracking_msg_pending')}
+                      {statusIndex === 1 && t('tracking_msg_cooking')}
+                      {statusIndex === 2 && activeOrder.delivery_method === 'delivery' && t('tracking_msg_delivering')}
+                      {statusIndex === 2 && activeOrder.delivery_method === 'pickup' && t('tracking_msg_ready')}
                     </p>
                   </div>
                 </div>
 
                 <div className="p-6">
-                  <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Resumen del Pedido</h4>
+                  <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">{t('order_summary')}</h4>
                   <div className="space-y-3">
                     {activeOrder.order_items?.map((item: any) => (
                       <div key={item.id} className="flex justify-between items-center text-sm">
@@ -188,7 +190,7 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
             {historyOrders.length === 0 ? (
               <div className="text-center py-20 bg-[#14141E] rounded-3xl border border-zinc-800">
                 <span className="text-4xl mb-4 block">📜</span>
-                <p className="text-zinc-500 font-medium">Aún no tienes pedidos completados.</p>
+                <p className="text-zinc-500 font-medium">{t('no_completed_orders')}</p>
               </div>
             ) : (
               historyOrders.map((order: any) => (
@@ -198,9 +200,9 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                       <span className="text-xs text-zinc-400 font-medium">{formatDate(order.created_at)}</span>
                       <div className="mt-1 flex items-center gap-2">
                         {order.status === 'delivered' ? (
-                          <span className="text-[10px] font-bold uppercase text-green-400 bg-green-500/10 px-2 py-1 rounded">Entregado</span>
+                          <span className="text-[10px] font-bold uppercase text-green-400 bg-green-500/10 px-2 py-1 rounded">{t('status_completed_title')}</span>
                         ) : (
-                          <span className="text-[10px] font-bold uppercase text-red-400 bg-red-500/10 px-2 py-1 rounded">Cancelado</span>
+                          <span className="text-[10px] font-bold uppercase text-red-400 bg-red-500/10 px-2 py-1 rounded">{t('status_cancelled_title')}</span>
                         )}
                         <span className="text-[10px] font-mono text-zinc-500 uppercase bg-zinc-900 px-2 py-1 rounded">ID: {order.id.slice(0,8)}</span>
                       </div>

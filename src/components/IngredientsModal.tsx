@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { NESTOR_INGREDIENTS_OFICIAL } from '../data/products';
 import { useCartStore } from '../store/cartStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
+import { useI18nStore } from '../store/i18nStore';
 
 // fallback image just in case
 const fallbackImg = 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&q=80';
@@ -13,6 +14,7 @@ interface IngredientsModalProps {
 
 export default function IngredientsModal({ product, onClose }: IngredientsModalProps) {
   useHardwareBack(true, onClose);
+  const { t } = useI18nStore();
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const addItem = useCartStore(state => state.addItem);
@@ -77,9 +79,9 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.5)] shrink-0">
                     <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"></path></svg>
                 </div>
-                <span className="truncate">A TU GUSTO</span>
+                <span className="truncate">{t('custom_taste')}</span>
               </h2>
-              <p className="text-gray-300 mt-1.5 sm:mt-2 text-xs sm:text-sm font-medium drop-shadow-md pr-2">Configura tu pizza seleccionando tus ingredientes favoritos (+1,00€/ud)</p>
+              <p className="text-gray-300 mt-1.5 sm:mt-2 text-xs sm:text-sm font-medium drop-shadow-md pr-2">{t('config_pizza_ingredients')}</p>
             </div>
         </div>
 
@@ -88,7 +90,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
           
           <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
              <div className="flex justify-between items-center mb-1">
-                <h4 className="text-white font-bold uppercase text-lg">{product.name} (BASE)</h4>
+                <h4 className="text-white font-bold uppercase text-lg">{product.name} {t('base_label')}</h4>
                 <span className="text-green-400 font-bold text-lg">{BASE_PRICE.toFixed(2).replace('.', ',')}€</span>
              </div>
              <p className="text-sm text-gray-400">33cm - {product.desc}</p>
@@ -98,7 +100,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
           <section>
             <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm flex items-center gap-2">
               <span className="bg-green-500 w-2 h-2 rounded-full inline-block"></span>
-              Añade Ingredientes Extras
+              {t('add_extra_ingredients')}
             </h3>
             
             <div className="flex flex-wrap gap-2">
@@ -127,7 +129,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
         {/* Footer */}
         <div className="p-6 border-t border-zinc-800 bg-[#0A0A0E] flex items-center justify-between gap-4 shrink-0">
           <div>
-            <div className="text-gray-400 text-xs mb-1 uppercase tracking-wider font-bold">Total Pizza</div>
+            <div className="text-gray-400 text-xs mb-1 uppercase tracking-wider font-bold">{t('total_pizza')}</div>
             <div className="text-white font-display font-black text-2xl">
               {finalPrice.toFixed(2).replace('.', ',')} €
             </div>
@@ -136,7 +138,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
             onClick={handleAddToCart}
             className="px-8 py-4 rounded-2xl font-display font-black text-sm uppercase tracking-wider transition-all flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white shadow-[0_0_25px_rgba(34,197,94,0.4)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)]"
           >
-            AÑADIR AL PEDIDO <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+            {t('add_to_order')} <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
           </button>
         </div>
       </div>

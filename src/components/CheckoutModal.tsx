@@ -6,6 +6,7 @@ import { SumUpPaymentModal } from './SumUpPaymentModal';
 import { isStoreOpen, generateAvailableTimeSlots } from '../utils/timeUtils';
 import { useHardwareBack } from '../utils/useHardwareBack';
 import { emailService } from '../lib/emailService';
+import { useI18nStore } from '../store/i18nStore';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -14,6 +15,7 @@ interface CheckoutModalProps {
 
 export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps) {
   useHardwareBack(true, onClose);
+  const { t, tDynamic } = useI18nStore();
   const { items, getTotal, removeItem, kioskClientInfo, setKioskClientInfo } = useCartStore();
   const { user, profile, updateProfile } = useAuthStore();
   const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>('delivery');
@@ -225,10 +227,10 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             </p>
             <div className="space-y-3">
               <a href="tel:+34679761987" className="block w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-sm transition-all shadow-[0_0_20px_rgba(22,163,74,0.3)]">
-                Llamar Ahora
+                {t('call_now')}
               </a>
               <button onClick={() => setGeofenceError(null)} className="block w-full bg-transparent hover:bg-zinc-900 text-zinc-500 font-bold py-3.5 rounded-xl uppercase tracking-wider text-sm transition-all border border-zinc-800">
-                Entendido
+                {t('understood')}
               </button>
             </div>
           </div>
@@ -239,8 +241,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         <div className="p-4 pt-6 sm:p-6 sm:pt-8 border-b border-zinc-800 flex items-center justify-between bg-zinc-950 relative overflow-hidden gap-3 shrink-0">
           <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-orange-500/10 via-green-500/10 to-transparent pointer-events-none"></div>
           <div>
-            <span className="text-[9px] sm:text-[10px] font-display font-bold text-green-500 uppercase tracking-widest block">Pasarela Oficial de Pedidos Caniles</span>
-            <h3 className="font-display font-black text-xl sm:text-3xl text-white mt-0.5 uppercase">Resumen y Tramitación</h3>
+            <span className="text-[9px] sm:text-[10px] font-display font-bold text-green-500 uppercase tracking-widest block">{t('official_checkout')}</span>
+            <h3 className="font-display font-black text-xl sm:text-3xl text-white mt-0.5 uppercase">{t('checkout_summary')}</h3>
           </div>
           <button onClick={onClose} className="text-zinc-400 hover:text-white text-xl font-bold p-2 bg-zinc-900 rounded-2xl border border-zinc-800 shrink-0 z-10 relative">✕</button>
         </div>
@@ -258,16 +260,16 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
               <span className="font-display font-bold text-white text-sm sm:text-sm uppercase tracking-wider flex items-center gap-2">
-                <span>Artículos en tu Comanda</span>
-                <span className="text-green-500 font-bold text-sm">{items.length} Artículos</span>
+                <span>{t('items_in_order')}</span>
+                <span className="text-green-500 font-bold text-sm">{items.length} {t('items_count')}</span>
               </span>
             </div>
             <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1 no-scrollbar">
               {items.map((item, index) => (
                 <div key={index} className="flex items-center justify-between bg-zinc-950 p-3 rounded-xl border border-zinc-800 group">
                   <div className="flex flex-col flex-1 min-w-0 mr-2">
-                    <span className="font-bold text-white text-sm truncate">{item.quantity}x {item.name}</span>
-                    <span className="text-xs text-zinc-400">{item.size === 'maxi' ? 'Tamaño: MAXI PIZZA' : 'Tamaño: Normal'}</span>
+                    <span className="font-bold text-white text-sm truncate">{item.quantity}x {tDynamic(item.name)}</span>
+                    <span className="text-xs text-zinc-400">{item.size === 'maxi' ? t('size_maxi') : t('size_normal')}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="font-black text-white">{(item.price * item.quantity).toFixed(2)} €</span>
@@ -290,15 +292,15 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-orange-600 text-white font-display font-bold flex items-center justify-center text-sm shrink-0 shadow">VIP</div>
                 <div>
-                  <span className="font-bold text-white block text-sm sm:text-sm">Club Fidelización Caniles: <span className="text-yellow-400 font-display font-extrabold">{userPoints}</span> Puntos</span>
+                  <span className="font-bold text-white block text-sm sm:text-sm">{t('vip_club')} <span className="text-yellow-400 font-display font-extrabold">{userPoints}</span> {t('points')}</span>
                   <span className="text-[11px] sm:text-sm text-zinc-400 leading-tight block">
                     {eligibleDiscount > 0 ? (
-                      <>Canjea 25 ptos para obtener un descuento de <strong className="text-green-400">-{eligibleDiscount.toFixed(2)} €</strong></>
+                      <>{t('redeem_25')} <strong className="text-green-400">-{eligibleDiscount.toFixed(2)} €</strong></>
                     ) : (
-                      <>Añade una pizza o hamburguesa para canjear tus puntos.</>
+                      <>{t('add_pizza_redeem')}</>
                     )}
                   </span>
-                  <span className="text-[10px] text-green-400 font-bold block mt-0.5">Sumarás +{pointsEarned} pts con este pedido</span>
+                  <span className="text-[10px] text-green-400 font-bold block mt-0.5">{t('earn_points')} +{pointsEarned} {t('with_this_order')}</span>
                 </div>
               </div>
               <button 
@@ -306,14 +308,14 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                 disabled={!canRedeem && !pointsRedeemed}
                 className={`w-full sm:w-auto justify-center font-display font-bold px-4 py-2.5 rounded-xl text-sm uppercase tracking-wider shrink-0 transition-all border ${pointsRedeemed ? 'bg-green-600 text-white border-green-500' : (canRedeem ? 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700' : 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed')}`}
               >
-                {pointsRedeemed ? 'Puntos Canjeados ✓' : 'Canjear 25 ptos'}
+                {pointsRedeemed ? t('redeemed_btn') : t('redeem_btn')}
               </button>
             </div>
           ) : (
             <div className="bg-gradient-to-r from-zinc-950 to-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <span className="font-bold text-white block text-sm">¿Tienes cuenta VIP?</span>
-                <span className="text-xs text-zinc-400 block mt-0.5">Inicia sesión para canjear o sumar puntos.</span>
+                <span className="font-bold text-white block text-sm">{t('have_vip')}</span>
+                <span className="text-xs text-zinc-400 block mt-0.5">{t('login_to_redeem')}</span>
               </div>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button 
@@ -322,7 +324,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   }}
                   className="flex-1 sm:flex-none px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase rounded-xl transition-colors border border-zinc-700"
                 >
-                  Iniciar Sesión
+                  {t('login')}
                 </button>
                 <button 
                   onClick={() => {
@@ -330,7 +332,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   }}
                   className="flex-1 sm:flex-none px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-bold uppercase rounded-xl transition-colors shadow-lg shadow-yellow-500/20"
                 >
-                  Registrarse
+                  {t('register')}
                 </button>
               </div>
             </div>
@@ -338,14 +340,14 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
           {/* Método Entrega */}
           <div className="space-y-2.5 sm:space-y-3">
-            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">1. Modalidad de Entrega o Recogida</span>
+            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">{t('delivery_mode')}</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 font-medium">
               <label onClick={() => setDeliveryMethod('delivery')} className={`flex items-center justify-between p-3.5 sm:p-4 rounded-2xl cursor-pointer shadow transition-all ${deliveryMethod === 'delivery' ? 'border-2 border-green-500 bg-green-500/15' : 'border border-zinc-700 bg-zinc-800 hover:border-green-500'}`}>
                 <div className="flex items-center gap-3">
                   <input type="radio" checked={deliveryMethod === 'delivery'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
                   <div>
-                    <span className="font-bold text-white block text-sm sm:text-sm">Envío a Domicilio en Caniles</span>
-                    <span className="text-[10px] sm:text-[11px] text-green-400 font-bold">Reparto Gratuito</span>
+                    <span className="font-bold text-white block text-sm sm:text-sm">{t('delivery_caniles')}</span>
+                    <span className="text-[10px] sm:text-[11px] text-green-400 font-bold">{t('free_delivery')}</span>
                   </div>
                 </div>
               </label>
@@ -353,7 +355,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                 <div className="flex items-center gap-3">
                   <input type="radio" checked={deliveryMethod === 'pickup'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
                   <div>
-                    <span className="font-bold text-white block text-sm sm:text-sm">Recoger en Pizzería</span>
+                    <span className="font-bold text-white block text-sm sm:text-sm">{t('pickup_store')}</span>
                     <span className="text-[10px] sm:text-[11px] text-zinc-400">Calle Alcalde Felip, 9</span>
                   </div>
                 </div>
@@ -363,15 +365,15 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
           {/* Datos de Envío */}
           <div className="space-y-3 border-t border-zinc-800 pt-4 sm:pt-5">
-            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">2. Datos de Contacto y Entrega</span>
+            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">{t('contact_data')}</span>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-medium mb-3">
               <div>
-                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Nombre Completo <span className="text-red-500">*</span></label>
-                <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Ej. Carlos Mendoza" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">{t('full_name')} <span className="text-red-500">*</span></label>
+                <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} placeholder={t('name_placeholder')} className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
               </div>
               <div>
-                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Móvil WhatsApp <span className="text-red-500">*</span></label>
+                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">{t('mobile_whatsapp')} <span className="text-red-500">*</span></label>
                 <input type="tel" value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="Ej. 679 00 00 00" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
               </div>
             </div>
@@ -379,8 +381,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             {deliveryMethod === 'delivery' ? (
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 font-medium">
                 <div className="sm:col-span-5">
-                  <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Calle Exacta <span className="text-red-500">*</span></label>
-                  <input type="text" value={addressStreet} onChange={e => setAddressStreet(e.target.value)} placeholder="Ej. Calle Amapola" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+                  <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">{t('exact_street')} <span className="text-red-500">*</span></label>
+                  <input type="text" value={addressStreet} onChange={e => setAddressStreet(e.target.value)} placeholder={t('street_placeholder')} className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Nº <span className="text-red-500">*</span></label>
@@ -391,35 +393,35 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   <input type="text" value={addressCP} onChange={e => setAddressCP(e.target.value)} placeholder="18810" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
                 </div>
                 <div className="sm:col-span-3">
-                  <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Notas (Opcional)</label>
-                  <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder="Piso, puerta..." className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+                  <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">{t('notes_optional')}</label>
+                  <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder={t('notes_placeholder_checkout')} className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
                 </div>
               </div>
             ) : (
               <div className="font-medium">
-                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Notas o Mesa (Opcional)</label>
-                <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder="Ej. Mesa 3 o Llegaré en 15 mins" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">{t('notes_or_table')}</label>
+                <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder={t('notes_table_placeholder')} className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
               </div>
             )}
           </div>
 
           {/* Cuándo lo quieres */}
           <div className="space-y-3 border-t border-zinc-800 pt-4 sm:pt-5">
-            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">3. Cuándo lo quieres</span>
+            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">{t('when_want')}</span>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-medium">
               <label onClick={() => isOpen && setScheduledTime('asap')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${scheduledTime === 'asap' ? 'bg-green-500/10 border border-green-500/50' : 'bg-zinc-950 border border-zinc-800'} ${!isOpen ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-700'}`}>
                 <input type="radio" checked={scheduledTime === 'asap'} readOnly disabled={!isOpen} className="text-green-500 w-4 h-4 shrink-0" />
                 <div>
-                  <span className="font-bold text-white text-sm block">Lo antes posible</span>
-                  <span className="text-xs text-zinc-400">{isOpen ? 'Prepárenlo ya' : 'Local Cerrado Ahora'}</span>
+                  <span className="font-bold text-white text-sm block">{t('asap')}</span>
+                  <span className="text-xs text-zinc-400">{isOpen ? t('prepare_now') : t('closed_now')}</span>
                 </div>
               </label>
 
               <label onClick={() => availableSlots.length > 0 && scheduledTime === 'asap' && setScheduledTime(availableSlots[0])} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${scheduledTime !== 'asap' ? 'bg-blue-500/10 border border-blue-500/50' : 'bg-zinc-950 border border-zinc-800'} ${availableSlots.length === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-zinc-700'}`}>
                 <input type="radio" checked={scheduledTime !== 'asap'} readOnly disabled={availableSlots.length === 0} className="text-blue-500 w-4 h-4 shrink-0" />
                 <div className="w-full pr-2">
-                  <span className="font-bold text-white text-sm block">Programar</span>
+                  <span className="font-bold text-white text-sm block">{t('schedule')}</span>
                   {scheduledTime !== 'asap' && availableSlots.length > 0 ? (
                     <select value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="mt-1.5 block w-full bg-zinc-900 border border-zinc-700 text-white rounded-lg px-2 py-1.5 text-xs outline-none focus:border-blue-500">
                       {availableSlots.map(slot => (
@@ -427,19 +429,19 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                       ))}
                     </select>
                   ) : (
-                    <span className="text-xs text-zinc-400">{availableSlots.length > 0 ? 'Elegir hora' : 'Sin turnos hoy'}</span>
+                    <span className="text-xs text-zinc-400">{availableSlots.length > 0 ? t('choose_time') : t('no_slots_today')}</span>
                   )}
                 </div>
               </label>
             </div>
             {!isOpen && availableSlots.length === 0 && (
-              <p className="text-[10px] text-orange-400">El local está cerrado y no hay más turnos por hoy.</p>
+              <p className="text-[10px] text-orange-400">{t('closed_no_slots')}</p>
             )}
           </div>
 
           {/* Forma de Pago */}
           <div className="space-y-3 border-t border-zinc-800 pt-4 sm:pt-5">
-            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">4. Forma de Pago</span>
+            <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">{t('payment_form')}</span>
 
             <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 space-y-3">
               {deliveryMethod === 'delivery' ? (
@@ -449,8 +451,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                       <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                     </div>
                     <div>
-                      <span className="font-bold text-white text-sm block">Pagar con Tarjeta</span>
-                      <span className="text-xs text-zinc-400">Pago online para envíos a domicilio</span>
+                      <span className="font-bold text-white text-sm block">{t('pay_card')}</span>
+                      <span className="text-xs text-zinc-400">{t('online_payment_delivery')}</span>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">VISA</span>
                         <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">MASTERCARD</span>
@@ -461,7 +463,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   </div>
 
                   <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
-                    🔒 Serás redirigido a la pasarela de pago segura de SumUp para completar tu pedido.
+                    {t('sumup_redirect')}
                   </p>
                 </>
               ) : (
@@ -469,8 +471,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   <label onClick={() => setPaymentMethod('online')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${paymentMethod === 'online' ? 'bg-blue-500/10 border border-blue-500/50' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
                     <input type="radio" checked={paymentMethod === 'online'} readOnly className="text-blue-500 w-4 h-4 shrink-0" />
                     <div>
-                      <span className="font-bold text-white text-sm block">Pagar con Tarjeta (Online)</span>
-                      <span className="text-xs text-zinc-400">Paga ahora y solo ven a recoger</span>
+                      <span className="font-bold text-white text-sm block">{t('pay_card_online')}</span>
+                      <span className="text-xs text-zinc-400">{t('pay_now_pickup')}</span>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">VISA</span>
                         <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">MASTER</span>
@@ -482,12 +484,12 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   <label onClick={() => setPaymentMethod('physical')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${paymentMethod === 'physical' ? 'bg-green-500/10 border border-green-500/50' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
                     <input type="radio" checked={paymentMethod === 'physical'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
                     <div>
-                      <span className="font-bold text-white text-sm block">Pago Físico al Recoger</span>
-                      <span className="text-xs text-zinc-400">Paga con Tarjeta o Efectivo en local</span>
+                      <span className="font-bold text-white text-sm block">{t('pay_physical')}</span>
+                      <span className="text-xs text-zinc-400">{t('pay_physical_desc')}</span>
                     </div>
                   </label>
                   <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
-                    🔒 Tu pedido queda confirmado al instante.
+                    {t('instant_confirm')}
                   </p>
                 </div>
               )}
@@ -500,7 +502,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             <div className="mb-4 bg-orange-500/10 border border-orange-500/30 text-orange-400 p-3 sm:p-4 rounded-xl flex flex-col gap-2 transition-all">
               <div className="flex items-center gap-2 font-medium text-xs sm:text-sm">
                 <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <span>El pedido mínimo para envíos a domicilio gratuitos es de <strong>12.00 €</strong>.</span>
+                <span>{t('min_order_delivery')} <strong>12.00 €</strong>.</span>
               </div>
               <label className="flex items-center gap-3 mt-1 cursor-pointer group">
                 <input 
@@ -509,13 +511,13 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   onChange={(e) => setAcceptSmallOrderFee(e.target.checked)} 
                   className="w-4 h-4 text-orange-500 rounded border-orange-500/50 bg-black/50 cursor-pointer focus:ring-orange-500" 
                 />
-                <span className="text-xs sm:text-sm text-orange-200 group-hover:text-orange-100 transition-colors">Aceptar recargo de 1.50 € por pedido pequeño</span>
+                <span className="text-xs sm:text-sm text-orange-200 group-hover:text-orange-100 transition-colors">{t('accept_surcharge')}</span>
               </label>
             </div>
           )}
           <div className="flex items-center justify-between gap-4">
             <div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Total a Abonar</span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">{t('total_to_pay')}</span>
               <span className="font-display font-black text-2xl sm:text-3xl text-white">{finalTotal.toFixed(2)} €</span>
             </div>
             <button 
@@ -523,7 +525,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               onClick={handleCheckoutClick} 
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
             >
-              {isProcessing ? 'Procesando...' : (paymentMethod === 'online' || deliveryMethod === 'delivery' ? 'Pagar Online →' : 'Confirmar Pedido →')}
+              {isProcessing ? t('processing') : (paymentMethod === 'online' || deliveryMethod === 'delivery' ? t('pay_online_btn') : t('confirm_order_btn'))}
             </button>
           </div>
         </div>
@@ -531,7 +533,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         {isProcessing && !showPaymentModal && (
           <div className="absolute inset-0 z-[1200] bg-zinc-950/90 backdrop-blur-md flex flex-col items-center justify-center rounded-[2.5rem] animate-fade-in">
             <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-green-500 font-bold uppercase tracking-widest animate-pulse">Confirmando Pedido...</p>
+            <p className="text-green-500 font-bold uppercase tracking-widest animate-pulse">{t('confirming_order')}</p>
           </div>
         )}
       </div>

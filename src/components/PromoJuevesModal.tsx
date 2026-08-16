@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NESTOR_PRODUCTS, Product } from '../data/products';
 import { useCartStore } from '../store/cartStore';
+import { useI18nStore } from '../store/i18nStore';
 
 interface PromoJuevesModalProps {
   onClose: () => void;
@@ -9,6 +10,7 @@ interface PromoJuevesModalProps {
 export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
   const [selectedPizzas, setSelectedPizzas] = useState<Product[]>([]);
   const addItem = useCartStore(state => state.addItem);
+  const { t } = useI18nStore();
 
   // Developer Bypass: Set to true to test on any day. Set to false for production.
   const DEV_BYPASS = false;
@@ -41,7 +43,7 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
       addItem({
         id: crypto.randomUUID(),
         productId: p.id,
-        name: `${p.name} ${isPromo ? '(Promo Jueves)' : ''}`,
+        name: `${p.name} ${isPromo ? `(${t('promo_title_2')})` : ''}`,
         price: isPromo ? 5.50 : p.price,
         quantity: 1
       });
@@ -58,10 +60,10 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
         <div className="p-4 pt-6 sm:p-6 sm:pt-8 bg-gradient-to-r from-green-900 via-zinc-900 to-zinc-950 border-b border-zinc-800 flex items-center justify-between shrink-0">
           <div>
             <span className="text-[10px] font-display font-bold uppercase tracking-widest text-green-500 flex items-center gap-1.5">
-              <span>🔥 PROMOCIÓN EXCLUSIVA CANILES</span>
+              <span>{t('promo_badge')}</span>
             </span>
-            <h3 className="font-display font-black text-2xl sm:text-3xl text-white mt-0.5 uppercase">JUEVES LOCOS</h3>
-            <p className="text-sm text-zinc-400 mt-1">Selecciona 2 pizzas por solo 11,00 €</p>
+            <h3 className="font-display font-black text-2xl sm:text-3xl text-white mt-0.5 uppercase">{t('promo_title_2')}</h3>
+            <p className="text-sm text-zinc-400 mt-1">{t('promo_subtitle_2')}</p>
           </div>
           <button onClick={onClose} className="text-zinc-400 hover:text-white text-xl font-bold p-2 bg-zinc-900 rounded-2xl border border-zinc-800 shrink-0 transition-colors">
             ✕
@@ -76,10 +78,10 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
             {!isJueves ? (
               <div className="absolute inset-0 z-10 bg-zinc-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
                 <span className="text-6xl mb-4">📅</span>
-                <h4 className="text-2xl font-display font-black uppercase text-white mb-2">Hoy no es Jueves</h4>
-                <p className="text-zinc-400 font-medium max-w-sm">Esta promoción es exclusiva para los días jueves. ¡Te esperamos el próximo jueves para disfrutarla!</p>
+                <h4 className="text-2xl font-display font-black uppercase text-white mb-2">{t('not_thursday_title')}</h4>
+                <p className="text-zinc-400 font-medium max-w-sm">{t('not_thursday_desc')}</p>
                 <button onClick={onClose} className="mt-6 bg-green-600 text-white font-bold px-6 py-3 rounded-xl uppercase tracking-wider text-sm hover:bg-green-500 transition-all">
-                  Volver al Menú
+                  {t('back_to_menu')}
                 </button>
               </div>
             ) : null}
@@ -98,7 +100,7 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
                   <div className="flex items-center justify-between mt-3">
                     <span className="font-bold text-zinc-500 text-xs line-through">{pizza.price.toFixed(2)}€</span>
                     <button className="px-2 py-1 rounded-lg bg-green-500/10 text-green-500 font-bold text-[10px] uppercase tracking-wider group-hover:bg-green-500 group-hover:text-white transition-all">
-                      + Añadir
+                      {t('add_item')}
                     </button>
                   </div>
                 </div>
@@ -109,12 +111,12 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
           {/* Right: Resumen */}
           <div className="w-full md:w-80 bg-zinc-950 flex flex-col shrink-0">
             <div className="p-4 sm:p-6 flex-1 overflow-y-auto no-scrollbar">
-              <h4 className="font-display font-bold text-sm text-zinc-500 uppercase tracking-wider mb-4">Pizzas Seleccionadas</h4>
+              <h4 className="font-display font-bold text-sm text-zinc-500 uppercase tracking-wider mb-4">{t('selected_pizzas')}</h4>
               
               {selectedPizzas.length === 0 ? (
                 <div className="text-center py-10">
                   <span className="text-4xl opacity-50 block mb-2">🍕</span>
-                  <p className="text-zinc-500 text-sm font-medium">Aún no has seleccionado ninguna pizza.</p>
+                  <p className="text-zinc-500 text-sm font-medium">{t('no_pizza_selected')}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -125,7 +127,7 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
                         <div className="flex-1">
                           <span className="font-bold text-sm text-white block">{pizza.name}</span>
                           <span className={`text-[10px] font-bold uppercase tracking-wider ${isPromo ? 'text-green-400' : 'text-zinc-500'}`}>
-                            {isPromo ? 'Precio Oferta (5.50€)' : `Precio Normal (${pizza.price.toFixed(2)}€)`}
+                            {isPromo ? t('promo_price_label') : `${t('normal_price_label')} (${pizza.price.toFixed(2)}€)`}
                           </span>
                         </div>
                         <button 
@@ -143,11 +145,11 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
 
             <div className="p-4 sm:p-6 bg-zinc-900 border-t border-zinc-800">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-zinc-400 text-sm font-medium">Promociones aplicadas:</span>
-                <span className="font-bold text-green-400">{pairs}x (2 por 11€)</span>
+                <span className="text-zinc-400 text-sm font-medium">{t('applied_promos')}</span>
+                <span className="font-bold text-green-400">{pairs}{t('promo_multiplier')}</span>
               </div>
               <div className="flex items-center justify-between mb-4">
-                <span className="font-display font-black text-xl text-white uppercase tracking-wider">Total:</span>
+                <span className="font-display font-black text-xl text-white uppercase tracking-wider">{t('total_label')}</span>
                 <span className="font-display font-black text-3xl text-green-500">{totalPrice.toFixed(2)}€</span>
               </div>
               
@@ -156,7 +158,7 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
                 disabled={selectedPizzas.length === 0}
                 className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-display font-black px-4 py-4 rounded-xl text-sm uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(22,163,74,0.3)] flex items-center justify-center gap-2"
               >
-                Añadir Promoción al Carrito
+                {t('add_promo_cart')}
               </button>
             </div>
           </div>

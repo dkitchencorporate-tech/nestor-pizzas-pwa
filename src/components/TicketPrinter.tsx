@@ -1,10 +1,12 @@
 import React from 'react';
+import { useI18nStore } from '../store/i18nStore';
 
 interface TicketPrinterProps {
   order: any;
 }
 
 export default function TicketPrinter({ order }: TicketPrinterProps) {
+  const { t } = useI18nStore();
   if (!order) return null;
 
   const isDelivery = order.delivery_method === 'delivery';
@@ -23,14 +25,14 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
         </p>
         
         <h2 className="text-2xl font-black border-b-2 border-black pb-2 mb-2 uppercase">
-          {isDelivery ? '¡A DOMICILIO!' : 'RECOGIDA LOCAL'}
+          {isDelivery ? t('ticket_delivery') : t('ticket_pickup')}
         </h2>
       </div>
 
       <div className="ticket-client text-left mb-4">
-        <p className="text-sm font-bold uppercase mb-1">Cliente:</p>
-        <p className="text-2xl font-black uppercase leading-none mb-1">{order.client_name || 'Sin Nombre'}</p>
-        <p className="text-xl font-bold">Tel: {order.client_phone}</p>
+        <p className="text-sm font-bold uppercase mb-1">{t('ticket_client')}</p>
+        <p className="text-2xl font-black uppercase leading-none mb-1">{order.client_name || t('no_name')}</p>
+        <p className="text-xl font-bold">{t('ticket_phone')} {order.client_phone}</p>
         {isDelivery && order.delivery_address && (
           <div className="mt-2 p-2 border-2 border-black font-bold text-xl leading-snug">
             {order.delivery_address}
@@ -42,9 +44,9 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
         <table className="w-full text-left font-bold text-sm">
           <thead>
             <tr className="border-b-2 border-black">
-              <th className="w-1/6 pb-1">CANT</th>
-              <th className="w-4/6 pb-1">ARTÍCULO</th>
-              <th className="w-1/6 pb-1 text-right">EUROS</th>
+              <th className="w-1/6 pb-1">{t('ticket_qty')}</th>
+              <th className="w-4/6 pb-1">{t('ticket_item')}</th>
+              <th className="w-1/6 pb-1 text-right">{t('ticket_euros')}</th>
             </tr>
           </thead>
           <tbody>
@@ -69,27 +71,27 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
       <div className="ticket-total text-right mb-4">
         {order.discount_applied > 0 && (
           <p className="text-xl font-bold uppercase border-t-2 border-black pt-2 mb-1">
-            SUBTOTAL: {(order.total_amount + order.discount_applied).toFixed(2)}€
+            {t('ticket_subtotal')} {(order.total_amount + order.discount_applied).toFixed(2)}€
           </p>
         )}
         {order.discount_applied > 0 && (
           <p className="text-lg font-bold uppercase mb-2">
-            DESC. CLUB VIP: -{order.discount_applied.toFixed(2)}€
+            {t('ticket_vip_discount')} -{order.discount_applied.toFixed(2)}€
           </p>
         )}
         <p className={`text-3xl font-black uppercase ${order.discount_applied > 0 ? 'border-t-2 border-black border-dotted pt-2' : 'border-t-2 border-black pt-2'}`}>
-          TOTAL: {order.total_amount?.toFixed(2)}€
+          {t('ticket_total')} {order.total_amount?.toFixed(2)}€
         </p>
       </div>
 
       <div className="ticket-footer text-center mt-8">
-        <p className="font-bold text-xs uppercase mb-1 text-gray-600">ID Pedido: #{order.id.slice(0, 8)}</p>
-        <p className="text-lg font-black italic border-t-2 border-black pt-2">¡Gracias por elegirnos!</p>
+        <p className="font-bold text-xs uppercase mb-1 text-gray-600">{t('ticket_order_id')}{order.id.slice(0, 8)}</p>
+        <p className="text-lg font-black italic border-t-2 border-black pt-2">{t('ticket_thanks')}</p>
       </div>
       
       {/* Spacer for paper cut mechanism to trigger properly */}
       <div className="h-16"></div>
-      <div className="text-center text-[10px] text-gray-400">- FIN DEL TICKET -</div>
+      <div className="text-center text-[10px] text-gray-400">{t('ticket_end')}</div>
     </div>
   );
 }

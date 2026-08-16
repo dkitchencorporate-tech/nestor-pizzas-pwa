@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import TicketPrinter from '../../components/TicketPrinter';
+import { useI18nStore } from '../../store/i18nStore';
 
 export default function AdminOrders() {
+  const { t, tDynamic } = useI18nStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'cooking' | 'ready' | 'delivered'>('pending');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -179,13 +181,13 @@ export default function AdminOrders() {
           <div className="w-24 h-24 bg-orange-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse border border-orange-500/50">
             <span className="text-4xl">🔔</span>
           </div>
-          <h2 className="text-3xl font-display font-black text-white uppercase tracking-wider mb-3">Recepción Bloqueada</h2>
-          <p className="text-gray-400 max-w-md mb-8">Por políticas de seguridad del navegador, necesitamos que hagas clic en este botón para poder emitir la alarma sonora cuando lleguen nuevos pedidos.</p>
+          <h2 className="text-3xl font-display font-black text-white uppercase tracking-wider mb-3">{t('reception_blocked')}</h2>
+          <p className="text-gray-400 max-w-md mb-8">{t('browser_security_message')}</p>
           <button 
             onClick={armAudio}
             className="bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-10 rounded-2xl uppercase tracking-widest shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-transform hover:scale-105"
           >
-            Activar Alarma Sonora
+            {t('activate_alarm')}
           </button>
         </div>
       )}
@@ -195,12 +197,12 @@ export default function AdminOrders() {
           <div className="flex items-center gap-3">
             <span className="text-3xl">⏰</span>
             <div>
-              <h3 className="font-display font-black uppercase text-xl">¡Hora de Abrir la Pizzería!</h3>
-              <p className="font-medium text-sm">Ya es la hora oficial de apertura según el horario.</p>
+              <h3 className="font-display font-black uppercase text-xl">{t('opening_time_title')}</h3>
+              <p className="font-medium text-sm">{t('opening_time_subtitle')}</p>
             </div>
           </div>
           <button onClick={handleSilence} className="mt-3 sm:mt-0 px-6 py-2 bg-black text-white rounded-xl font-bold uppercase hover:bg-zinc-900 border border-red-500/50">
-            Silenciar Alarma
+            {t('silence_alarm')}
           </button>
         </div>
       )}
@@ -208,14 +210,14 @@ export default function AdminOrders() {
       {/* Header and Controls */}
       <div className="p-4 sm:p-6 border-b border-zinc-800 bg-[#14141E] z-10 shadow-md flex items-center justify-between">
         <h2 className="text-xl sm:text-2xl font-display font-black uppercase text-white tracking-wide flex items-center gap-2">
-          Gestor de <span className="text-green-500">Pedidos</span>
+          {t('orders_manager_title')} <span className="text-green-500">{t('orders')}</span>
         </h2>
         {pending.length > silencedCount && (
           <button 
             onClick={handleSilence}
             className="px-4 py-2 bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 rounded-lg text-sm font-bold uppercase animate-pulse shadow-[0_0_15px_rgba(250,204,21,0.3)]"
           >
-            Silenciar Alarma ({pending.length - silencedCount})
+            {t('silence_alarm')} ({pending.length - silencedCount})
           </button>
         )}
       </div>
@@ -226,25 +228,25 @@ export default function AdminOrders() {
           onClick={() => setActiveTab('pending')}
           className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'pending' ? 'border-red-500 text-red-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
-          Nuevos ({pending.length})
+          {t('new')} ({pending.length})
         </button>
         <button 
           onClick={() => setActiveTab('cooking')}
           className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'cooking' ? 'border-yellow-500 text-yellow-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
-          Cocina ({cooking.length})
+          {t('cooking')} ({cooking.length})
         </button>
         <button 
           onClick={() => setActiveTab('ready')}
           className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'ready' ? 'border-blue-500 text-blue-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
-          Reparto / Listos ({ready.length})
+          {t('delivery_ready')} ({ready.length})
         </button>
         <button 
           onClick={() => setActiveTab('delivered')}
           className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'delivered' ? 'border-green-500 text-green-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
-          Completados ({delivered.length})
+          {t('completed')} ({delivered.length})
         </button>
       </div>
 
@@ -254,7 +256,7 @@ export default function AdminOrders() {
         {currentList.length === 0 ? (
           <div className="text-center py-20 bg-[#14141E] rounded-3xl border border-zinc-800">
             <span className="text-4xl block mb-4">🍽️</span>
-            <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm">No hay pedidos en esta sección</p>
+            <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm">{t('no_orders_section')}</p>
           </div>
         ) : (
           currentList.map(order => {
@@ -293,19 +295,19 @@ export default function AdminOrders() {
                     
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-display font-black text-lg text-white uppercase">{order.client_name || 'Sin Nombre'}</span>
+                        <span className="font-display font-black text-lg text-white uppercase">{order.client_name || t('no_name')}</span>
                         {isTPV && (
                           <span className="bg-blue-600/20 text-blue-400 font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-widest border border-blue-500/30 ml-2">
-                            TPV FÍSICO
+                            {t('tpv_physical')}
                           </span>
                         )}
                         <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-mono uppercase tracking-widest">#{order.id.slice(0,5)}</span>
                       </div>
                       <div className="flex gap-3 text-xs font-medium mt-1">
-                        <span className={isDelivery ? 'text-blue-400' : 'text-purple-400'}>{isDelivery ? 'A Domicilio' : 'Recogida Local'}</span>
+                        <span className={isDelivery ? 'text-blue-400' : 'text-purple-400'}>{isDelivery ? t('delivery_method_home') : t('delivery_method_pickup')}</span>
                         <span className="text-zinc-400">{new Date(order.created_at).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
-                        {order.discount_applied > 0 && <span className="text-green-500 font-bold ml-2">🎫 -{order.discount_applied}€ (VIP)</span>}
-                        {order.status === 'cancelled' && <span className="text-red-500 font-bold ml-2">CANCELADO</span>}
+                        {order.discount_applied > 0 && <span className="text-green-500 font-bold ml-2">🎫 -{order.discount_applied}€ ({t('vip')})</span>}
+                        {order.status === 'cancelled' && <span className="text-red-500 font-bold ml-2">{t('cancelled')}</span>}
                       </div>
                     </div>
                   </div>
@@ -313,7 +315,7 @@ export default function AdminOrders() {
                   <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full">
                     <div className="text-right">
                       <span className="block text-2xl font-black text-green-400 leading-none">{order.total_amount}€</span>
-                      <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Total Pagar</span>
+                      <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{t('total_amount')}</span>
                     </div>
                     <svg className={`w-6 h-6 text-zinc-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </div>
@@ -326,15 +328,15 @@ export default function AdminOrders() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Left: Items */}
                       <div>
-                        <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Resumen de Productos</h4>
+                        <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('product_summary')}</h4>
                         <div className="space-y-2">
                           {order.order_items?.map((item: any) => (
                             <div key={item.id} className="flex gap-3 text-sm border-b border-zinc-800/50 pb-2">
                               <span className="font-black text-white w-6 shrink-0">{item.quantity}x</span>
                               <div className="flex-1 text-zinc-300">
-                                <span>{item.customization_details?.name || item.products?.name || 'Producto Desconocido'}</span>
+                                <span>{item.customization_details?.name ? tDynamic(item.customization_details.name) : (item.products?.name ? tDynamic(item.products.name) : t('unknown_product'))}</span>
                                 {item.customization_details?.notes && (
-                                  <p className="text-xs text-orange-400 mt-1 font-bold">📝 Notas: {item.customization_details.notes}</p>
+                                  <p className="text-xs text-orange-400 mt-1 font-bold">📝 {t('notes')}: {item.customization_details.notes}</p>
                                 )}
                               </div>
                             </div>
@@ -342,7 +344,7 @@ export default function AdminOrders() {
                           
                           {order.discount_applied > 0 && (
                             <div className="flex justify-between text-sm border-t border-zinc-800/50 pt-2 mt-2">
-                              <span className="font-bold text-green-400">Descuento Club VIP Aplicado:</span>
+                              <span className="font-bold text-green-400">{t('vip_discount_applied')}:</span>
                               <span className="font-bold text-green-400">-{order.discount_applied}€</span>
                             </div>
                           )}
@@ -352,8 +354,8 @@ export default function AdminOrders() {
                       {/* Right: Client Details & Actions */}
                       <div className="space-y-4">
                         <div className="bg-[#14141E] p-4 rounded-xl border border-zinc-800">
-                          <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Datos del Cliente</h4>
-                          <p className="text-sm text-white font-bold mb-1">📞 {order.client_phone || 'Sin teléfono'}</p>
+                          <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('client_details')}</h4>
+                          <p className="text-sm text-white font-bold mb-1">📱 {order.client_phone || t('no_phone')}</p>
                           {order.delivery_address && (
                             <p className="text-sm text-zinc-400 leading-relaxed">
                               📍 {typeof order.delivery_address === 'string' ? order.delivery_address : JSON.stringify(order.delivery_address)}
@@ -388,7 +390,7 @@ export default function AdminOrders() {
                           {order.status === 'cooking' && (
                             <div className="flex gap-3">
                               <button onClick={() => updateOrderStatus(order.id, isDelivery ? 'delivering' : 'ready')} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-                                Marcar como {isDelivery ? 'EN REPARTO' : 'LISTO PARA RECOGER'}
+                                {t('mark_as')} {isDelivery ? t('status_delivering_title').toUpperCase() : t('status_ready_pickup_title').toUpperCase()}
                               </button>
                             </div>
                           )}

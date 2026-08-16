@@ -131,7 +131,7 @@ export default function UserModal() {
 
   const handleResetPassword = async () => {
     if (!email) {
-      setErrorMsg('Por favor ingresa tu email para recuperar la contraseña.');
+      setErrorMsg(t('please_enter_email_reset'));
       return;
     }
     setErrorMsg('');
@@ -143,7 +143,7 @@ export default function UserModal() {
     if (error) {
       setErrorMsg(error.message);
     } else {
-      setErrorMsg('Te hemos enviado un correo con las instrucciones.');
+      setErrorMsg(t('email_sent_instructions'));
     }
   };
 
@@ -158,7 +158,7 @@ export default function UserModal() {
       logout();
       setModalView('delete-success');
     } catch (error: any) {
-      setErrorMsg('No se pudo eliminar la cuenta. ' + error.message);
+      setErrorMsg(t('cannot_delete_account') + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -177,7 +177,7 @@ export default function UserModal() {
       await updateProfile({ phone: editPhone, address: addressJson });
       setModalView('profile');
     } catch (e: any) {
-      setErrorMsg(e.message || 'Error al actualizar perfil');
+      setErrorMsg(e.message || t('error_updating_profile'));
     } finally {
       setIsLoading(false);
     }
@@ -204,11 +204,11 @@ export default function UserModal() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'pending': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-400">PENDIENTE</span>;
-      case 'cooking': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400">COCINANDO</span>;
-      case 'delivering': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400">EN REPARTO</span>;
-      case 'delivered': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-400">ENTREGADO</span>;
-      case 'cancelled': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400">CANCELADO</span>;
+      case 'pending': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-400">{t('status_pending_title')}</span>;
+      case 'cooking': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400">{t('status_cooking_title')}</span>;
+      case 'delivering': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400">{t('status_delivering_title')}</span>;
+      case 'delivered': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-400">{t('status_completed_title')}</span>;
+      case 'cancelled': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400">{t('status_cancelled_title')}</span>;
       default: return null;
     }
   };
@@ -231,8 +231,8 @@ export default function UserModal() {
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v4H8v2h3v3h2v-3h3v-2h-3V7z"/>
               </svg>
             </div>
-            <h2 className="text-2xl font-display font-black text-white uppercase tracking-tight">{(user || profile) ? 'Mi Cuenta VIP' : 'Néstor Pizzas'}</h2>
-            <p className="text-sm text-gray-400 mt-1">{(user || profile) ? 'Club de Fidelización y Pedidos' : 'Inicia sesión para acumular puntos'}</p>
+            <h2 className="text-2xl font-display font-black text-white uppercase tracking-tight">{(user || profile) ? t('vip_account') : t('brand_name')}</h2>
+            <p className="text-sm text-gray-400 mt-1">{(user || profile) ? t('vip_account_desc_logged_in') : t('vip_account_desc_logged_out')}</p>
           </div>
         </div>
 
@@ -244,11 +244,11 @@ export default function UserModal() {
               <div className="w-20 h-20 mx-auto bg-red-500/10 rounded-full flex items-center justify-center border-2 border-red-500/50 mb-4 animate-pulse">
                 <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
               </div>
-              <h3 className="text-xl font-display font-black text-white uppercase mb-2">Sesión Administrativa</h3>
-              <p className="text-sm text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/20 p-4 rounded-xl">Estás usando una cuenta con privilegios de administrador. Los pedidos personales y los puntos de fidelidad están deshabilitados para no cruzar datos del TPV. Por favor, utiliza otra cuenta para pedidos personales.</p>
+              <h3 className="text-xl font-display font-black text-white uppercase mb-2">{t('admin_session_title')}</h3>
+              <p className="text-sm text-gray-300 leading-relaxed bg-red-500/10 border border-red-500/20 p-4 rounded-xl">{t('admin_session_desc')}</p>
               
               <button onClick={logout} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-6 shadow-[0_0_15px_rgba(220,38,38,0.3)]">
-                Cerrar Sesión Admin
+                {t('admin_logout')}
               </button>
             </div>
           ) : userModalView === 'login' ? (
@@ -260,21 +260,21 @@ export default function UserModal() {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                Continuar con Google
+                {t('continue_with_google')}
               </button>
               
               <div className="relative flex py-1 items-center">
                 <div className="flex-grow border-t border-white/5"></div>
-                <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-medium uppercase">O con tu email</span>
+                <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-medium uppercase">{t('or_with_email')}</span>
                 <div className="flex-grow border-t border-white/5"></div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Email / Teléfono</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('email_or_phone')}</label>
                 <input type="text" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="tu@email.com" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Contraseña</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('password')}</label>
                 <div className="relative w-full">
                   <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 pr-12 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="••••••••" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1">
@@ -294,9 +294,9 @@ export default function UserModal() {
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-600 text-green-500 bg-[#14141E] focus:ring-green-500 focus:ring-offset-black" />
-                  <span className="text-xs text-gray-400">Recordarme</span>
+                  <span className="text-xs text-gray-400">{t('remember_me')}</span>
                 </label>
-                <button type="button" onClick={() => setModalView('forgot-password')} className="text-xs text-green-400 hover:text-green-300 hover:underline">¿Olvidaste tu contraseña?</button>
+                <button type="button" onClick={() => setModalView('forgot-password')} className="text-xs text-green-400 hover:text-green-300 hover:underline">{t('forgot_password_question')}</button>
               </div>
               
               {errorMsg && (
@@ -306,17 +306,17 @@ export default function UserModal() {
               )}
               
               <button onClick={handleLogin} disabled={isLoading} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-2 disabled:opacity-50">
-                {isLoading ? 'Cargando...' : 'Entrar'}
+                {isLoading ? t('processing') : t('login_btn')}
               </button>
               <p className="text-center text-xs text-gray-400 mt-2">
-                ¿No tienes cuenta? <button onClick={() => setModalView('register')} className="text-green-400 font-bold hover:underline">Regístrate</button>
+                {t('dont_have_account')} <button onClick={() => setModalView('register')} className="text-green-400 font-bold hover:underline">{t('register_here')}</button>
               </p>
             </div>
           ) : userModalView === 'forgot-password' ? (
             <div className="space-y-4">
-              <p className="text-sm text-gray-300 text-center mb-4">Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseña.</p>
+              <p className="text-sm text-gray-300 text-center mb-4">{t('reset_password_desc')}</p>
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Email</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('email_address')}</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="tu@email.com" />
               </div>
               
@@ -327,10 +327,10 @@ export default function UserModal() {
               )}
               
               <button onClick={handleResetPassword} disabled={isLoading} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-4 disabled:opacity-50">
-                {isLoading ? 'Enviando...' : 'Enviar Instrucciones'}
+                {isLoading ? t('processing') : t('send_instructions')}
               </button>
               <button onClick={() => setModalView('login')} className="w-full bg-transparent hover:bg-white/5 text-gray-400 border border-white/10 font-bold py-3 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
-                Volver
+                {t('go_back')}
               </button>
             </div>
           ) : userModalView === 'register' ? (
@@ -342,29 +342,29 @@ export default function UserModal() {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                Continuar con Google
+                {t('continue_with_google')}
               </button>
               
               <div className="relative flex py-1 items-center">
                 <div className="flex-grow border-t border-white/5"></div>
-                <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-medium uppercase">O con tu email</span>
+                <span className="flex-shrink-0 mx-4 text-white/30 text-xs font-medium uppercase">{t('or_with_email')}</span>
                 <div className="flex-grow border-t border-white/5"></div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Nombre Completo</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Tu nombre" />
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('full_name')}</label>
+                <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder={t('placeholder_name_example')} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Teléfono</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('phone_number')}</label>
                 <input type="tel" value={registerPhone} onChange={e => setRegisterPhone(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="+34 600 000 000" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Email</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('email_address')}</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="tu@email.com" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Contraseña</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('password')}</label>
                 <div className="relative w-full">
                   <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-2.5 pr-12 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="•••••••••" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1">
@@ -389,21 +389,21 @@ export default function UserModal() {
               )}
               
               <button onClick={handleRegister} disabled={isLoading} className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all mt-2 disabled:opacity-50">
-                {isLoading ? 'Cargando...' : 'Crear Cuenta'}
+                {isLoading ? t('processing') : t('create_account_btn')}
               </button>
               <p className="text-center text-xs text-gray-400 mt-2">
-                ¿Ya tienes cuenta? <button onClick={() => setModalView('login')} className="text-green-400 font-bold hover:underline">Entra aquí</button>
+                {t('already_have_account')} <button onClick={() => setModalView('login')} className="text-green-400 font-bold hover:underline">{t('login_here')}</button>
               </p>
             </div>
           ) : userModalView === 'profile' ? (
             <div className="space-y-4 text-left pb-4">
               {/* Puntos */}
               <div className="bg-gradient-to-br from-green-900/30 to-[#14141E] border border-green-500/30 rounded-2xl p-5 text-center">
-                <h3 className="text-xl font-display font-black text-white uppercase mb-1">¡Hola, <span className="text-green-400">{profile?.full_name || user?.email?.split('@')[0] || 'Usuario'}</span>!</h3>
-                <p className="text-sm text-gray-300">Bienvenido al Club VIP de Caniles</p>
+                <h3 className="text-xl font-display font-black text-white uppercase mb-1">{t('hello')} <span className="text-green-400">{profile?.full_name || user?.email?.split('@')[0] || t('user')}</span>!</h3>
+                <p className="text-sm text-gray-300">{t('vip_welcome')}</p>
                 
                 <div className="mt-4 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Puntos Acumulados</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('accumulated_points')}</span>
                   <span className="text-5xl font-display font-black text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.3)]">{profile?.points || 0}</span>
                 </div>
               </div>
@@ -411,16 +411,16 @@ export default function UserModal() {
               {/* Mis Datos */}
               <div className="bg-[#14141E] border border-white/5 rounded-2xl p-4">
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mis Datos</h4>
-                  <button onClick={() => setModalView('edit-profile')} className="text-[10px] text-green-500 hover:text-green-400 font-bold uppercase tracking-wider px-2 py-1 bg-green-500/10 rounded-lg transition-colors">Editar</button>
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('my_data')}</h4>
+                  <button onClick={() => setModalView('edit-profile')} className="text-[10px] text-green-500 hover:text-green-400 font-bold uppercase tracking-wider px-2 py-1 bg-green-500/10 rounded-lg transition-colors">{t('edit_btn')}</button>
                 </div>
                 <div className="space-y-2 text-sm text-gray-300">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Teléfono:</span>
+                    <span className="text-gray-500">{t('phone_label')}</span>
                     <span className="font-medium text-white">{profile?.phone || '-'}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Dirección:</span>
+                    <span className="text-gray-500">{t('address_label')}</span>
                     <span className="font-medium text-white text-right max-w-[65%] leading-tight">{formatAddress(profile?.address)}</span>
                   </div>
                 </div>
@@ -432,35 +432,35 @@ export default function UserModal() {
                   <div className="w-8 h-8 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                   </div>
-                  <span className="font-bold text-white uppercase tracking-wider">Historial de Pedidos</span>
+                  <span className="font-bold text-white uppercase tracking-wider">{t('order_history')}</span>
                 </div>
                 <svg className="w-5 h-5 text-gray-600 group-hover:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
               </button>
 
               {/* Recompensas */}
               <div className="bg-[#14141E] border border-white/5 rounded-2xl p-4">
-                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Recompensas Disponibles</h4>
+                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{t('available_rewards')}</h4>
                 <div className="space-y-2.5">
                   {/* Recompensa 1 */}
                   <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-[#1A1A24] hover:border-green-500/30 transition-all">
                     <div>
                       <div className="text-yellow-400 font-bold text-sm">25 pts</div>
-                      <div className="text-white text-[11px] font-medium">Pizza/Hamburguesa Gratis</div>
+                      <div className="text-white text-[11px] font-medium">{t('free_pizza_burger')}</div>
                     </div>
                     <button className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all ${(profile?.points || 0) >= 25 ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}>
-                      {(profile?.points || 0) >= 25 ? 'Desbloqueado' : 'Bloqueado'}
+                      {(profile?.points || 0) >= 25 ? t('unlocked') : t('locked')}
                     </button>
                   </div>
                 </div>
               </div>
 
               <div className="text-left bg-[#1A1A24] p-4 rounded-xl border border-white/5">
-                <h4 className="text-[11px] font-bold text-white uppercase mb-1">💡 ¿Cómo funciona?</h4>
-                <p className="text-sm text-gray-300 leading-relaxed">Acumulas puntos automáticamente con cada pedido confirmado. Obtienes 4 puntos por cada 10€ gastados. Con 25 puntos puedes canjear una pizza o hamburguesa gratis.</p>
+                <h4 className="text-[11px] font-bold text-white uppercase mb-1">{t('how_it_works_title')}</h4>
+                <p className="text-sm text-gray-300 leading-relaxed">{t('how_it_works_desc')}</p>
               </div>
 
               <button onClick={logout} className="w-full bg-transparent hover:bg-red-500/10 text-red-400 border border-red-500/30 font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
-                Cerrar Sesión
+                {t('logout_btn')}
               </button>
             </div>
           ) : userModalView === 'orders' ? (
@@ -469,7 +469,7 @@ export default function UserModal() {
                 <button onClick={() => setModalView('profile')} className="p-2 -ml-2 text-gray-400 hover:text-white transition-colors">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
-                <h3 className="text-xl font-display font-black text-white uppercase tracking-wider">Mis Pedidos</h3>
+                <h3 className="text-xl font-display font-black text-white uppercase tracking-wider">{t('my_orders')}</h3>
               </div>
               
               {(!orders || orders.length === 0) ? (
@@ -477,10 +477,10 @@ export default function UserModal() {
                   <div className="w-20 h-20 bg-zinc-800/50 rounded-full flex items-center justify-center text-4xl mb-2">
                     🍕
                   </div>
-                  <h4 className="font-display font-bold text-white text-lg">Aún no hay pedidos</h4>
-                  <p className="text-sm text-zinc-400 px-4">Tu estómago ruge... ¡Es hora de hacer tu primer pedido!</p>
+                  <h4 className="font-display font-bold text-white text-lg">{t('no_orders_yet')}</h4>
+                  <p className="text-sm text-zinc-400 px-4">{t('no_orders_desc')}</p>
                   <button onClick={() => { closeUserModal(); window.scrollTo({top: 0, behavior: 'smooth'}); }} className="mt-4 px-6 py-2 bg-green-600 text-white font-bold text-sm uppercase rounded-xl">
-                    Ver Menú
+                    {t('view_menu')}
                   </button>
                 </div>
               ) : (
@@ -502,7 +502,7 @@ export default function UserModal() {
                       <div className="space-y-1.5 mb-4">
                         {order.order_items?.map((item: any) => (
                           <div key={item.id} className="text-sm text-zinc-300 flex justify-between">
-                            <span><span className="text-green-500 font-bold">{item.quantity}x</span> {item.products?.name || 'Producto'}</span>
+                            <span><span className="text-green-500 font-bold">{item.quantity}x</span> {item.products?.name ? tDynamic(item.products.name) : t('product')}</span>
                           </div>
                         ))}
                       </div>
@@ -510,7 +510,7 @@ export default function UserModal() {
                       {order.status === 'delivered' && (
                         <button onClick={() => handleRepeatOrder(order)} className="w-full py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 font-bold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                          Repetir Pedido
+                          {t('repeat_order')}
                         </button>
                       )}
                     </div>
@@ -524,33 +524,33 @@ export default function UserModal() {
                 <div className="w-12 h-12 bg-yellow-500/20 rounded-full mx-auto flex items-center justify-center mb-3">
                   <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 </div>
-                <h3 className="text-xl font-display font-black text-yellow-500 uppercase mb-2">Completar Datos de Entrega</h3>
-                <p className="text-xs text-gray-300">Para poder enviar tus pedidos a domicilio o contactarte si surge un imprevisto, necesitamos conocer tu teléfono y dirección.</p>
+                <h3 className="text-xl font-display font-black text-yellow-500 uppercase mb-2">{t('complete_delivery_data')}</h3>
+                <p className="text-xs text-gray-300">{t('delivery_data_desc')}</p>
               </div>
               
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Teléfono <span className="text-red-500">*</span></label>
-                <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: 600 000 000" />
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('phone_number')} <span className="text-red-500">*</span></label>
+                <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder={t('placeholder_phone_example')} />
               </div>
               
               <div className="grid grid-cols-12 gap-3">
                 <div className="col-span-6">
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Calle <span className="text-red-500">*</span></label>
-                  <input type="text" value={editStreet} onChange={e => setEditStreet(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: Calle Amapola" />
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('street_label')} <span className="text-red-500">*</span></label>
+                  <input type="text" value={editStreet} onChange={e => setEditStreet(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder={t('placeholder_street_example')} />
                 </div>
                 <div className="col-span-3">
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Número <span className="text-red-500">*</span></label>
-                  <input type="text" value={editNumber} onChange={e => setEditNumber(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Ej: 1" />
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('number_label')} <span className="text-red-500">*</span></label>
+                  <input type="text" value={editNumber} onChange={e => setEditNumber(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder={t('placeholder_number_example')} />
                 </div>
                 <div className="col-span-3">
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">CP <span className="text-red-500">*</span></label>
-                  <input type="text" value={editCP} onChange={e => setEditCP(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="18810" />
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('cp_label')} <span className="text-red-500">*</span></label>
+                  <input type="text" value={editCP} onChange={e => setEditCP(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder={t('placeholder_cp_example')} />
                 </div>
               </div>
               
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Detalles o Notas (Opcional)</label>
-                <input type="text" value={editNotes} onChange={e => setEditNotes(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder="Piso, puerta, etc." />
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">{t('details_notes_optional')}</label>
+                <input type="text" value={editNotes} onChange={e => setEditNotes(e.target.value)} className="w-full bg-[#14141E] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-green-500 transition-colors" placeholder={t('placeholder_notes_example')} />
               </div>
               
               {errorMsg && (
@@ -560,12 +560,12 @@ export default function UserModal() {
               )}
               
               <button onClick={handleUpdateProfile} disabled={isLoading || !editPhone || !editStreet || !editNumber || !editCP} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wide text-sm shadow-[0_0_20px_rgba(22,163,74,0.3)] transition-all mt-4 disabled:opacity-50">
-                {isLoading ? 'Guardando...' : 'Guardar Información'}
+                {isLoading ? t('saving') : t('save_info_btn')}
               </button>
               
               {profile?.phone && profile?.address && (
                 <button onClick={() => setModalView('profile')} className="w-full bg-transparent hover:bg-white/5 text-gray-400 border border-white/10 font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
-                  Cancelar
+                  {t('cancel_btn')}
                 </button>
               )}
             </div>
@@ -573,33 +573,33 @@ export default function UserModal() {
 
           {userModalView === 'legal' && (
             <div className="space-y-4 text-left pb-4">
-              <h3 className="text-xl font-display font-black text-white uppercase mb-1 text-center">Centro Legal</h3>
-              <p className="text-sm text-gray-400 text-center mb-6">Transparencia y normativas RGPD</p>
+              <h3 className="text-xl font-display font-black text-white uppercase mb-1 text-center">{t('legal_center')}</h3>
+              <p className="text-sm text-gray-400 text-center mb-6">{t('legal_center_desc')}</p>
               
               <div className="space-y-2">
                 <button onClick={() => setLegalDoc('Política de Privacidad')} className="w-full bg-[#14141E] hover:bg-[#1E1E2C] border border-white/5 text-left px-4 py-3.5 rounded-xl text-sm text-gray-300 font-medium transition-all flex justify-between items-center group">
-                  <span>Política de Privacidad</span>
+                  <span>{t('privacy_policy')}</span>
                   <svg className="w-4 h-4 text-gray-600 group-hover:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
                 <button onClick={() => setLegalDoc('Términos y Condiciones')} className="w-full bg-[#14141E] hover:bg-[#1E1E2C] border border-white/5 text-left px-4 py-3.5 rounded-xl text-sm text-gray-300 font-medium transition-all flex justify-between items-center group">
-                  <span>Términos y Condiciones</span>
+                  <span>{t('terms_and_conditions')}</span>
                   <svg className="w-4 h-4 text-gray-600 group-hover:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
                 <button onClick={() => setLegalDoc('Uso y Tratamiento de Datos')} className="w-full bg-[#14141E] hover:bg-[#1E1E2C] border border-white/5 text-left px-4 py-3.5 rounded-xl text-sm text-gray-300 font-medium transition-all flex justify-between items-center group">
-                  <span>Uso y Tratamiento de Datos</span>
+                  <span>{t('data_usage')}</span>
                   <svg className="w-4 h-4 text-gray-600 group-hover:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
                 
                 <div className="pt-4 mt-4 border-t border-white/5">
                   <button onClick={() => setModalView('delete-account')} className="w-full bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-left px-4 py-3.5 rounded-xl text-sm text-red-400 font-medium transition-all flex justify-between items-center group">
-                    <span>Solicitar Eliminación de Cuenta</span>
+                    <span>{t('request_account_deletion')}</span>
                     <svg className="w-4 h-4 text-red-500/50 group-hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                   </button>
                 </div>
               </div>
               
               <button onClick={() => setModalView(user ? 'profile' : 'login')} className="w-full bg-transparent hover:bg-white/5 text-gray-400 border border-white/10 font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-4">
-                ← Volver
+                ← {t('go_back')}
               </button>
             </div>
           )}
@@ -609,50 +609,50 @@ export default function UserModal() {
               <h3 className="text-xl font-display font-black text-white uppercase mb-1 text-center">{activeLegalDoc}</h3>
               
               <div className="bg-[#14141E] border border-white/5 rounded-2xl p-4 max-h-[50vh] overflow-y-auto no-scrollbar text-gray-400 text-sm leading-relaxed space-y-3">
-                <p><strong>Última actualización:</strong> Julio de 2026</p>
-                <p>En cumplimiento con el Reglamento General de Protección de Datos (RGPD) y la Ley Orgánica de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD), Néstor Pizzas (en adelante, "la Empresa") informa a los usuarios sobre las políticas de uso, almacenamiento y tratamiento de los datos recabados en la presente plataforma digital.</p>
-                <p>Los datos personales proporcionados (tales como nombre, teléfono y dirección) son estrictamente utilizados para la correcta gestión y entrega de los pedidos, así como para la acumulación de puntos en el programa de fidelización VIP. Estos datos se almacenan en servidores seguros con encriptación de extremo a extremo.</p>
-                <p>El usuario tiene derecho, en todo momento, a ejercer sus derechos de acceso, rectificación, cancelación y oposición (derechos ARCO) a través del Centro Legal de esta aplicación, seleccionando la opción correspondiente o contactando directamente con nuestro soporte.</p>
-                <p>Al continuar utilizando nuestros servicios, usted acepta incondicionalmente estos términos y confirma que ha leído nuestra política al completo.</p>
+                <p><strong>{t('last_updated_july_2026')}</strong></p>
+                <p>{t('legal_p1')}</p>
+                <p>{t('legal_p2')}</p>
+                <p>{t('legal_p3')}</p>
+                <p>{t('legal_p4')}</p>
               </div>
               
               <button onClick={() => setModalView('legal')} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-4 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-                Entendido y Aceptar
+                {t('understood_accept')}
               </button>
             </div>
           )}
 
           {userModalView === 'delete-account' && (
             <div className="space-y-4 text-left pb-4">
-              <h3 className="text-xl font-display font-black text-red-500 uppercase mb-1 text-center">Baja de Usuario</h3>
-              <p className="text-sm text-gray-400 text-center mb-6">Lamentamos que quieras irte. Ayúdanos a mejorar.</p>
+              <h3 className="text-xl font-display font-black text-red-500 uppercase mb-1 text-center">{t('delete_account_title')}</h3>
+              <p className="text-sm text-gray-400 text-center mb-6">{t('delete_account_desc')}</p>
               
               <div className="bg-[#14141E] border border-white/5 rounded-2xl p-4 space-y-3">
-                <label className="block text-xs font-bold text-gray-400 uppercase">¿Por qué deseas eliminar tu cuenta?</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase">{t('why_delete_account')}</label>
                 <select value={deleteReason} onChange={e => setDeleteReason(e.target.value)} className="w-full bg-[#1A1A24] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 transition-colors">
-                  <option value="" disabled>Selecciona un motivo...</option>
-                  <option value="No uso la aplicación">No uso la aplicación</option>
-                  <option value="Recibo demasiadas notificaciones">Recibo demasiadas notificaciones</option>
-                  <option value="Problemas con mis pedidos">Problemas con mis pedidos</option>
-                  <option value="Me mudo a otra ciudad">Me mudo a otra ciudad</option>
-                  <option value="Otro">Otro motivo</option>
+                  <option value="" disabled>{t('select_reason')}</option>
+                  <option value="No uso la aplicación">{t('reason_not_using')}</option>
+                  <option value="Recibo demasiadas notificaciones">{t('reason_too_many_notifications')}</option>
+                  <option value="Problemas con mis pedidos">{t('reason_problems_orders')}</option>
+                  <option value="Me mudo a otra ciudad">{t('reason_moving')}</option>
+                  <option value="Otro">{t('reason_other')}</option>
                 </select>
                 
                 {deleteReason === 'Otro' && (
-                  <textarea rows={2} placeholder="Explícanos tu motivo..." className="w-full bg-[#1A1A24] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 transition-colors mt-2"></textarea>
+                  <textarea rows={2} placeholder={t('explain_reason')} className="w-full bg-[#1A1A24] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 transition-colors mt-2"></textarea>
                 )}
                 
                 <label className="flex items-start gap-3 cursor-pointer mt-4 pt-4 border-t border-white/5">
                   <input type="checkbox" checked={deleteConfirm} onChange={e => setDeleteConfirm(e.target.checked)} className="mt-1 w-5 h-5 rounded border-gray-600 text-red-500 bg-[#1A1A24] focus:ring-red-500 focus:ring-offset-black" />
-                  <span className="text-xs text-gray-400">Entiendo que esta acción es irreversible y todos mis puntos y datos personales serán borrados permanentemente.</span>
+                  <span className="text-xs text-gray-400">{t('understand_deletion_irreversible')}</span>
                 </label>
               </div>
               
               <button disabled={!deleteConfirm} onClick={processAccountDeletion} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-4 disabled:opacity-50 shadow-[0_0_15px_rgba(220,38,38,0.3)]">
-                Confirmar Eliminación Definitiva
+                {t('confirm_permanent_deletion')}
               </button>
               <button onClick={() => setModalView('legal')} className="w-full bg-transparent hover:bg-white/5 text-gray-400 border border-white/10 font-bold py-3 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
-                Cancelar
+                {t('cancel_btn')}
               </button>
             </div>
           )}
@@ -662,11 +662,13 @@ export default function UserModal() {
               <div className="w-20 h-20 mx-auto bg-green-500/10 rounded-full flex items-center justify-center border-2 border-green-500/50 mb-4 animate-bounce">
                 <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
               </div>
-              <h3 className="text-xl font-display font-black text-white uppercase mb-2">Cuenta Eliminada</h3>
-              <p className="text-sm text-gray-300 leading-relaxed">Tu cuenta y todos tus datos personales han sido borrados de nuestros sistemas permanentemente.</p>
+              <h3 className="text-2xl font-display font-black text-white uppercase tracking-wider">{t('see_you_soon')}</h3>
+              <p className="text-zinc-400 leading-relaxed max-w-sm mx-auto">
+                {t('account_deleted_msg')}
+              </p>
               
               <button onClick={closeUserModal} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-6 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-                Cerrar Ventana
+                {t('close_window')}
               </button>
             </div>
           )}
@@ -693,7 +695,7 @@ export default function UserModal() {
           {userModalView !== 'legal' && userModalView !== 'legal-doc' && userModalView !== 'delete-account' && userModalView !== 'delete-success' && userModalView !== 'check-email' && (
             <div className="mt-5 text-center border-t border-white/5 pt-4">
               <button onClick={() => setModalView('legal')} className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest">
-                Páginas Legales y Privacidad
+                {t('legal_footer')}
               </button>
             </div>
           )}

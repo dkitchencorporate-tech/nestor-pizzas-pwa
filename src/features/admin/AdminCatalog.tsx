@@ -3,8 +3,10 @@ import { supabase } from '../../lib/supabase';
 import AdminCategoryForm from './components/AdminCategoryForm';
 import AdminProductForm from './components/AdminProductForm';
 import AdminUpsells from './components/AdminUpsells';
+import { useI18nStore } from '../../store/i18nStore';
 
 export default function AdminCatalog() {
+  const { t, tDynamic } = useI18nStore();
   const [activeTab, setActiveTab] = useState<'catalog' | 'upsells'>('catalog');
   
   const [categories, setCategories] = useState<any[]>([]);
@@ -34,7 +36,7 @@ export default function AdminCatalog() {
       if (prodsRes.data) setProducts(prodsRes.data);
     } catch (error) {
       console.error('Error fetching catalog:', error);
-      showNotification('Error al cargar el catálogo', 'error');
+      showNotification(t('error_loading_catalog'), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -48,14 +50,14 @@ export default function AdminCatalog() {
   const toggleProductActive = async (id: number, currentStatus: boolean) => {
     const { error } = await supabase.from('products').update({ is_active: !currentStatus }).eq('id', id);
     if (error) {
-      showNotification('Error al actualizar estado', 'error');
+      showNotification(t('error_updating_status'), 'error');
     } else {
       fetchData();
     }
   };
 
   const deleteProduct = async (product: any) => {
-    if (!window.confirm(`ATENCIÓN: Se eliminará permanentemente "${product.name}" de la base de datos y de todas partes. ¿Proceder?`)) return;
+    if (!window.confirm(t('confirm_delete_product'))) return;
     
     // 1. Borrar la imagen de storage si la tiene
     if (product.img_url && product.img_url.includes('supabase.co')) {
@@ -74,9 +76,9 @@ export default function AdminCatalog() {
     // 2. Borrar de la BD
     const { error } = await supabase.from('products').delete().eq('id', product.id);
     if (error) {
-      showNotification('No se pudo eliminar el producto.', 'error');
+      showNotification(t('error_deleting_product'), 'error');
     } else {
-      showNotification('Producto eliminado totalmente', 'success');
+      showNotification(t('product_deleted_success'), 'success');
       fetchData();
     }
   };
@@ -84,17 +86,17 @@ export default function AdminCatalog() {
   const deleteCategory = async (id: string) => {
     const hasProducts = products.some(p => p.category_id === id);
     if (hasProducts) {
-      showNotification('No puedes eliminar una categoría que tiene productos. Mueve o borra sus productos primero.', 'error');
+      showNotification(t('error_delete_category_with_products'), 'error');
       return;
     }
 
-    if (!window.confirm('¿Estás seguro de eliminar esta categoría?')) return;
+    if (!window.confirm(t('confirm_delete_category'))) return;
     
     const { error } = await supabase.from('categories').delete().eq('id', id);
     if (error) {
-      showNotification('Error al eliminar categoría', 'error');
+      showNotification(t('error_deleting_category'), 'error');
     } else {
-      showNotification('Categoría eliminada', 'success');
+      showNotification(t('category_deleted_success'), 'success');
       fetchData();
     }
   };
@@ -112,9 +114,9 @@ export default function AdminCatalog() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h2 className="text-2xl font-display font-black uppercase text-white tracking-wide">
-            Gestión <span className="text-green-500">Profesional</span>
+            {t('gestion_profesional')}
           </h2>
-          <p className="text-gray-400 text-sm mt-1">Control total sobre base de datos, imágenes y sugerencias.</p>
+          <p className="text-gray-400 text-sm mt-1">{t('control_total_description')}</p>
         </div>
         
         {/* Tabs */}
@@ -125,7 +127,7 @@ export default function AdminCatalog() {
               activeTab === 'catalog' ? 'bg-zinc-800 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            Carta
+            {t('carta')}
           </button>
           <button 
             onClick={() => setActiveTab('upsells')}
@@ -133,7 +135,7 @@ export default function AdminCatalog() {
               activeTab === 'upsells' ? 'bg-zinc-800 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            Upsells
+            {t('upsells')}
           </button>
         </div>
       </div>
@@ -147,13 +149,13 @@ export default function AdminCatalog() {
               onClick={() => setCategoryModal({ isOpen: true })}
               className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-zinc-900/50"
             >
-              + Nueva Categoría
+              + {t('new_category')}
             </button>
             <button 
               onClick={() => setProductModal({ isOpen: true })}
               className="px-4 py-2 bg-green-500 hover:bg-green-400 text-black rounded-xl text-sm font-bold transition-colors shadow-lg shadow-green-500/20"
             >
-              + Nuevo Producto
+              + {t('new_product')}
             </button>
           </div>
 
@@ -172,23 +174,23 @@ export default function AdminCatalog() {
                     <div className="flex justify-between items-center mb-6 pb-4 border-b border-zinc-800">
                       <div>
                         <h3 className="text-xl font-display font-black text-white uppercase flex items-center gap-2">
-                          {category.name}
-                          {isBebidas && <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-500 text-[10px] rounded-full">AGRUPADO</span>}
+                          {tDynamic(category.name)}
+                          {isBebidas && <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-500 text-[10px] rounded-full">{t('agrupado')}</span>}
                         </h3>
-                        {category.description && <p className="text-sm text-gray-500 mt-1">{category.description}</p>}
+                        {category.description && <p className="text-sm text-gray-500 mt-1">{tDynamic(category.description)}</p>}
                       </div>
                       <div className="flex gap-2">
                         <button 
                           onClick={() => setCategoryModal({ isOpen: true, data: category })}
                           className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-gray-400 transition-colors"
-                          title="Editar categoría"
+                          title={t('edit_category')}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </button>
                         <button 
                           onClick={() => deleteCategory(category.id)}
                           className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
-                          title="Eliminar categoría"
+                          title={t('delete_category')}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
@@ -209,8 +211,8 @@ export default function AdminCatalog() {
                           <div className="flex justify-between items-start gap-2 relative z-10">
                             <div className="flex-1">
                               <h4 className="font-bold text-white text-sm flex items-center gap-2">
-                                {product.name}
-                                {product.img_url && <span className="w-2 h-2 rounded-full bg-blue-500" title="Tiene foto"></span>}
+                                {tDynamic(product.name)}
+                                {product.img_url && <span className="w-2 h-2 rounded-full bg-blue-500" title={t('has_photo')}></span>}
                               </h4>
                               {isBebidas && product.subcategory && (
                                 <span className="inline-block mt-1 px-1.5 py-0.5 bg-yellow-500/10 text-yellow-500 text-[9px] font-bold rounded uppercase">
@@ -223,7 +225,7 @@ export default function AdminCatalog() {
                               <button 
                                 onClick={() => toggleProductActive(product.id, product.is_active)}
                                 className={`w-10 h-5 rounded-full relative transition-colors shrink-0 ${product.is_active ? 'bg-green-500' : 'bg-zinc-700'}`}
-                                title={product.is_active ? 'Ocultar producto' : 'Mostrar producto'}
+                                title={product.is_active ? t('hide_product') : t('show_product')}
                               >
                                 <div className={`absolute top-[2px] w-4 h-4 rounded-full bg-white transition-all ${product.is_active ? 'left-[22px]' : 'left-[2px]'}`}></div>
                               </button>
@@ -246,14 +248,14 @@ export default function AdminCatalog() {
                           </div>
                           
                           {product.description && (
-                            <p className="text-[11px] text-gray-500 line-clamp-2 relative z-10">{product.description}</p>
+                            <p className="text-[11px] text-gray-500 line-clamp-2 relative z-10">{tDynamic(product.description)}</p>
                           )}
                         </div>
                       ))}
                       
                       {categoryProducts.length === 0 && (
                         <div className="col-span-full py-4 text-center border border-dashed border-zinc-800 rounded-2xl text-gray-500 text-sm">
-                          No hay productos en esta categoría.
+                          {t('no_products_in_category')}
                         </div>
                       )}
                     </div>
@@ -272,7 +274,7 @@ export default function AdminCatalog() {
           onSuccess={() => {
             setCategoryModal({ isOpen: false });
             fetchData();
-            showNotification('Categoría guardada con éxito', 'success');
+            showNotification(t('category_saved_success'), 'success');
           }}
         />
       )}
@@ -285,7 +287,7 @@ export default function AdminCatalog() {
           onSuccess={() => {
             setProductModal({ isOpen: false });
             fetchData();
-            showNotification('Producto guardado con éxito', 'success');
+            showNotification(t('product_saved_success'), 'success');
           }}
         />
       )}
