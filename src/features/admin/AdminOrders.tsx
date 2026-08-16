@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import TicketPrinter from '../../components/TicketPrinter';
 import { useI18nStore } from '../../store/i18nStore';
+import DOMPurify from 'dompurify';
 
 export default function AdminOrders() {
   const { t, tDynamic } = useI18nStore();
@@ -341,7 +342,12 @@ export default function AdminOrders() {
                               <div className="flex-1 text-zinc-300">
                                 <span>{item.customization_details?.name ? tDynamic(item.customization_details.name) : (item.products?.name ? tDynamic(item.products.name) : t('unknown_product'))}</span>
                                 {item.customization_details?.notes && (
-                                  <p className="text-xs text-orange-400 mt-1 font-bold">📝 {t('notes')}: {item.customization_details.notes}</p>
+                                  <p 
+                                    className="text-xs text-orange-400 mt-1 font-bold"
+                                    dangerouslySetInnerHTML={{ 
+                                      __html: DOMPurify.sanitize(`📝 ${t('notes')}: ${item.customization_details.notes}`)
+                                    }}
+                                  />
                                 )}
                               </div>
                             </div>
