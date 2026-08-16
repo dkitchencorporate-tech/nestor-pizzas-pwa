@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useCartStore } from '../store/cartStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
+import { useI18nStore } from '../store/i18nStore';
 
 interface Product {
   id: number | string;
