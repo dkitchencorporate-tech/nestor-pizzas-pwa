@@ -42,7 +42,8 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
       productId: product.id,
       name: itemNotes ? `${itemName} - ${itemNotes}` : itemName,
       price: finalPrice,
-      quantity: 1
+      quantity: 1,
+      extras: sauceObject ? [sauceObject.id] : undefined
     });
 
     onClose();

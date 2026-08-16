@@ -42,7 +42,8 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
       productId: product.id,
       name: `${product.name}${ingText}`,
       price: finalPrice,
-      quantity: 1
+      quantity: 1,
+      extras: selectedIngredients
     });
 
     onClose();
