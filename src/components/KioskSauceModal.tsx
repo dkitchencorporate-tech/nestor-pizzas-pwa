@@ -1,0 +1,137 @@
+import { useState } from 'react';
+import { Product } from '../data/products';
+import { CartItem } from '../store/cartStore';
+import { useI18nStore } from '../store/i18nStore';
+import { useHardwareBack } from '../utils/useHardwareBack';
+
+interface SauceModalProps {
+  product: Product;
+  onClose: () => void;
+  onAdd: (item: Omit<CartItem, 'id'>) => void;
+}
+
+const SAUCES = [
+  { id: 'alioli', name: 'Salsa Alioli', extraCost: 0 },
+  { id: 'barbacoa', name: 'Salsa Barbacoa', extraCost: 0 },
+  { id: 'brava', name: 'Salsa Brava', extraCost: 0 },
+  { id: 'morisca', name: 'Salsa Morisca', extraCost: 0 },
+  { id: 'sriracha', name: 'Salsa Sriracha', extraCost: 0 },
+  { id: 'cheddar', name: 'Salsa Cheddar (Extra)', extraCost: 1.00 },
+];
+
+export default function KioskSauceModal({ product, onClose, onAdd }: SauceModalProps) {
+  useHardwareBack(true, onClose);
+
+  const [selectedSauce, setSelectedSauce] = useState<string | null>(null);
+  const [notes, setNotes] = useState('');
+  const { t, tDynamic } = useI18nStore();
+
+  const sauceObject = SAUCES.find(s => s.id === selectedSauce);
+  const finalPrice = product.price + (sauceObject?.extraCost || 0);
+
+  const handleAddToCart = () => {
+    if (!selectedSauce) {
+      return;
+    }
+
+    const itemName = `${product.name} (${t('sauce_label')}: ${tDynamic(sauceObject?.name || '')})`;
+    const itemNotes = notes.trim() ? `${t('notes_label')}: ${notes.trim()}` : undefined;
+
+    onAdd({
+      productId: product.id,
+      name: itemNotes ? `${itemName} - ${itemNotes}` : itemName,
+      price: finalPrice,
+      quantity: 1,
+      extras: sauceObject ? [sauceObject.id] : undefined
+    });
+
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 overflow-y-auto no-scrollbar">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      ></div>
+
+      {/* Modal */}
+      <div className="relative bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-md shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
+        {/* Header */}
+        <div className="p-4 pt-6 sm:p-6 sm:pt-8 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] relative shrink-0">
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-400 hover:text-white bg-zinc-800/50 hover:bg-red-500/80 p-2 rounded-xl transition-all z-10"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+          <h2 className="font-display font-black text-2xl text-white uppercase tracking-wider pr-10">{tDynamic(product.name)}</h2>
+          <p className="text-gray-400 mt-1 text-sm">{product.desc ? tDynamic(product.desc) : ''}</p>
+        </div>
+
+        {/* Body */}
+        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto">
+          {/* Sauces */}
+          <div>
+            <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm flex items-center gap-2">
+              <span className="bg-green-500 w-2 h-2 rounded-full inline-block"></span>
+              {t('choose_sauce')}
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {SAUCES.map(sauce => (
+                <button
+                  key={sauce.id}
+                  onClick={() => setSelectedSauce(sauce.id)}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    selectedSauce === sauce.id 
+                      ? 'bg-green-500/10 border-green-500 text-white' 
+                      : 'bg-zinc-900 border-zinc-800 text-gray-300 hover:border-green-500/50 hover:bg-zinc-800'
+                  }`}
+                >
+                  <div className="font-bold text-sm">{tDynamic(sauce.name.toUpperCase())}</div>
+                  {sauce.extraCost > 0 && (
+                    <div className="text-xs text-green-400 mt-0.5">+{sauce.extraCost.toFixed(2).replace('.', ',')} €</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <h3 className="text-white font-bold mb-3 uppercase tracking-wider text-sm flex items-center gap-2">
+              <span className="bg-zinc-600 w-2 h-2 rounded-full inline-block"></span>
+              {t('additional_notes')}
+            </h3>
+            <textarea
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white text-sm focus:outline-none focus:border-green-500 transition-colors"
+              placeholder={t('sauce_notes_placeholder')}
+              rows={2}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+            ></textarea>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-zinc-800 bg-[#0A0A0E] flex items-center justify-between gap-4">
+          <div className="text-white font-display font-black text-xl">
+            {finalPrice.toFixed(2).replace('.', ',')} €
+          </div>
+          <button
+            onClick={handleAddToCart}
+            disabled={!selectedSauce}
+            className={`px-8 py-3.5 rounded-2xl font-display font-black text-sm uppercase tracking-wider transition-all flex items-center gap-2 ${
+              selectedSauce 
+                ? 'bg-green-500 text-white hover:bg-green-400 shadow-[0_0_20px_rgba(34,197,94,0.4)]' 
+                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+            }`}
+          >
+            {t('add_btn')} <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

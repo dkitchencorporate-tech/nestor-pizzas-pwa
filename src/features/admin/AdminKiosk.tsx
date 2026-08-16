@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useKioskCartStore, KioskClientInfo } from '../../store/kioskCartStore';
-
+import KioskSauceModal from '../../components/KioskSauceModal';
+import KioskIngredientsModal from '../../components/KioskIngredientsModal';
+import KioskPromoJuevesModal from '../../components/KioskPromoJuevesModal';
+import { CartItem } from '../../store/cartStore';
 interface Category {
   id: string;
   name: string;
@@ -51,6 +54,10 @@ export default function AdminKiosk() {
   const [newClientPhone, setNewClientPhone] = useState('');
   const [newClientAddress, setNewClientAddress] = useState('');
   const [isCreatingClient, setIsCreatingClient] = useState(false);
+
+  const [kioskSauceProduct, setKioskSauceProduct] = useState<Product | null>(null);
+  const [kioskIngrProduct, setKioskIngrProduct] = useState<Product | null>(null);
+  const [kioskPromoOpen, setKioskPromoOpen] = useState(false);
 
   useEffect(() => {
     loadCatalog();
@@ -201,6 +208,26 @@ export default function AdminKiosk() {
     categoryRefs.current[categoryId]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const handleKioskProductAdd = (product: Product) => {
+    // Patatas Gajos (ID 33) → selector de salsa obligatorio
+    if (product.id === 33) {
+      setKioskSauceProduct(product);
+      return;
+    }
+    // Pizza Margarita (ID 22) o Maxi Pizza/Mazza (ID 23) → selector de ingredientes
+    if (product.id === 22 || product.id === 23) {
+      setKioskIngrProduct(product);
+      return;
+    }
+    // Promo Jueves Locos (ID 999) → modal de promo
+    if (product.id === 999) {
+      setKioskPromoOpen(true);
+      return;
+    }
+    // Resto de productos → añadir directo
+    addItem({ productId: product.id, name: product.name, price: product.price, quantity: 1 });
+  };
+
   return (
     <div className="h-full flex bg-[#0A0A0E] text-white overflow-hidden relative">
       
@@ -343,7 +370,7 @@ export default function AdminKiosk() {
                         {catProducts.map(product => (
                           <button
                             key={product.id}
-                            onClick={() => addItem({ productId: product.id, name: product.name, price: product.price, quantity: 1 })}
+                            onClick={() => handleKioskProductAdd(product)}
                             className="bg-[#1A1A24] border border-zinc-800 hover:border-green-500 hover:bg-zinc-800 p-5 rounded-2xl flex flex-col text-left transition-all group shadow-lg"
                           >
                             <span className="font-bold text-white text-base leading-tight mb-4 group-hover:text-green-400">{product.name}</span>
@@ -464,6 +491,29 @@ export default function AdminKiosk() {
             </form>
           </div>
         </div>
+      )}
+
+      {kioskSauceProduct && (
+        <KioskSauceModal
+          product={kioskSauceProduct}
+          onClose={() => setKioskSauceProduct(null)}
+          onAdd={(item) => { addItem({ ...item, id: crypto.randomUUID() }); setKioskSauceProduct(null); }}
+        />
+      )}
+
+      {kioskIngrProduct && (
+        <KioskIngredientsModal
+          product={kioskIngrProduct}
+          onClose={() => setKioskIngrProduct(null)}
+          onAdd={(item) => { addItem({ ...item, id: crypto.randomUUID() }); setKioskIngrProduct(null); }}
+        />
+      )}
+
+      {kioskPromoOpen && (
+        <KioskPromoJuevesModal
+          onClose={() => setKioskPromoOpen(false)}
+          onAdd={(item) => { addItem({ ...item, id: crypto.randomUUID() }); setKioskPromoOpen(false); }}
+        />
       )}
 
       {/* ESTILOS GLOBALES PARA EL TPV */}
