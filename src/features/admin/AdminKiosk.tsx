@@ -53,7 +53,10 @@ export default function AdminKiosk() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
-  const [newClientAddress, setNewClientAddress] = useState('');
+  const [addressStreet, setAddressStreet] = useState('');
+  const [addressNumber, setAddressNumber] = useState('');
+  const [addressCP, setAddressCP] = useState('');
+  const [addressNotes, setAddressNotes] = useState('');
   const [isCreatingClient, setIsCreatingClient] = useState(false);
 
   const [kioskSauceProduct, setKioskSauceProduct] = useState<Product | null>(null);
@@ -112,14 +115,23 @@ export default function AdminKiosk() {
 
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClientPhone || !newClientName) return alert('Nombre y teléfono obligatorios');
+    if (!newClientPhone || !newClientName || !addressStreet || !addressNumber || !addressCP) {
+      return alert('Faltan datos obligatorios');
+    }
 
     setIsCreatingClient(true);
     try {
+      const addressJson = JSON.stringify({
+        street: addressStreet,
+        number: addressNumber,
+        cp: addressCP,
+        notes: addressNotes
+      });
+
       const { data: newId, error } = await supabase.rpc('create_kiosk_client', {
         p_full_name: newClientName,
         p_phone: newClientPhone,
-        p_address: newClientAddress
+        p_address: addressJson
       });
 
       if (error) throw error;
@@ -129,7 +141,7 @@ export default function AdminKiosk() {
         id: newId,
         full_name: newClientName,
         phone: newClientPhone,
-        address: newClientAddress,
+        address: addressJson,
         is_registered: false
       });
       setIsCreateModalOpen(false);
@@ -483,9 +495,23 @@ export default function AdminKiosk() {
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Teléfono (Se usará de ID)</label>
                 <input type="tel" required value={newClientPhone} onChange={e => setNewClientPhone(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
               </div>
-              <div>
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dirección (Opcional si es recogida)</label>
-                <textarea rows={2} value={newClientAddress} onChange={e => setNewClientAddress(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1"></textarea>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Calle o Avenida *</label>
+                  <input type="text" required value={addressStreet} onChange={e => setAddressStreet(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Número *</label>
+                  <input type="text" required value={addressNumber} onChange={e => setAddressNumber(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Código Postal *</label>
+                  <input type="text" required value={addressCP} onChange={e => setAddressCP(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Notas adicionales (Opcional)</label>
+                  <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder="Ej: Piso 2A, Puerta azul" className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
+                </div>
               </div>
               <button type="submit" disabled={isCreatingClient} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl mt-4 transition-all uppercase tracking-widest text-sm">
                 {isCreatingClient ? 'Guardando...' : 'Guardar y Continuar'}
