@@ -14,20 +14,6 @@ export default function Header() {
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({top:0,behavior:'smooth'})}>
           <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-black border border-green-500/60 p-1 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.3)] relative">
             <img src="./assets/brand/logo_black_exact_2k.png" alt="Néstor Pizzas Logo Oficial 2K Fondo Negro" className="w-full h-full object-contain" />
-            <div className="absolute -bottom-3 -right-3 flex items-center bg-[#0C0C12] rounded-full p-1 border border-zinc-700 shadow-xl z-50">
-              <button 
-                onClick={() => lang !== 'es' && toggleLang()} 
-                className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${lang === 'es' ? 'opacity-100 scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100'}`}
-              >
-                🇪🇸
-              </button>
-              <button 
-                onClick={() => lang !== 'en' && toggleLang()} 
-                className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${lang === 'en' ? 'opacity-100 scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100'}`}
-              >
-                🇬🇧
-              </button>
-            </div>
           </div>
           <div className="hidden sm:block">
             <div className="flex items-center gap-2">
@@ -47,6 +33,13 @@ export default function Header() {
 
         {/* Botones */}
         <div className="flex items-center gap-3 sm:gap-2.5 ml-auto">
+          <button 
+            onClick={() => toggleLang()} 
+            className="flex items-center justify-center w-10 h-10 sm:h-9 sm:w-10 rounded-xl bg-[#14141E] hover:bg-[#1E1E2C] border border-green-500/40 text-xl shadow transition-all shrink-0 hover:scale-105"
+            title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+          >
+            {lang === 'es' ? '🇬🇧' : '🇪🇸'}
+          </button>
           <button onClick={promptToInstall} className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-nestor-gold to-yellow-400 text-black font-display font-bold text-sm shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:scale-105 transition-transform uppercase tracking-widest border border-yellow-300/50">
             <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             <span>INSTALAR APP</span>
