@@ -38,6 +38,12 @@ export default function AdminKiosk() {
   const [products, setProducts] = useState<Product[]>([]);
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [kioskNotification, setKioskNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+
+  const showKioskNotif = (msg: string, type: 'success' | 'error') => {
+    setKioskNotification({ msg, type });
+    setTimeout(() => setKioskNotification(null), 4000);
+  };
 
   // Modal para crear cliente
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -177,12 +183,12 @@ export default function AdminKiosk() {
 
       if (error) throw error;
 
-      alert('¡Pedido procesado correctamente!');
+      showKioskNotif('¡Pedido procesado correctamente!', 'success');
       clearCart();
       setView('client'); // Volver al inicio para el siguiente cliente
     } catch (error: any) {
       console.error('Error processing order:', error);
-      alert(error.message || 'Error al procesar el pedido.');
+      showKioskNotif(error.message || 'Error al procesar el pedido.', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -198,6 +204,17 @@ export default function AdminKiosk() {
   return (
     <div className="h-full flex bg-[#0A0A0E] text-white overflow-hidden relative">
       
+      {/* Notification Toast */}
+      {kioskNotification && (
+        <div className={`fixed top-4 right-4 z-[9999] px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm uppercase tracking-wider animate-fade-in flex items-center gap-3 ${
+          kioskNotification.type === 'success' 
+            ? 'bg-green-600 text-white border border-green-500' 
+            : 'bg-red-600 text-white border border-red-500'
+        }`}>
+          <span>{kioskNotification.type === 'success' ? '✅' : '❌'}</span>
+          <span>{kioskNotification.msg}</span>
+        </div>
+      )}
       {/* ============================================================ */}
       {/* VISTA 1: ASIGNACIÓN DE CLIENTE */}
       {/* ============================================================ */}

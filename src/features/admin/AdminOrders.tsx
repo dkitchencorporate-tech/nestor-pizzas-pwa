@@ -11,7 +11,9 @@ export default function AdminOrders() {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [silencedCount, setSilencedCount] = useState<number>(0);
   const [printingOrder, setPrintingOrder] = useState<any>(null);
-  const [isAudioArmed, setIsAudioArmed] = useState<boolean>((window as any).isAudioUnlocked || false);
+  const [isAudioArmed, setIsAudioArmed] = useState<boolean>(
+    (window as any).isAudioUnlocked || localStorage.getItem('nestor_audio_armed') === 'true' || false
+  );
   const [isOpeningAlarm, setIsOpeningAlarm] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -26,7 +28,7 @@ export default function AdminOrders() {
     // Realtime subscription
     const channel = supabase.channel('realtime_orders')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
-        console.log('Nuevo pedido recibido!', payload);
+        console.log('Nuevo pedido recibido.'); // No logueamos el payload para evitar exponer PII
         fetchOrders();
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
@@ -85,6 +87,7 @@ export default function AdminOrders() {
         audioRef.current?.pause();
         setIsAudioArmed(true);
         (window as any).isAudioUnlocked = true;
+        localStorage.setItem('nestor_audio_armed', 'true');
       }).catch(e => console.log('Armado bloqueado', e));
     }
   };

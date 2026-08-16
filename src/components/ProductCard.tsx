@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import SauceModal from './SauceModal';
 import AddToCartModal from './AddToCartModal';
 import { useI18nStore } from '../store/i18nStore';
@@ -21,7 +22,8 @@ const highlightIngredients = (desc: string) => {
   // Ingredientes clave a resaltar (en mayúsculas/minúsculas)
   const keyIngredients = ['mozzarella', 'tomate', 'york', 'queso de cabra', 'cebolla', 'carne kebab', 'salsa kebab', 'piña', 'champiñón', 'atún', 'bacon', 'serrano', 'salami', 'salchichas', 'gambas', 'delicias de mar', 'peperoni', 'ternera', 'salsa picante', 'salsa barbacoa', 'salsa cheddar', 'salsa boloñesa', 'pollo al curry', 'salsa carbonara', 'nata', 'huevo', 'cinco quesos', 'pulled pork', 'salsa BBQ', 'doble cheddar', 'hamburguesa artesana'];
   
-  let highlightedDesc = desc;
+  // SECURITY: Sanitize the description before any HTML injection
+  let highlightedDesc = DOMPurify.sanitize(desc, { ALLOWED_TAGS: [] });
   
   keyIngredients.forEach(ing => {
     // Expresión regular insensible a mayúsculas
@@ -29,10 +31,16 @@ const highlightIngredients = (desc: string) => {
     highlightedDesc = highlightedDesc.replace(regex, '<span class="text-green-400 font-bold">$1</span>');
   });
 
+  // SECURITY: Only <span> with specific class is allowed — all other tags stripped
+  const sanitizedWithHighlights = DOMPurify.sanitize(highlightedDesc, {
+    ALLOWED_TAGS: ['span'],
+    ALLOWED_ATTR: ['class']
+  });
+
   return (
     <p 
       className="text-xs sm:text-sm text-gray-400 mt-1.5 leading-relaxed font-medium line-clamp-2"
-      dangerouslySetInnerHTML={{ __html: highlightedDesc }}
+      dangerouslySetInnerHTML={{ __html: sanitizedWithHighlights }}
     ></p>
   );
 };
