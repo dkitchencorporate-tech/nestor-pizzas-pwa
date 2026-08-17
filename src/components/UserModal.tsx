@@ -7,6 +7,7 @@ import { useI18nStore } from '../store/i18nStore';
 
 export default function UserModal() {
   const { isUserModalOpen, closeUserModal, userModalView, setModalView, setLegalDoc, activeLegalDoc, user, profile, logout, orders } = useAuthStore();
+  const { t } = useI18nStore();
   useHardwareBack(isUserModalOpen, closeUserModal);
   const { addItem, clearCart } = useCartStore();
   
