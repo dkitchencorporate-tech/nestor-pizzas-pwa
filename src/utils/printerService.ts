@@ -35,10 +35,13 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     order.order_items?.forEach((item: any) => {
       const lineTotal = (item.quantity * item.unit_price).toFixed(2);
       text += `${item.quantity}x     ${item.products?.name.substring(0, 18).padEnd(18, ' ')} ${lineTotal}EUR\n`;
-      if (item.options) {
-        Object.entries(item.options).forEach(([k, v]) => {
-          text += `  * ${v}\n`;
+      if (item.customization_details?.extras && Array.isArray(item.customization_details.extras)) {
+        item.customization_details.extras.forEach((extra: any) => {
+          text += `  * + ${extra.name}\n`;
         });
+      }
+      if (item.customization_details?.notes) {
+        text += `  * NOTA: ${item.customization_details.notes}\n`;
       }
     });
     

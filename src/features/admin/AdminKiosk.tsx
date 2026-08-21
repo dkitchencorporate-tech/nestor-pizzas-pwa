@@ -31,6 +31,7 @@ export default function AdminKiosk() {
     addItem, 
     removeItem, 
     updateQuantity, 
+    updatePrice,
     clearCart, 
     getTotal 
   } = useKioskCartStore();
@@ -287,14 +288,21 @@ export default function AdminKiosk() {
       setKioskSauceProduct(product);
       return;
     }
-    // Pizza Margarita (ID 22) o Maxi Pizza/Mazza (ID 23) → selector de ingredientes
-    if (product.id === 22 || product.id === 23) {
-      setKioskIngrProduct(product);
-      return;
-    }
     // Promo Jueves Locos (ID 999) → modal de promo
     if (product.id === 999) {
       setKioskPromoOpen(true);
+      return;
+    }
+    // Todas las Pizzas → selector de ingredientes
+    if (
+      product.category_id?.includes('PIZZA') || 
+      product.category_id === 'NUESTRAS PIZZAS' ||
+      product.category_id === 'PIZZAS BLANCAS' ||
+      product.category_id === 'MAZZI PIZZAS' ||
+      product.id === 22 || 
+      product.id === 23
+    ) {
+      setKioskIngrProduct(product);
       return;
     }
     // Resto de productos → añadir directo
