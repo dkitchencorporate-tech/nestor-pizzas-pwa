@@ -6,7 +6,7 @@ import { useI18nStore } from '../../store/i18nStore';
 
 export default function AdminAnalytics() {
   const { t } = useI18nStore();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [todaySales, setTodaySales] = useState(0);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMarketingModal, setShowMarketingModal] = useState(false);

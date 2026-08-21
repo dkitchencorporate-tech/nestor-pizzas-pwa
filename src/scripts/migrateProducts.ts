@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NESTOR_PRODUCTS, NESTOR_CATEGORIES } from '../data/products';
 
-const supabaseUrl = 'https://jlchjamoejkzahaeimec.supabase.co' || 'https://jlchjamoejkzahaeimec.supabase.co';
+const supabaseUrl = 'https://jlchjamoejkzahaeimec.supabase.co';
 const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsY2hqYW1vZWpremFoYWVpbWVjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjU1NjMzMCwiZXhwIjoyMTAyMTMyMzMwfQ.s6GyK7sIowzYolQzsRJYr8GEVoWbN4m-znX51V1rTMs';
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
