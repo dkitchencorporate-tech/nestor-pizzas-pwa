@@ -4,7 +4,7 @@ import ProductCard from '../../components/ProductCard';
 import IngredientsModal from '../../components/IngredientsModal';
 import { useState, useEffect } from 'react';
 import { NESTOR_INGREDIENTS_OFICIAL } from '../../data/products';
-import { Product } from '../../types';
+import { Product } from '../../data/products';
 import { supabase } from '../../lib/supabase';
 import PromoJuevesModal from '../../components/PromoJuevesModal';
 import NotificationManager from '../../components/NotificationManager';

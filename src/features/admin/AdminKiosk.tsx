@@ -375,8 +375,8 @@ export default function AdminKiosk() {
                         ) : (
                           <span className="bg-gray-500/20 text-gray-400 text-xs px-3 py-1 rounded-full font-bold">MOSTRADOR</span>
                         )}
-                        {c.is_registered && c.points !== undefined && (
-                          <span className="text-yellow-400 text-xs font-bold mt-2 font-mono">{c.points} pts</span>
+                        {c.is_registered && ((c as any).points) !== undefined && (
+                          <span className="text-yellow-400 text-xs font-bold mt-2 font-mono">{((c as any).points)} pts</span>
                         )}
                       </div>
                     </div>

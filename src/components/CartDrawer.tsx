@@ -11,7 +11,7 @@ interface CartDrawerProps {
 export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerProps) {
   useHardwareBack(isOpen, onClose);
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCartStore();
-  const { t } = useI18nStore();
+  const { t, tDynamic } = useI18nStore();
 
   const handleClearCart = () => {
     if (window.confirm(t('clear_cart_confirm'))) {
@@ -74,7 +74,7 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
                   </div>
                   
                   {item.extraDescription && (
-                    <p className="text-xs text-gray-400 mt-1">{tDynamic(item.extraDescription)}</p>
+                    <p className="text-xs text-gray-400 mt-1">{tDynamic(item.extraDescription || '')}</p>
                   )}
                   {item.notes && (
                     <p className="text-xs text-yellow-500 mt-1 italic">"{item.notes}"</p>
