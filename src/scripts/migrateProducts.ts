@@ -29,7 +29,7 @@ async function migrateProducts() {
       id: p.id,
       category_id: p.category,
       name: p.name,
-      description: description_en: (p as any).description,
+      description_en: (p as any).description,
       price: p.price,
       badge: p.badge,
       img_url: p.img,
