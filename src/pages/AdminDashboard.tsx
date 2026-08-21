@@ -6,13 +6,14 @@ import AdminCatalog from '../features/admin/AdminCatalog';
 import AdminKiosk from '../features/admin/AdminKiosk';
 import AdminAnalytics from '../features/admin/AdminAnalytics';
 import AdminHistory from '../features/admin/AdminHistory';
+import AdminPrinterSettings from '../features/admin/AdminPrinterSettings';
 import { supabase } from '../lib/supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function AdminDashboard() {
   const { t } = useI18nStore();
   const { user, profile, signIn } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'kiosk' | 'catalog' | 'analytics'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'kiosk' | 'catalog' | 'analytics' | 'printers'>('orders');
   const [isSaturated, setIsSaturated] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -273,6 +274,12 @@ export default function AdminDashboard() {
           >
             📊 {t('analytics')}
           </button>
+          <button 
+            onClick={() => setActiveTab('printers')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'printers' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+          >
+            🖨️ Configuración Impresoras
+          </button>
 
           <div className="pt-4 mt-4 border-t border-zinc-800">
             <button 
@@ -324,6 +331,11 @@ export default function AdminDashboard() {
         <div className={activeTab === 'kiosk' ? 'block h-full' : 'hidden'}><AdminKiosk /></div>
         <div className={activeTab === 'catalog' ? 'block h-full' : 'hidden'}><AdminCatalog /></div>
         <div className={activeTab === 'analytics' ? 'block h-full' : 'hidden'}><AdminAnalytics /></div>
+        <div className={activeTab === 'printers' ? 'block h-full overflow-y-auto pt-16 sm:pt-4' : 'hidden'}>
+          <div className="p-4 sm:p-8">
+            <AdminPrinterSettings />
+          </div>
+        </div>
       </main>
       
     </div>

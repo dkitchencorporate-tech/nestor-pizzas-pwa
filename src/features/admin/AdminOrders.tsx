@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import TicketPrinter from '../../components/TicketPrinter';
-import AdminPrinterSettings from './AdminPrinterSettings';
 import { sendToNetworkPrinter } from '../../utils/printerService';
 import { useI18nStore } from '../../store/i18nStore';
 import DOMPurify from 'dompurify';
@@ -449,11 +448,7 @@ export default function AdminOrders() {
         
       </div>
       
-      {isSettingsOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <AdminPrinterSettings onClose={() => setIsSettingsOpen(false)} />
-        </div>
-      )}
+      
       
       {/* Componente invisible para impresión térmica */}
       {printingOrder && <TicketPrinter order={printingOrder} />}
