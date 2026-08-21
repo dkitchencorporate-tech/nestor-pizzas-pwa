@@ -558,7 +558,6 @@ const dynamicDictionary: Record<string, string> = {
   'SALSA BARBACOA': 'BBQ SAUCE',
   'SALSA BRAVA': 'BRAVA SAUCE',
   'SALSA MORISCA': 'MOORISH SAUCE',
-  'SALSA SRIRACHA': 'SRIRACHA SAUCE',
   'SALSA CHEDDAR (EXTRA)': 'CHEDDAR SAUCE (EXTRA)',
 };
 

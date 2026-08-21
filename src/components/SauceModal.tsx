@@ -14,7 +14,6 @@ const SAUCES = [
   { id: 'barbacoa', name: 'Salsa Barbacoa', extraCost: 0 },
   { id: 'brava', name: 'Salsa Brava', extraCost: 0 },
   { id: 'morisca', name: 'Salsa Morisca', extraCost: 0 },
-  { id: 'sriracha', name: 'Salsa Sriracha', extraCost: 0 },
   { id: 'cheddar', name: 'Salsa Cheddar (Extra)', extraCost: 1.00 },
 ];
 
