@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useKioskCartStore, KioskClientInfo } from '../../store/kioskCartStore';
 import { useAdminUiStore } from '../../store/adminUiStore';
-import { useEffect } from 'react';
 import KioskSauceModal from '../../components/KioskSauceModal';
 import KioskIngredientsModal from '../../components/KioskIngredientsModal';
 import KioskPromoJuevesModal from '../../components/KioskPromoJuevesModal';
