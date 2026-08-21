@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import TicketPrinter from '../../components/TicketPrinter';
+import AdminPrinterSettings from './AdminPrinterSettings';
+import { sendToNetworkPrinter } from '../../utils/printerService';
 import { useI18nStore } from '../../store/i18nStore';
 import DOMPurify from 'dompurify';
 import { formatAddress } from '../../utils/addressUtils';
@@ -11,6 +13,7 @@ export default function AdminOrders() {
   const [activeTab, setActiveTab] = useState<'pending' | 'cooking' | 'ready' | 'delivered'>('pending');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [silencedCount, setSilencedCount] = useState<number>(0);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [printingOrder, setPrintingOrder] = useState<any>(null);
   const [isAudioArmed, setIsAudioArmed] = useState<boolean>(
     (window as any).isAudioUnlocked || localStorage.getItem('nestor_audio_armed') === 'true' || false
@@ -100,12 +103,14 @@ export default function AdminOrders() {
     setSilencedCount(orders.filter(o => o.status === 'pending').length);
   };
 
-  const handlePrint = (order: any) => {
-    setPrintingOrder(order);
-    // Esperamos a que el DOM se actualice antes de llamar a print()
-    setTimeout(() => {
-      window.print();
-    }, 300);
+  const handlePrint = async (order: any) => {
+    const success = await sendToNetworkPrinter(order);
+    if (!success) {
+      setPrintingOrder(order);
+      setTimeout(() => {
+        window.print();
+      }, 300);
+    }
   };
 
   const updateOrderStatus = async (id: string, status: string, estimatedTime?: string) => {
@@ -433,6 +438,12 @@ export default function AdminOrders() {
         )}
         
       </div>
+      
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <AdminPrinterSettings onClose={() => setIsSettingsOpen(false)} />
+        </div>
+      )}
       
       {/* Componente invisible para impresión térmica */}
       {printingOrder && <TicketPrinter order={printingOrder} />}
