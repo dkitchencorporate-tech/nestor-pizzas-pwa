@@ -442,7 +442,7 @@ export default function AdminKiosk() {
                   const catProducts = products.filter(p => p.category_id === cat.id);
                   if (catProducts.length === 0) return null;
                   return (
-                    <div key={cat.id} ref={el => categoryRefs.current[cat.id] = el} className="scroll-mt-6">
+                    <div key={cat.id} ref={(el: any) => categoryRefs.current[cat.id] = el} className="scroll-mt-6">
                       <h3 className="font-display font-black text-2xl uppercase tracking-widest text-green-500 mb-6 flex items-center gap-4">
                         {cat.name}
                         <div className="flex-1 h-px bg-zinc-800"></div>
@@ -590,7 +590,7 @@ export default function AdminKiosk() {
 
       {kioskSauceProduct && (
         <KioskSauceModal
-          product={kioskSauceProduct}
+          product={kioskSauceProduct as any}
           onClose={() => setKioskSauceProduct(null)}
           onAdd={(item) => { addItem(item); setKioskSauceProduct(null); }}
         />
@@ -598,7 +598,7 @@ export default function AdminKiosk() {
 
       {kioskIngrProduct && (
         <KioskIngredientsModal
-          product={kioskIngrProduct}
+          product={kioskIngrProduct as any}
           onClose={() => setKioskIngrProduct(null)}
           onAdd={(item) => { addItem(item); setKioskIngrProduct(null); }}
         />

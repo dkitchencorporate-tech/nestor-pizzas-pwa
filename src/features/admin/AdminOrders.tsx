@@ -105,8 +105,8 @@ export default function AdminOrders() {
   };
 
   const handlePrint = async (order: any) => {
-    const success1 = await sendToNetworkPrinter(order, 'cocina');
-    const success2 = await sendToNetworkPrinter(order, 'mostrador');
+    const success1 = await sendToNetworkPrinter(order);
+    const success2 = await sendToNetworkPrinter(order);
     
     if (!success1 && !success2) {
       setPrintingOrder(order);

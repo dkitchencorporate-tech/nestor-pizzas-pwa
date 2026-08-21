@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NESTOR_PRODUCTS, NESTOR_CATEGORIES } from '../data/products';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://jlchjamoejkzahaeimec.supabase.co';
+const supabaseUrl = (process as any).env.VITE_SUPABASE_URL || 'https://jlchjamoejkzahaeimec.supabase.co';
 const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsY2hqYW1vZWpremFoYWVpbWVjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjU1NjMzMCwiZXhwIjoyMTAyMTMyMzMwfQ.s6GyK7sIowzYolQzsRJYr8GEVoWbN4m-znX51V1rTMs';
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -29,7 +29,7 @@ async function migrateProducts() {
       id: p.id,
       category_id: p.category,
       name: p.name,
-      description: p.description,
+      description: description_en: (p as any).description,
       price: p.price,
       badge: p.badge,
       img_url: p.img,

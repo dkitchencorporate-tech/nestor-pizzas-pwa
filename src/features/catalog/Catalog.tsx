@@ -330,7 +330,7 @@ export default function Catalog() {
                     if (prod.id === 999) {
                       setIsPromoOpen(true);
                     } else {
-                      setIngredientsProduct(prod);
+                      setIngredientsProduct(prod as any);
                     }
                   }} />
                 })}

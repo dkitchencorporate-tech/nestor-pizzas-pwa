@@ -16,7 +16,7 @@ export default function NotificationManager() {
         body,
         icon: '/assets/brand/icon-192.png',
         badge: '/assets/brand/icon-192.png',
-        vibrate: [200, 100, 200]
+        // vibrate: [200, 100, 200]
       });
     }
   };

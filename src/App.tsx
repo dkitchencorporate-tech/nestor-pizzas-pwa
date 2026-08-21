@@ -216,7 +216,7 @@ function App() {
         </Suspense>
       )}
 
-      {hasActiveOrder && currentView !== 'tracking' && currentView !== 'admin' && (
+      {hasActiveOrder && currentView !== 'tracking' && currentView !== ('admin' as any) && (
         <button
           onClick={() => setCurrentView('tracking')}
           className="fixed bottom-24 right-4 sm:right-6 z-[900] w-14 h-14 sm:w-16 sm:h-16 bg-green-500 text-white rounded-full shadow-[0_0_20px_rgba(34,197,94,0.5)] flex items-center justify-center animate-bounce transition-transform hover:scale-110"
