@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { NESTOR_INGREDIENTS_OFICIAL, Product } from '../data/products';
+import { NESTOR_INGREDIENTS_OFICIAL } from '../data/products';
+import { Product } from '../types';
 import { CartItem } from '../store/cartStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
 import { useI18nStore } from '../store/i18nStore';
