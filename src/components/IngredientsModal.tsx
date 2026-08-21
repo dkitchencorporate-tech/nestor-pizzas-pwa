@@ -17,16 +17,24 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
   const { t } = useI18nStore();
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+  const [activeHalf, setActiveHalf] = useState<'full' | 'left' | 'right'>('full');
   const addItem = useCartStore(state => state.addItem);
 
   const BASE_PRICE = product.price;
 
-  const toggleIngredient = (ing: string) => {
+  const toggleIngredient = (baseIng: string) => {
+    const suffix = activeHalf === 'left' ? ' (Mitad Izq)' : activeHalf === 'right' ? ' (Mitad Der)' : '';
+    const ing = baseIng + suffix;
     setSelectedIngredients(prev => 
       prev.includes(ing) 
         ? prev.filter(i => i !== ing)
         : [...prev, ing]
     );
+  };
+  
+  const isSelected = (baseIng: string) => {
+    const suffix = activeHalf === 'left' ? ' (Mitad Izq)' : activeHalf === 'right' ? ' (Mitad Der)' : '';
+    return selectedIngredients.includes(baseIng + suffix);
   };
 
   const ingredientsCost = selectedIngredients.length * 1.00; // +1€ por ingrediente adicional
@@ -106,7 +114,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
             
             <div className="flex flex-wrap gap-2">
               {NESTOR_INGREDIENTS_OFICIAL.map(ing => {
-                const isSelected = selectedIngredients.includes(ing);
+                const isSelected = isSelected(ing);
                 return (
                   <button
                     key={ing}

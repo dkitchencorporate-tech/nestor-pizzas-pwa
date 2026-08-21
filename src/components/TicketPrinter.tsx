@@ -56,9 +56,14 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
                 <td className="py-3 text-xl">{item.quantity}x</td>
                 <td className="py-3 text-lg leading-tight">
                   <span className="uppercase block font-black">{item.products?.name}</span>
-                  {item.options && Object.keys(item.options).length > 0 && (
+                  {item.customization_details?.extras && Array.isArray(item.customization_details.extras) && item.customization_details.extras.length > 0 && (
                     <span className="text-sm font-normal text-gray-800 block italic mt-1">
-                      {Object.entries(item.options).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                      {item.customization_details.extras.map((e: any) => `+ ${e.name}`).join(', ')}
+                    </span>
+                  )}
+                  {item.customization_details?.notes && (
+                    <span className="text-sm font-bold text-gray-800 block mt-1">
+                      NOTA: {item.customization_details.notes}
                     </span>
                   )}
                 </td>
