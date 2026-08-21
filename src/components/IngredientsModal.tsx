@@ -1,3 +1,4 @@
+import { Product } from '../data/products';
 import { useState, useMemo } from 'react';
 import { NESTOR_INGREDIENTS_OFICIAL } from '../data/products';
 import { useCartStore } from '../store/cartStore';
