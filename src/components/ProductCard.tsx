@@ -51,7 +51,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onCustomize }: ProductCardProps) {
-  const { t, tDynamic, language } = useI18nStore();
+  const { t, tDynamic, language } = useI18nStore() as any;
   const [showSauceModal, setShowSauceModal] = useState(false);
   const [showAddToCartModal, setShowAddToCartModal] = useState(false);
 
@@ -123,7 +123,7 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
       </div>
 
       {showSauceModal && (
-        <SauceModal product={product} onClose={() => setShowSauceModal(false)} />
+        <SauceModal product={product as any} onClose={() => setShowSauceModal(false)} />
       )}
 
       {showAddToCartModal && (

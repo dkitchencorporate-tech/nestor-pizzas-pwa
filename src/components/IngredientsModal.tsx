@@ -114,7 +114,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
             
             <div className="flex flex-wrap gap-2">
               {NESTOR_INGREDIENTS_OFICIAL.map(ing => {
-                const isSelected = isSelected(ing);
+                const isSel = isSelected(ing);
                 return (
                   <button
                     key={ing}

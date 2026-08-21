@@ -39,7 +39,7 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
 
     if (data) {
       // Filter out inactive products
-      const activeUpsells = data.filter(u => u.products.is_active);
+      const activeUpsells = data.filter(u => (u.products as any).is_active);
 
       // Group by category
       const grouped = activeUpsells.reduce((acc: any, item: any) => {

@@ -73,8 +73,8 @@ export default function CartDrawer({ isOpen, onClose, onCheckout }: CartDrawerPr
                     </button>
                   </div>
                   
-                  {item.extraDescription && (
-                    <p className="text-xs text-gray-400 mt-1">{tDynamic(item.extraDescription || '')}</p>
+                  {(item as any).extraDescription && (
+                    <p className="text-xs text-gray-400 mt-1">{tDynamic((item as any).extraDescription || '')}</p>
                   )}
                   {item.notes && (
                     <p className="text-xs text-yellow-500 mt-1 italic">"{item.notes}"</p>
