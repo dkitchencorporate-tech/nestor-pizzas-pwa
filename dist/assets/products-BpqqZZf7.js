@@ -1,4 +1,4 @@
-import{o as e,r as t}from"./middleware-D1FzRrlm.js";var n=e(t());function r(){let[e,t]=(0,n.useState)(null);return(0,n.useEffect)(()=>{let e=e=>{e.preventDefault(),t(e)};return window.addEventListener(`beforeinstallprompt`,e),()=>{window.removeEventListener(`beforeinstallprompt`,e)}},[]),{installPrompt:e,promptToInstall:async()=>{if(!e){alert(`La aplicación ya está instalada en este dispositivo o el navegador no soporta la instalación directa.
+import{o as e,r as t}from"./middleware-D1FzRrlm.js";var n=e(t(),1);function r(){let[e,t]=(0,n.useState)(null);return(0,n.useEffect)(()=>{let e=e=>{e.preventDefault(),t(e)};return window.addEventListener(`beforeinstallprompt`,e),()=>{window.removeEventListener(`beforeinstallprompt`,e)}},[]),{installPrompt:e,promptToInstall:async()=>{if(!e){alert(`La aplicación ya está instalada en este dispositivo o el navegador no soporta la instalación directa.
 
 Nota: La App de Pedidos y el Panel de Administración (Kitchen POS) son la MISMA aplicación (PWA). Si ya instalaste "Néstor Pizzas", puedes usar ese mismo icono para entrar como administrador.
 
