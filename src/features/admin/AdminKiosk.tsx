@@ -61,7 +61,7 @@ export default function AdminKiosk() {
         editingOrder.order_items.forEach((item: any) => {
            // We need to match the cart item structure
            addItem({
-             product_id: item.product_id,
+             productId: item.product_id,
              name: item.customization_details?.name || 'Producto Editado',
              price: item.unit_price,
              quantity: item.quantity,
@@ -592,7 +592,7 @@ export default function AdminKiosk() {
         <KioskSauceModal
           product={kioskSauceProduct}
           onClose={() => setKioskSauceProduct(null)}
-          onAdd={(item) => { addItem({ ...item, id: crypto.randomUUID() }); setKioskSauceProduct(null); }}
+          onAdd={(item) => { addItem(item); setKioskSauceProduct(null); }}
         />
       )}
 
@@ -600,14 +600,14 @@ export default function AdminKiosk() {
         <KioskIngredientsModal
           product={kioskIngrProduct}
           onClose={() => setKioskIngrProduct(null)}
-          onAdd={(item) => { addItem({ ...item, id: crypto.randomUUID() }); setKioskIngrProduct(null); }}
+          onAdd={(item) => { addItem(item); setKioskIngrProduct(null); }}
         />
       )}
 
       {kioskPromoOpen && (
         <KioskPromoJuevesModal
           onClose={() => setKioskPromoOpen(false)}
-          onAdd={(item) => { addItem({ ...item, id: crypto.randomUUID() }); setKioskPromoOpen(false); }}
+          onAdd={(item) => { addItem(item); setKioskPromoOpen(false); }}
         />
       )}
 
