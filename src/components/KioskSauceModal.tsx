@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Product } from '../data/products';
+import { Product } from '../types';
 import { CartItem } from '../store/cartStore';
 import { useI18nStore } from '../store/i18nStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
