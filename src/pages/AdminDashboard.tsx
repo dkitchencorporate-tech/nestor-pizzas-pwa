@@ -9,11 +9,12 @@ import AdminHistory from '../features/admin/AdminHistory';
 import AdminPrinterSettings from '../features/admin/AdminPrinterSettings';
 import { supabase } from '../lib/supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
+import { useAdminUiStore } from '../store/adminUiStore';
 
 export default function AdminDashboard() {
   const { t } = useI18nStore();
   const { user, profile, signIn } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'orders' | 'history' | 'kiosk' | 'catalog' | 'analytics' | 'printers'>('orders');
+  const { activeTab, setActiveTab } = useAdminUiStore();
   const [isSaturated, setIsSaturated] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
