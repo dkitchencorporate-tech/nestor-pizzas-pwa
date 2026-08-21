@@ -1,7 +1,7 @@
 {
   "name": "nestor-pizzas-pwa",
   "version": "1.0.0",
-  "description": "App Oficial de Pedidos, Carta Digital Interactiva y PWA de Néstor Pizzas (Caniles & Baza) por Architect.Sys",
+  "description": "App Oficial de Pedidos, Carta Digital Interactiva y PWA de N\u00e9stor Pizzas (Caniles & Baza) por Architect.Sys",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -49,5 +49,6 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "@types/dompurify": "^3.0.5"
-  }
+  },
+  "type": "module"
 }
