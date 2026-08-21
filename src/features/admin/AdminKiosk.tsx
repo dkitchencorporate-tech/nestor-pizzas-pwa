@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useKioskCartStore, KioskClientInfo } from '../../store/kioskCartStore';
+import { useAdminUiStore } from '../../store/adminUiStore';
+import { useEffect } from 'react';
 import KioskSauceModal from '../../components/KioskSauceModal';
 import KioskIngredientsModal from '../../components/KioskIngredientsModal';
 import KioskPromoJuevesModal from '../../components/KioskPromoJuevesModal';
@@ -20,6 +22,7 @@ interface Product {
 }
 
 export default function AdminKiosk() {
+  const { editingOrder, finishEditingOrder } = useAdminUiStore();
   const { 
     items, 
     clientInfo, 
@@ -37,6 +40,39 @@ export default function AdminKiosk() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<KioskClientInfo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Efecto para cargar pedido en modo edición
+  useEffect(() => {
+    if (editingOrder) {
+      clearCart();
+      setView('catalog');
+      if (editingOrder.client_phone) {
+        setClientInfo({
+          full_name: editingOrder.client_name,
+          phone: editingOrder.client_phone,
+          address: editingOrder.delivery_address,
+          is_registered: false
+        });
+      }
+      setDeliveryMethod(editingOrder.delivery_method || 'local');
+      
+      // Load items
+      if (editingOrder.order_items) {
+        editingOrder.order_items.forEach((item: any) => {
+           // We need to match the cart item structure
+           addItem({
+             product_id: item.product_id,
+             name: item.customization_details?.name || 'Producto Editado',
+             price: item.unit_price,
+             quantity: item.quantity,
+             notes: item.customization_details?.notes || '',
+             extras: item.customization_details?.extras || []
+           });
+        });
+      }
+    }
+  }, [editingOrder]);
+
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -144,7 +180,11 @@ export default function AdminKiosk() {
         address: addressJson,
         is_registered: false
       });
-      setIsCreateModalOpen(false);
+      
+    setNewClientName('');
+    setNewClientPhone('');
+    setIsCreateModalOpen(false);
+
       setView('catalog');
     } catch (error: any) {
       console.error('Error creando cliente:', error);
@@ -190,7 +230,9 @@ export default function AdminKiosk() {
         }
       }));
 
-      const { data, error } = await supabase.rpc('process_checkout', {
+
+      let rpcName = 'process_checkout';
+      let rpcParams: any = {
         p_user_id: clientInfo?.id || null,
         p_client_name: clientInfo?.full_name || 'Mesa / Local',
         p_client_phone: clientInfo?.phone || '000000000',
@@ -200,13 +242,31 @@ export default function AdminKiosk() {
         p_points_redeemed: false,
         p_small_order_fee_accepted: true,
         p_ip_address: 'kiosk'
-      });
+      };
+
+      if (editingOrder) {
+         rpcName = 'update_kiosk_order';
+         rpcParams = {
+            p_order_id: editingOrder.id,
+            p_items: formattedItems,
+            p_ip_address: 'kiosk'
+         };
+      }
+
+      const { data, error } = await supabase.rpc(rpcName, rpcParams);
+
 
       if (error) throw error;
 
-      showKioskNotif('¡Pedido procesado correctamente!', 'success');
+
+      showKioskNotif(editingOrder ? '¡Pedido actualizado correctamente!' : '¡Pedido procesado correctamente!', 'success');
       clearCart();
-      setView('client'); // Volver al inicio para el siguiente cliente
+      if (editingOrder) {
+         finishEditingOrder(); // Volver a órdenes
+      } else {
+         setView('client');
+      }
+
     } catch (error: any) {
       console.error('Error processing order:', error);
       showKioskNotif(error.message || 'Error al procesar el pedido.', 'error');

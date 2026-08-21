@@ -5,8 +5,10 @@ import { sendToNetworkPrinter } from '../../utils/printerService';
 import { useI18nStore } from '../../store/i18nStore';
 import DOMPurify from 'dompurify';
 import { formatAddress } from '../../utils/addressUtils';
+import { useAdminUiStore } from '../../store/adminUiStore';
 
 export default function AdminOrders() {
+  const { startEditingOrder } = useAdminUiStore();
   const { t, tDynamic } = useI18nStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'cooking' | 'ready' | 'delivered'>('pending');
@@ -392,14 +394,23 @@ export default function AdminOrders() {
                           )}
                         </div>
 
-                        {/* Print Button */}
-                        <div className="pb-4 mb-4 border-b border-zinc-800/80">
+{/* Print Button */}
+                        <div className="pb-4 mb-4 border-b border-zinc-800/80 flex gap-2">
                           <button 
                             onClick={() => handlePrint(order)}
-                            className="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                            className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
                           >
-                            <span className="text-xl">🖨️</span> Imprimir Ticket (80mm)
+                            <span className="text-xl">🖨️</span> Imprimir
                           </button>
+                          
+                          {(order.status === 'pending' || order.status === 'cooking') && (
+                            <button 
+                              onClick={() => startEditingOrder(order)}
+                              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.3)]"
+                            >
+                              <span className="text-xl">✏️</span> Editar / Añadir
+                            </button>
+                          )}
                         </div>
 
                         {/* Actions Buttons based on status */}
