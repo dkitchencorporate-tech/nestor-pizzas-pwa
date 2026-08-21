@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MarketingCampaignModal } from './components/MarketingCampaignModal';
-import { User } from '../../types';
+
 import { useI18nStore } from '../../store/i18nStore';
 
 export default function AdminAnalytics() {
