@@ -104,8 +104,10 @@ export default function AdminOrders() {
   };
 
   const handlePrint = async (order: any) => {
-    const success = await sendToNetworkPrinter(order);
-    if (!success) {
+    const success1 = await sendToNetworkPrinter(order, 'cocina');
+    const success2 = await sendToNetworkPrinter(order, 'mostrador');
+    
+    if (!success1 && !success2) {
       setPrintingOrder(order);
       setTimeout(() => {
         window.print();
@@ -115,6 +117,14 @@ export default function AdminOrders() {
 
   const updateOrderStatus = async (id: string, status: string, estimatedTime?: string) => {
     stopAudio();
+    
+    if (status === 'cooking') {
+      const orderToPrint = orders.find(o => o.id === id);
+      if (orderToPrint) {
+        handlePrint(orderToPrint);
+      }
+    }
+
     const updateData: any = { status };
     if (estimatedTime) {
       updateData.estimated_ready_at = new Date(Date.now() + parseInt(estimatedTime) * 60000).toISOString();
