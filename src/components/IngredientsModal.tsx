@@ -142,13 +142,13 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
                     key={ing}
                     onClick={() => toggleIngredient(ing)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
-                      isIngSelected 
+                      isSel 
                         ? 'bg-green-500 text-white border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.4)]' 
                         : 'bg-zinc-900 text-gray-300 border-zinc-800 hover:border-green-500/50 hover:bg-zinc-800'
                     }`}
                   >
                     {ing}
-                    {isIngSelected && <span className="ml-2 bg-black/20 px-1.5 rounded text-xs">+1€</span>}
+                    {isSel && <span className="ml-2 bg-black/20 px-1.5 rounded text-xs">+1€</span>}
                   </button>
                 )
               })}
