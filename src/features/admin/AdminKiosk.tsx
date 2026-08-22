@@ -47,7 +47,8 @@ export default function AdminKiosk() {
   useEffect(() => {
     if (editingOrder) {
       clearCart();
-      setOrderNotes('');
+      setDeliveryMethod(editingOrder.delivery_method || 'local');
+      setOrderNotes(editingOrder.notes || '');
       setView('catalog');
       if (editingOrder.client_phone) {
         setClientInfo({
@@ -184,7 +185,9 @@ export default function AdminKiosk() {
       if (error) throw error;
 
       // Asignar cliente y pasar al catálogo
+      const currentMethod = deliveryMethod;
       clearCart();
+      setDeliveryMethod(currentMethod);
       setOrderNotes('');
       setClientInfo({
         id: newId,
