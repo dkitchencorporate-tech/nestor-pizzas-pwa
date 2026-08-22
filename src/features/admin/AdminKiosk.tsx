@@ -38,6 +38,7 @@ export default function AdminKiosk() {
 
   const [view, setView] = useState<'client' | 'catalog'>('client');
   const [searchQuery, setSearchQuery] = useState('');
+  const [tableName, setTableName] = useState('');
   const [showChangeClientModal, setShowChangeClientModal] = useState(false);
   const [searchResults, setSearchResults] = useState<KioskClientInfo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -419,9 +420,18 @@ export default function AdminKiosk() {
             </div>
 
             {deliveryMethod === 'local' && (
-              <button onClick={skipClientAssignment} className="mt-6 w-full py-4 text-gray-400 hover:text-white font-bold tracking-wider text-sm transition-colors border border-transparent hover:border-zinc-800 rounded-xl">
-                Continuar sin asignar cliente (Solo Mesa) ➔
-              </button>
+              <div className="mt-6 w-full flex flex-col gap-3">
+                <input 
+                  type="text" 
+                  placeholder="Ej: Mesa 1, Mesa José (Opcional)" 
+                  value={tableName}
+                  onChange={(e) => setTableName(e.target.value)}
+                  className="w-full bg-[#1A1A24] text-white p-4 rounded-xl border border-zinc-700 outline-none focus:border-green-500 transition-colors"
+                />
+                <button onClick={skipClientAssignment} className="w-full py-4 bg-green-600/20 text-green-500 hover:bg-green-600/30 font-bold tracking-wider text-sm transition-colors border border-transparent rounded-xl">
+                  {tableName.trim() ? 'Continuar con este nombre ➔' : 'Continuar sin asignar cliente ➔'}
+                </button>
+              </div>
             )}
           </div>
         </div>
