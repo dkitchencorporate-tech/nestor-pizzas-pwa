@@ -271,7 +271,6 @@ export default function AdminKiosk() {
             p_total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
             p_status: 'pending',
             p_items: formattedItems,
-            p_ip_address: 'kiosk',
             p_notes: orderNotes,
             p_payment_method: paymentMethod
          };
