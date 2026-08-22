@@ -37,7 +37,7 @@ export default function AdminKiosk() {
     getTotal 
   } = useKioskCartStore();
 
-  const [view, setView] = useState<'client' | 'catalog'>('client');
+  const [view, setView] = useState<'client' | 'catalog'>('catalog');
   const [searchQuery, setSearchQuery] = useState('');
   const [tableName, setTableName] = useState('');
   const [showChangeClientModal, setShowChangeClientModal] = useState(false);
@@ -200,6 +200,10 @@ export default function AdminKiosk() {
       
     setNewClientName('');
     setNewClientPhone('');
+    setAddressStreet('');
+    setAddressNumber('');
+    setAddressCP('');
+    setAddressNotes('');
     setIsCreateModalOpen(false);
 
       setView('catalog');
@@ -421,7 +425,15 @@ export default function AdminKiosk() {
               {searchQuery && searchResults.length === 0 && !isSearching && (
                 <div className="mt-4 text-center p-6 bg-zinc-800/50 rounded-xl border border-dashed border-zinc-600">
                   <p className="text-zinc-400 mb-4">No se encontró a nadie con "{searchQuery}"</p>
-                  <button onClick={() => { setNewClientPhone(searchQuery); setIsCreateModalOpen(true); }} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                  <button onClick={() => { 
+                      setNewClientPhone(searchQuery); 
+                      setNewClientName('');
+                      setAddressStreet('');
+                      setAddressNumber('');
+                      setAddressCP('');
+                      setAddressNotes('');
+                      setIsCreateModalOpen(true); 
+                  }} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all">
                     ➕ Crear Cliente Nuevo
                   </button>
                 </div>
@@ -610,11 +622,17 @@ export default function AdminKiosk() {
                 </div>
                 
                 <button
-                  onClick={handleProcessOrder}
+                  onClick={() => {
+                    if (editingOrder || clientInfo) {
+                      handleProcessOrder();
+                    } else {
+                      setView('client');
+                    }
+                  }}
                   disabled={isProcessing || items.length === 0}
                   className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-base transition-all ${isProcessing || items.length === 0 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 text-white shadow-[0_0_25px_rgba(22,163,74,0.4)] hover:shadow-[0_0_35px_rgba(22,163,74,0.6)]'}`}
                 >
-                  {isProcessing ? 'Procesando...' : 'ENVIAR A COCINA'}
+                  {isProcessing ? 'Procesando...' : (editingOrder || clientInfo ? 'ENVIAR A COCINA' : 'SIGUIENTE: ASIGNAR CLIENTE/MESA ➔')}
                 </button>
               </div>
             </div>

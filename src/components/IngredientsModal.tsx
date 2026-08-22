@@ -19,6 +19,8 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [activeHalf, setActiveHalf] = useState<'full' | 'left' | 'right'>('full');
+  const [pizzaBase, setPizzaBase] = useState<'Normal' | 'Blanca' | 'Maxxi'>('Normal');
+  const [itemNotes, setItemNotes] = useState('');
   const addItem = useCartStore(state => state.addItem);
 
   const BASE_PRICE = product.price;
@@ -40,7 +42,8 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
   };
 
   const ingredientsCost = selectedIngredients.length * 1.00; // +1€ por ingrediente adicional
-  const finalPrice = BASE_PRICE + ingredientsCost;
+  const baseCost = pizzaBase === 'Maxxi' ? 3.00 : 0;
+  const finalPrice = BASE_PRICE + ingredientsCost + baseCost;
 
   const handleAddToCart = () => {
     const ingText = selectedIngredients.length > 0 
@@ -176,6 +179,43 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
 
           
           
+          {/* Selector de Base */}
+          <div className="mb-4">
+            <h4 className="text-white font-bold mb-2 uppercase tracking-wider text-sm flex items-center gap-2">🍕 Seleccionar Base</h4>
+            <div className="flex gap-2 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+              <button 
+                onClick={() => setPizzaBase('Normal')}
+                className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Normal' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-green-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+              >
+                Normal
+              </button>
+              <button 
+                onClick={() => setPizzaBase('Blanca')}
+                className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Blanca' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-blue-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+              >
+                Blanca
+              </button>
+              <button 
+                onClick={() => setPizzaBase('Maxxi')}
+                className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Maxxi' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-orange-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+              >
+                Maxxi (+3€)
+              </button>
+            </div>
+          </div>
+          
+          {/* Notas Adicionales */}
+          <div className="mb-4">
+            <label className="text-white font-bold mb-2 uppercase tracking-wider text-sm flex items-center gap-2">📝 Notas Especiales</label>
+            <input 
+              type="text" 
+              placeholder="Ej. Sin cebolla, extra tostada..." 
+              value={itemNotes} 
+              onChange={(e) => setItemNotes(e.target.value)} 
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:border-green-500 outline-none"
+            />
+          </div>
+
           <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
              <div className="flex justify-between items-center mb-1">
                 <h4 className="text-white font-bold uppercase text-lg">{product.name} {t('base_label')}</h4>
