@@ -239,7 +239,7 @@ export default function AdminAnalytics() {
                   <td className="px-4 py-3 text-white font-bold">
                     {u.full_name || t('no_name')}
                     {u.is_kiosk && <span className="ml-2 text-[9px] bg-zinc-700 px-1 rounded uppercase text-zinc-300">Kiosko</span>}
-                    {u.is_ghost && <span className="ml-2 text-[9px] bg-zinc-800 text-zinc-500 px-1 rounded uppercase">Fantasma</span>}
+                    {u.is_ghost && <span className="ml-2 text-[9px] bg-zinc-700 px-1 rounded uppercase text-zinc-300">Kiosko</span>}
                   </td>
                   <td className="px-4 py-3 text-gray-400">{u.email || t('no_email')}</td>
                   <td className="px-4 py-3">{u.phone || t('no_phone')}</td>
