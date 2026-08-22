@@ -220,8 +220,13 @@ export default function AdminKiosk() {
 
   const skipClientAssignment = () => {
     clearCart();
-      setOrderNotes('');
-    setClientInfo(undefined); // Sin cliente asignado
+    setOrderNotes('');
+    setClientInfo({
+      full_name: tableName.trim() ? tableName.trim() : 'Mesa / Local',
+      phone: '000000000',
+      address: 'Local',
+      is_registered: false
+    });
     setView('catalog');
   };
 
