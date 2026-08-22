@@ -97,6 +97,27 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
 
         {/* Body (Scrollable) */}
         <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+          <div className="flex gap-2 p-1 bg-zinc-900 rounded-xl border border-zinc-800">
+            <button
+              onClick={() => setActiveHalf('full')}
+              className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${activeHalf === 'full' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}
+            >
+              Completa
+            </button>
+            <button
+              onClick={() => setActiveHalf('left')}
+              className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${activeHalf === 'left' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}
+            >
+              Mitad Izq
+            </button>
+            <button
+              onClick={() => setActiveHalf('right')}
+              className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${activeHalf === 'right' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}
+            >
+              Mitad Der
+            </button>
+          </div>
+          
           
           <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
              <div className="flex justify-between items-center mb-1">
