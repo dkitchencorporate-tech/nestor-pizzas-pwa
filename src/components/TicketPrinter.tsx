@@ -58,7 +58,7 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
                   <span className="uppercase block font-black">{item.products?.name}</span>
                   {item.customization_details?.extras && Array.isArray(item.customization_details.extras) && item.customization_details.extras.length > 0 && (
                     <span className="text-sm font-normal text-gray-800 block italic mt-1">
-                      {item.customization_details.extras.map((e: any) => `+ ${e.name}`).join(', ')}
+                      {item.customization_details.extras.map((e: any) => `+ ${typeof e === 'string' ? e : e.name}`).join(', ')}
                     </span>
                   )}
                   {item.customization_details?.notes && (

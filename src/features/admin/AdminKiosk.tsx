@@ -173,6 +173,7 @@ export default function AdminKiosk() {
       if (error) throw error;
 
       // Asignar cliente y pasar al catálogo
+      clearCart();
       setClientInfo({
         id: newId,
         full_name: newClientName,
@@ -195,6 +196,7 @@ export default function AdminKiosk() {
   };
 
   const selectClient = (client: KioskClientInfo) => {
+    clearCart();
     setClientInfo(client);
     setSearchQuery('');
     setSearchResults([]);
@@ -202,6 +204,7 @@ export default function AdminKiosk() {
   };
 
   const skipClientAssignment = () => {
+    clearCart();
     setClientInfo(undefined); // Sin cliente asignado
     setView('catalog');
   };
@@ -415,7 +418,7 @@ export default function AdminKiosk() {
             {/* Header de la vista con botón para volver atrás */}
             <div className="p-4 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
-                <button onClick={() => setView('client')} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white transition-colors">
+                <button onClick={() => { if(confirm('¿Seguro que quieres cambiar de cliente? El carrito se vaciará.')) { clearCart(); setView('client'); } }} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                 </button>
                 <h2 className="font-display font-black text-xl tracking-widest text-white uppercase">Menú</h2>
@@ -475,7 +478,7 @@ export default function AdminKiosk() {
                 <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${deliveryMethod === 'local' ? 'bg-green-500/20 text-green-400' : deliveryMethod === 'pickup' ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}`}>
                   {deliveryMethod === 'local' ? '🍴 Local/Mesa' : deliveryMethod === 'pickup' ? '🛍️ Recogida' : '🛵 Domicilio'}
                 </span>
-                <button onClick={() => setView('client')} className="text-xs text-zinc-400 hover:text-white underline">Cambiar</button>
+                <button onClick={() => { if(confirm('¿Seguro que quieres cambiar de cliente? El carrito se vaciará.')) { clearCart(); setView('client'); } }} className="text-xs text-zinc-400 hover:text-white underline">Cambiar</button>
               </div>
               
               {clientInfo ? (
@@ -504,7 +507,17 @@ export default function AdminKiosk() {
                   <div key={item.id} className="bg-zinc-900/80 border border-zinc-800 p-4 rounded-2xl flex justify-between items-center">
                     <div className="flex-1 pr-3">
                       <p className="text-sm font-bold text-white">{item.name}</p>
-                      <p className="text-xs text-zinc-500">{item.price.toFixed(2)}€/u</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-zinc-500">{item.price.toFixed(2)}€/u</p>
+                        <button onClick={() => {
+                          const newPrice = prompt(`Nuevo precio para ${item.name}:`, item.price.toString());
+                          if (newPrice && !isNaN(parseFloat(newPrice))) {
+                            updatePrice(item.id, parseFloat(newPrice));
+                          }
+                        }} className="text-zinc-500 hover:text-white transition-colors" title="Editar precio">
+                          ✏️
+                        </button>
+                      </div>
                     </div>
                     <div className="flex items-center gap-3 bg-[#1A1A24] rounded-xl p-1 border border-zinc-700">
                       <button onClick={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeItem(item.id)} className="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors font-bold text-lg">
