@@ -81,6 +81,10 @@ export default function AdminKiosk() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [orderNotes, setOrderNotes] = useState('');
+
+  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+  const [editingPriceValue, setEditingPriceValue] = useState<string>('');
+
   const [paymentMethod, setPaymentMethod] = useState<'tpv' | 'cash'>('tpv');
 
   const [kioskNotification, setKioskNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
@@ -525,15 +529,31 @@ export default function AdminKiosk() {
                     <div className="flex-1 pr-3">
                       <p className="text-sm font-bold text-white">{item.name}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <p className="text-xs text-zinc-500">{item.price.toFixed(2)}€/u</p>
-                        <button onClick={() => {
-                          const newPrice = prompt(`Nuevo precio para ${item.name}:`, item.price.toString());
-                          if (newPrice && !isNaN(parseFloat(newPrice))) {
-                            updatePrice(item.id, parseFloat(newPrice));
-                          }
-                        }} className="text-zinc-500 hover:text-white transition-colors" title="Editar precio">
-                          ✏️
-                        </button>
+                        {editingPriceId === item.id ? (
+                          <div className="flex items-center gap-1">
+                            <input 
+                              type="number" 
+                              value={editingPriceValue}
+                              onChange={(e) => setEditingPriceValue(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleConfirmPrice(item.id)}
+                              autoFocus
+                              onBlur={() => handleConfirmPrice(item.id)}
+                              className="w-16 bg-[#0A0A0E] text-white text-xs px-2 py-1 rounded border border-green-500 outline-none"
+                              step="0.1"
+                            />
+                            <span className="text-xs text-zinc-500">€/u</span>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-xs text-zinc-500">{item.price.toFixed(2)}€/u</p>
+                            <button onClick={() => {
+                              setEditingPriceId(item.id);
+                              setEditingPriceValue(item.price.toString());
+                            }} className="text-zinc-500 hover:text-white transition-colors" title="Editar precio">
+                              ✏️
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 bg-[#1A1A24] rounded-xl p-1 border border-zinc-700">
