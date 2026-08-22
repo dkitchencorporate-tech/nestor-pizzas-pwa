@@ -23,6 +23,7 @@ interface KioskCartState {
   updateQuantity: (id: string, quantity: number) => void;
   updatePrice: (id: string, price: number) => void;
   clearCart: () => void;
+  resetKiosk: () => void;
   getTotal: () => number;
 }
 
@@ -74,6 +75,12 @@ export const useKioskCartStore = create<KioskCartState>()((set, get) => ({
   })),
   
   clearCart: () => set({ 
+    items: [],
+    clientInfo: undefined,
+    lastUpdated: Date.now()
+  }),
+  
+  resetKiosk: () => set({
     items: [],
     clientInfo: undefined,
     deliveryMethod: 'local',

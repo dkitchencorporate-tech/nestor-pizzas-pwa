@@ -28,6 +28,7 @@ export default function AdminKiosk() {
     deliveryMethod,
     setClientInfo, 
     setDeliveryMethod,
+    resetKiosk,
     addItem, 
     removeItem, 
     updateQuantity, 
@@ -292,7 +293,7 @@ export default function AdminKiosk() {
 
 
       showKioskNotif(editingOrder ? '¡Pedido actualizado correctamente!' : '¡Pedido procesado correctamente!', 'success');
-      clearCart();
+      resetKiosk();
       setOrderNotes('');
       if (editingOrder) {
          finishEditingOrder(); // Volver a órdenes
