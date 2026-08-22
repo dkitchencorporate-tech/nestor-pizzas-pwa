@@ -34,10 +34,15 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     
     order.order_items?.forEach((item: any) => {
       const lineTotal = (item.quantity * item.unit_price).toFixed(2);
-      text += `${item.quantity}x     ${item.products?.name.substring(0, 18).padEnd(18, ' ')} ${lineTotal}EUR\n`;
+      const itemName = item.customization_details?.name || item.products?.name || 'Producto';
+      
+      text += `${item.quantity}x     ${itemName}\n`;
+      text += `                    ${lineTotal}EUR\n`;
+      
       if (item.customization_details?.extras && Array.isArray(item.customization_details.extras)) {
         item.customization_details.extras.forEach((extra: any) => {
-          text += `  * + ${extra.name}\n`;
+          const extraName = typeof extra === 'string' ? extra : extra.name;
+          text += `  * + ${extraName}\n`;
         });
       }
       if (item.customization_details?.notes) {
