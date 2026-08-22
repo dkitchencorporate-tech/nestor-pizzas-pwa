@@ -22,7 +22,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
   const addItem = useCartStore(state => state.addItem);
 
   const BASE_PRICE = product.price;
-  const isCustomPizza = product.name.toUpperCase().includes('MAZZI');
+  const isCustomPizza = product.name.toUpperCase().includes('MAZZI') || product.category_id === 'POR INGREDIENTES' || product.id === 22;
 
   const toggleIngredient = (baseIng: string) => {
     const suffix = activeHalf === 'left' ? ' (Mitad Izq)' : activeHalf === 'right' ? ' (Mitad Der)' : '';
