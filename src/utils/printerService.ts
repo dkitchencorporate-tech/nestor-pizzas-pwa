@@ -39,6 +39,13 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     text += `CANT   ARTICULO            TOTAL\n`;
     text += `--------------------------------\n`;
     
+    if (!order.order_items || order.order_items.length === 0) {
+      text += `[ERROR LOG: NO ITEMS]\n`;
+      text += `TAMAÑO ARRAY: ${order.order_items ? order.order_items.length : 'UNDEFINED'}\n`;
+    } else {
+      text += `[DEBUG LOG: ARRAY TIENE ${order.order_items.length} ITEMS]\n`;
+    }
+
     order.order_items?.forEach((item: any) => {
       const lineTotal = (item.quantity * item.unit_price).toFixed(2);
       const itemName = item.customization_details?.name || item.products?.name || 'Producto';
