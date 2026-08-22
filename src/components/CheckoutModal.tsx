@@ -172,7 +172,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         p_items: orderItems,
         p_points_redeemed: pointsRedeemed,
         p_small_order_fee_accepted: acceptSmallOrderFee,
-        p_ip_address: 'client' // La BD usa x-forwarded-for internamente; este campo es una referencia adicional
+        p_ip_address: 'client', p_notes: orderNotes, p_payment_method: paymentMethod
       });
 
       if (checkoutError) throw checkoutError;
