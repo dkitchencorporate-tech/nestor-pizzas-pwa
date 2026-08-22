@@ -99,19 +99,19 @@ export default function KioskIngredientsModal({ product, onClose, onAdd }: Ingre
           <div className="flex gap-2 p-1 bg-zinc-900 rounded-xl border border-zinc-800">
             <button
               onClick={() => setActiveHalf('full')}
-              className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${activeHalf === 'full' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}
+              className={`flex-1 py-3 text-sm font-bold rounded-lg border-2 transition-all ${activeHalf === 'full' ? 'bg-zinc-700 text-white border-green-500 shadow-md' : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-700'}`}
             >
               Completa
             </button>
             <button
               onClick={() => setActiveHalf('left')}
-              className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${activeHalf === 'left' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}
+              className={`flex-1 py-3 text-sm font-bold rounded-lg border-2 transition-all ${activeHalf === 'left' ? 'bg-zinc-700 text-white border-green-500 shadow-md' : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-700'}`}
             >
               Mitad Izq
             </button>
             <button
               onClick={() => setActiveHalf('right')}
-              className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${activeHalf === 'right' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}
+              className={`flex-1 py-3 text-sm font-bold rounded-lg border-2 transition-all ${activeHalf === 'right' ? 'bg-zinc-700 text-white border-green-500 shadow-md' : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-700'}`}
             >
               Mitad Der
             </button>
@@ -141,13 +141,13 @@ export default function KioskIngredientsModal({ product, onClose, onAdd }: Ingre
                     key={ing}
                     onClick={() => toggleIngredient(ing)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
-                      isSelected 
+                      isIngSelected 
                         ? 'bg-green-500 text-white border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.4)]' 
                         : 'bg-zinc-900 text-gray-300 border-zinc-800 hover:border-green-500/50 hover:bg-zinc-800'
                     }`}
                   >
                     {ing}
-                    {isSelected && <span className="ml-2 bg-black/20 px-1.5 rounded text-xs">+1€</span>}
+                    {isIngSelected && <span className="ml-2 bg-black/20 px-1.5 rounded text-xs">+1€</span>}
                   </button>
                 )
               })}
