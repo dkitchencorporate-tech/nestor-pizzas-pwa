@@ -22,6 +22,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
   const addItem = useCartStore(state => state.addItem);
 
   const BASE_PRICE = product.price;
+  const isCustomPizza = product.name.toUpperCase().includes('MAZZI');
 
   const toggleIngredient = (baseIng: string) => {
     const suffix = activeHalf === 'left' ? ' (Mitad Izq)' : activeHalf === 'right' ? ' (Mitad Der)' : '';
@@ -97,26 +98,82 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
 
         {/* Body (Scrollable) */}
         <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
-          <div className="flex gap-2 p-1 bg-zinc-900 rounded-xl border border-zinc-800">
-            <button
-              onClick={() => setActiveHalf('full')}
-              className={`flex-1 py-3 text-sm font-bold rounded-lg border-2 transition-all ${activeHalf === 'full' ? 'bg-zinc-700 text-white border-green-500 shadow-md' : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-700'}`}
-            >
-              Completa
-            </button>
-            <button
-              onClick={() => setActiveHalf('left')}
-              className={`flex-1 py-3 text-sm font-bold rounded-lg border-2 transition-all ${activeHalf === 'left' ? 'bg-zinc-700 text-white border-green-500 shadow-md' : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-700'}`}
-            >
-              Mitad Izq
-            </button>
-            <button
-              onClick={() => setActiveHalf('right')}
-              className={`flex-1 py-3 text-sm font-bold rounded-lg border-2 transition-all ${activeHalf === 'right' ? 'bg-zinc-700 text-white border-green-500 shadow-md' : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-700'}`}
-            >
-              Mitad Der
-            </button>
-          </div>
+          
+          {isCustomPizza && (
+            <>
+              <div className="flex gap-2 p-1 bg-zinc-900 rounded-xl border border-zinc-800">
+                <button
+                  onClick={() => setActiveHalf('full')}
+                  className={`flex-1 py-3 text-sm font-bold rounded-lg border-2 transition-all ${activeHalf === 'full' ? 'bg-zinc-700 text-white border-green-500 shadow-md' : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-700'}`}
+                >
+                  Completa
+                </button>
+                <button
+                  onClick={() => setActiveHalf('left')}
+                  className={`flex-1 py-3 text-sm font-bold rounded-lg border-2 transition-all ${activeHalf === 'left' ? 'bg-zinc-700 text-white border-green-500 shadow-md' : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-700'}`}
+                >
+                  Mitad Izq
+                </button>
+                <button
+                  onClick={() => setActiveHalf('right')}
+                  className={`flex-1 py-3 text-sm font-bold rounded-lg border-2 transition-all ${activeHalf === 'right' ? 'bg-zinc-700 text-white border-green-500 shadow-md' : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-700'}`}
+                >
+                  Mitad Der
+                </button>
+              </div>
+
+              {/* Resumen Actual */}
+              {selectedIngredients.length > 0 && (
+                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                  <h4 className="text-zinc-400 text-xs font-bold uppercase mb-3">Resumen de Ingredientes Extras</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Completa */}
+                    <div className="bg-[#0A0A0E] p-3 rounded-lg border border-zinc-800">
+                      <div className="text-white text-xs font-bold mb-2 opacity-80 border-b border-zinc-800 pb-1">COMPLETA</div>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedIngredients.filter(i => !i.includes('(Mitad')).map(i => (
+                          <span key={i} className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded border border-green-500/30">{i}</span>
+                        ))}
+                        {selectedIngredients.filter(i => !i.includes('(Mitad')).length === 0 && <span className="text-zinc-600 text-xs">-</span>}
+                      </div>
+                    </div>
+                    {/* Mitad Izq */}
+                    <div className="bg-[#0A0A0E] p-3 rounded-lg border border-zinc-800">
+                      <div className="text-white text-xs font-bold mb-2 opacity-80 border-b border-zinc-800 pb-1">MITAD IZQ</div>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedIngredients.filter(i => i.includes('(Mitad Izq)')).map(i => (
+                          <span key={i} className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded border border-green-500/30">{i.replace(' (Mitad Izq)', '')}</span>
+                        ))}
+                        {selectedIngredients.filter(i => i.includes('(Mitad Izq)')).length === 0 && <span className="text-zinc-600 text-xs">-</span>}
+                      </div>
+                    </div>
+                    {/* Mitad Der */}
+                    <div className="bg-[#0A0A0E] p-3 rounded-lg border border-zinc-800">
+                      <div className="text-white text-xs font-bold mb-2 opacity-80 border-b border-zinc-800 pb-1">MITAD DER</div>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedIngredients.filter(i => i.includes('(Mitad Der)')).map(i => (
+                          <span key={i} className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded border border-green-500/30">{i.replace(' (Mitad Der)', '')}</span>
+                        ))}
+                        {selectedIngredients.filter(i => i.includes('(Mitad Der)')).length === 0 && <span className="text-zinc-600 text-xs">-</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {!isCustomPizza && selectedIngredients.length > 0 && (
+             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+               <h4 className="text-zinc-400 text-xs font-bold uppercase mb-3">Ingredientes Extras Añadidos</h4>
+               <div className="flex flex-wrap gap-2">
+                 {selectedIngredients.map(i => (
+                    <span key={i} className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-md border border-green-500/30">{i}</span>
+                 ))}
+               </div>
+             </div>
+          )}
+
           
           
           <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
