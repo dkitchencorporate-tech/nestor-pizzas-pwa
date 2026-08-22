@@ -50,13 +50,15 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
       ? ` + ${selectedIngredients.join(', ')}` 
       : '';
     
+    const baseText = pizzaBase !== 'Normal' ? ` (Base ${pizzaBase})` : '';
     addItem({
       id: crypto.randomUUID(),
       productId: product.id,
-      name: `${product.name}${ingText}`,
+      name: `${product.name}${baseText}${ingText}`,
       price: finalPrice,
       quantity: 1,
-      extras: selectedIngredients
+      extras: selectedIngredients,
+      notes: itemNotes
     });
 
     onClose();

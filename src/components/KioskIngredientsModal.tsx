@@ -50,12 +50,14 @@ export default function KioskIngredientsModal({ product, onClose, onAdd }: Ingre
       ? ` + ${selectedIngredients.join(', ')}` 
       : '';
     
+    const baseText = pizzaBase !== 'Normal' ? ` (Base ${pizzaBase})` : '';
     onAdd({
       productId: product.id,
-      name: `${product.name}${ingText}`,
+      name: `${product.name}${baseText}${ingText}`,
       price: finalPrice,
       quantity: 1,
-      extras: selectedIngredients
+      extras: selectedIngredients,
+      notes: itemNotes
     });
 
     onClose();
