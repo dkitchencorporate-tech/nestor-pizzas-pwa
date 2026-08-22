@@ -38,6 +38,7 @@ export default function AdminKiosk() {
 
   const [view, setView] = useState<'client' | 'catalog'>('client');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showChangeClientModal, setShowChangeClientModal] = useState(false);
   const [searchResults, setSearchResults] = useState<KioskClientInfo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -206,8 +207,10 @@ export default function AdminKiosk() {
   };
 
   const selectClient = (client: KioskClientInfo) => {
+    const currentMethod = deliveryMethod;
     clearCart();
-      setOrderNotes('');
+    setDeliveryMethod(currentMethod);
+    setOrderNotes('');
     setClientInfo(client);
     setSearchQuery('');
     setSearchResults([]);
@@ -437,8 +440,7 @@ export default function AdminKiosk() {
             {/* Header de la vista con botón para volver atrás */}
             <div className="p-4 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
-                <button onClick={() => { if(confirm('¿Seguro que quieres cambiar de cliente? El carrito se vaciará.')) { clearCart();
-      setOrderNotes(''); setView('client'); } }} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white transition-colors">
+                <button onClick={() => setShowChangeClientModal(true)} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                 </button>
                 <h2 className="font-display font-black text-xl tracking-widest text-white uppercase">Menú</h2>
@@ -498,8 +500,7 @@ export default function AdminKiosk() {
                 <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${deliveryMethod === 'local' ? 'bg-green-500/20 text-green-400' : deliveryMethod === 'pickup' ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}`}>
                   {deliveryMethod === 'local' ? '🍴 Local/Mesa' : deliveryMethod === 'pickup' ? '🛍️ Recogida' : '🛵 Domicilio'}
                 </span>
-                <button onClick={() => { if(confirm('¿Seguro que quieres cambiar de cliente? El carrito se vaciará.')) { clearCart();
-      setOrderNotes(''); setView('client'); } }} className="text-xs text-zinc-400 hover:text-white underline">Cambiar</button>
+                <button onClick={() => setShowChangeClientModal(true)} className="text-xs text-zinc-400 hover:text-white underline">Cambiar</button>
               </div>
               
               {clientInfo ? (
