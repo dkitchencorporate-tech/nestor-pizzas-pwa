@@ -1,8 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MarketingCampaignModal } from './components/MarketingCampaignModal';
-
 import { useI18nStore } from '../../store/i18nStore';
+
+// Simple Modal for Order History
+const OrderHistoryModal = ({ user, onClose, orders }: { user: any, onClose: () => void, orders: any[] }) => {
+  if (!user) return null;
+  return (
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+      <div className="bg-[#14141E] border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+        <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+          <div>
+            <h3 className="text-xl font-bold text-white uppercase tracking-wide">Historial de Pedidos</h3>
+            <p className="text-zinc-400 text-sm mt-1">{user.full_name || 'Sin Nombre'} ({user.phone || 'Sin Teléfono'})</p>
+          </div>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div className="p-6 overflow-y-auto flex-1">
+          {orders.length === 0 ? (
+            <p className="text-zinc-500 text-center py-4">No hay pedidos registrados para este cliente.</p>
+          ) : (
+            <div className="space-y-4">
+              {orders.map(order => (
+                <div key={order.id} className="bg-[#0A0A0E] border border-zinc-800 p-4 rounded-xl flex justify-between items-center">
+                  <div>
+                    <p className="text-white font-bold">{new Date(order.created_at).toLocaleString('es-ES')}</p>
+                    <p className="text-xs text-zinc-500 mt-1 uppercase tracking-wider">{order.status} • {order.delivery_method}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-black text-green-500">{Number(order.total_amount).toFixed(2)}€</p>
+                    <p className="text-xs text-zinc-400 mt-1">ID: {order.id.slice(0,8)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 export default function AdminAnalytics() {
   const { t } = useI18nStore();
@@ -10,6 +48,7 @@ export default function AdminAnalytics() {
   const [todaySales, setTodaySales] = useState(0);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMarketingModal, setShowMarketingModal] = useState(false);
+  const [selectedUserForHistory, setSelectedUserForHistory] = useState<any>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -19,13 +58,62 @@ export default function AdminAnalytics() {
   const fetchUsers = async () => {
     const { data: profilesData } = await supabase.from('profiles').select('*');
     const { data: kioskData } = await supabase.from('kiosk_customers').select('*');
+    const { data: ordersData } = await supabase.from('orders').select('*');
     
-    const allUsers = [
-      ...(profilesData || []),
-      ...(kioskData || []).map(k => ({ ...k, points: k.points || 0, is_kiosk: true }))
-    ];
+    // Create a unified map of users by phone number
+    const usersMap = new Map();
+
+    // 1. Add Profiles
+    (profilesData || []).forEach(p => {
+      if (p.phone) usersMap.set(p.phone, { ...p, is_app: true, orderHistory: [] });
+    });
+
+    // 2. Add Kiosk Customers
+    (kioskData || []).forEach(k => {
+      if (k.phone) {
+        if (!usersMap.has(k.phone)) {
+          usersMap.set(k.phone, { ...k, points: k.points || 0, is_kiosk: true, orderHistory: [] });
+        } else {
+          // Merge kiosk flags
+          usersMap.get(k.phone).is_kiosk = true;
+        }
+      }
+    });
+
+    // 3. Process Orders for ghost clients and order history
+    (ordersData || []).forEach(order => {
+      const phone = order.client_phone;
+      if (phone && phone.trim() !== '' && phone !== 'Sin Teléfono' && phone !== 'unknown') {
+        if (!usersMap.has(phone)) {
+          // Ghost client from an order
+          usersMap.set(phone, {
+            id: 'ghost-' + order.id,
+            full_name: order.client_name || 'Cliente Anónimo',
+            phone: phone,
+            points: 0,
+            is_ghost: true,
+            created_at: order.created_at,
+            orderHistory: []
+          });
+        }
+        // Attach order to the user's history
+        usersMap.get(phone).orderHistory.push(order);
+      } else if (order.user_id) {
+        // Find user by id if phone is missing but id is linked
+        const userByProfile = Array.from(usersMap.values()).find(u => u.id === order.user_id);
+        if (userByProfile) {
+          userByProfile.orderHistory.push(order);
+        }
+      }
+    });
     
-    // Ordenar combinados por fecha de creación (más recientes primero)
+    const allUsers = Array.from(usersMap.values());
+    
+    // Ordenar pedidos internamente por fecha y usuarios por fecha
+    allUsers.forEach(u => {
+      u.orderHistory.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    });
+    
     allUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     setUsers(allUsers);
@@ -142,16 +230,24 @@ export default function AdminAnalytics() {
             </thead>
             <tbody>
               {users.map(u => (
-                <tr key={u.id} className="border-b border-zinc-800 hover:bg-zinc-800/20">
+                <tr 
+                  key={u.id} 
+                  onClick={() => setSelectedUserForHistory(u)}
+                  className="border-b border-zinc-800 hover:bg-zinc-800/40 cursor-pointer transition-colors"
+                >
                   <td className="px-4 py-3 font-mono text-[10px]">{u.id.slice(0,8)}...</td>
                   <td className="px-4 py-3 text-white font-bold">
                     {u.full_name || t('no_name')}
-                    {u.is_kiosk && <span className="ml-2 text-[9px] bg-zinc-700 px-1 rounded uppercase">Kiosko</span>}
+                    {u.is_kiosk && <span className="ml-2 text-[9px] bg-zinc-700 px-1 rounded uppercase text-zinc-300">Kiosko</span>}
+                    {u.is_ghost && <span className="ml-2 text-[9px] bg-zinc-800 text-zinc-500 px-1 rounded uppercase">Fantasma</span>}
                   </td>
                   <td className="px-4 py-3 text-gray-400">{u.email || t('no_email')}</td>
                   <td className="px-4 py-3">{u.phone || t('no_phone')}</td>
                   <td className="px-4 py-3 text-green-400 font-bold">{u.points} pts</td>
-                  <td className="px-4 py-3 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-xs flex justify-between items-center">
+                    <span>{new Date(u.created_at).toLocaleDateString()}</span>
+                    <span className="text-[10px] bg-zinc-800 px-2 py-1 rounded text-zinc-400">{u.orderHistory?.length || 0} pedidos &rarr;</span>
+                  </td>
                 </tr>
               ))}
               {users.length === 0 && (
@@ -225,6 +321,13 @@ export default function AdminAnalytics() {
         onClose={() => setShowMarketingModal(false)} 
         userCount={users.length} 
       />
+      {selectedUserForHistory && (
+        <OrderHistoryModal 
+          user={selectedUserForHistory} 
+          orders={selectedUserForHistory.orderHistory || []} 
+          onClose={() => setSelectedUserForHistory(null)} 
+        />
+      )}
     </div>
   );
 }
