@@ -302,7 +302,7 @@ export default function AdminKiosk() {
       if (editingOrder) {
          finishEditingOrder(); // Volver a órdenes
       } else {
-         setView('client');
+         setView('catalog');
       }
 
     } catch (error: any) {
@@ -470,7 +470,16 @@ export default function AdminKiosk() {
             {/* Header de la vista con botón para volver atrás */}
             <div className="p-4 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
-                <button onClick={() => setShowChangeClientModal(true)} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white transition-colors">
+                <button onClick={() => {
+                  if (items.length > 0) {
+                    if (window.confirm('¿Seguro que quieres salir? Se vaciará el carrito actual.')) {
+                      resetKiosk();
+                      finishEditingOrder();
+                    }
+                  } else {
+                    finishEditingOrder();
+                  }
+                }} className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-white transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                 </button>
                 <h2 className="font-display font-black text-xl tracking-widest text-white uppercase">Menú</h2>
