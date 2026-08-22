@@ -28,6 +28,11 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
         <h2 className="text-2xl font-black border-b-2 border-black pb-2 mb-2 uppercase">
           {isDelivery ? t('ticket_delivery') : t('ticket_pickup')}
         </h2>
+        {order.estimated_ready_at && (
+          <p className="text-xl font-black bg-black text-white py-1 uppercase mb-2">
+            LISTO: {new Date(order.estimated_ready_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        )}
       </div>
 
       <div className="ticket-client text-left mb-4">

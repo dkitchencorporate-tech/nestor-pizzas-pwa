@@ -15,6 +15,13 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     text += `================================\n\n`;
     text += `TICKET: ${order.id.slice(0, 8).toUpperCase()}\n`;
     text += `TIPO: ${order.delivery_method === 'delivery' ? 'A DOMICILIO' : 'RECOGIDA'}\n`;
+    
+    if (order.estimated_ready_at) {
+      const date = new Date(order.estimated_ready_at);
+      const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      text += `LISTO A LAS: ${timeStr}\n`;
+    }
+
     text += `CLIENTE: ${order.client_name || 'Sin Nombre'}\n`;
     text += `TELEFONO: ${order.client_phone || ''}\n`;
     

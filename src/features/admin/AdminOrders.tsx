@@ -119,18 +119,37 @@ export default function AdminOrders() {
   const updateOrderStatus = async (id: string, status: string, estimatedTime?: string) => {
     stopAudio();
     
+    const updateData: any = { status };
+    let newEstimatedReadyAt = null;
+    if (estimatedTime) {
+      newEstimatedReadyAt = new Date(Date.now() + parseInt(estimatedTime) * 60000).toISOString();
+      updateData.estimated_ready_at = newEstimatedReadyAt;
+    }
+    
+    await supabase.from('orders').update(updateData).eq('id', id);
+    
     if (status === 'cooking') {
-      const orderToPrint = orders.find(o => o.id === id);
+      let orderToPrint = orders.find(o => o.id === id);
+      
+      // Asegurarnos de que los order_items existan, ya que el realtime a veces no los trae
+      if (orderToPrint && (!orderToPrint.order_items || orderToPrint.order_items.length === 0)) {
+        const { data } = await supabase
+          .from('orders')
+          .select('*, order_items(*, products(name))')
+          .eq('id', id)
+          .single();
+        if (data) orderToPrint = data;
+      }
+      
       if (orderToPrint) {
-        handlePrint(orderToPrint);
+        // Inyectar el tiempo estimado manualmente antes de que React actualice
+        if (newEstimatedReadyAt) {
+          orderToPrint = { ...orderToPrint, estimated_ready_at: newEstimatedReadyAt };
+        }
+        await handlePrint(orderToPrint);
       }
     }
 
-    const updateData: any = { status };
-    if (estimatedTime) {
-      updateData.estimated_ready_at = new Date(Date.now() + parseInt(estimatedTime) * 60000).toISOString();
-    }
-    await supabase.from('orders').update(updateData).eq('id', id);
     setExpandedOrderId(null); // Collapse when moving
     fetchOrders();
   };
