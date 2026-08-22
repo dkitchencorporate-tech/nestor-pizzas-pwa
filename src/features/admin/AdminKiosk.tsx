@@ -534,10 +534,20 @@ export default function AdminKiosk() {
                             <input 
                               type="number" 
                               value={editingPriceValue}
-                              onChange={(e) => setEditingPriceValue(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && handleConfirmPrice(item.id)}
+                              onChange={(e) => {
+                                setEditingPriceValue(e.target.value);
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val) && val >= 0) {
+                                  updatePrice(item.id, val);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.currentTarget.blur();
+                                }
+                              }}
                               autoFocus
-                              onBlur={() => handleConfirmPrice(item.id)}
+                              onBlur={() => setEditingPriceId(null)}
                               className="w-16 bg-[#0A0A0E] text-white text-xs px-2 py-1 rounded border border-green-500 outline-none"
                               step="0.1"
                             />
@@ -577,7 +587,7 @@ export default function AdminKiosk() {
               <div className="p-5 border-t border-zinc-800 bg-zinc-900">
                 <div className="flex justify-between items-center mb-5">
                   <span className="text-zinc-400 text-sm font-bold uppercase tracking-widest">Total Pagar</span>
-                  <span className="text-4xl font-display font-black text-green-500">{getTotal().toFixed(2)}€</span>
+                  <span className="text-4xl font-display font-black text-green-500">{items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}€</span>
                 </div>
                 
                 <button
