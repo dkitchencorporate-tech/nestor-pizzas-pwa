@@ -17,8 +17,18 @@ export default function AdminAnalytics() {
   }, []);
 
   const fetchUsers = async () => {
-    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-    if (data) setUsers(data);
+    const { data: profilesData } = await supabase.from('profiles').select('*');
+    const { data: kioskData } = await supabase.from('kiosk_customers').select('*');
+    
+    const allUsers = [
+      ...(profilesData || []),
+      ...(kioskData || []).map(k => ({ ...k, points: k.points || 0, is_kiosk: true }))
+    ];
+    
+    // Ordenar combinados por fecha de creación (más recientes primero)
+    allUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
+    setUsers(allUsers);
   };
 
   const fetchTodaySales = async () => {
@@ -134,7 +144,10 @@ export default function AdminAnalytics() {
               {users.map(u => (
                 <tr key={u.id} className="border-b border-zinc-800 hover:bg-zinc-800/20">
                   <td className="px-4 py-3 font-mono text-[10px]">{u.id.slice(0,8)}...</td>
-                  <td className="px-4 py-3 text-white font-bold">{u.full_name || t('no_name')}</td>
+                  <td className="px-4 py-3 text-white font-bold">
+                    {u.full_name || t('no_name')}
+                    {u.is_kiosk && <span className="ml-2 text-[9px] bg-zinc-700 px-1 rounded uppercase">Kiosko</span>}
+                  </td>
                   <td className="px-4 py-3 text-gray-400">{u.email || t('no_email')}</td>
                   <td className="px-4 py-3">{u.phone || t('no_phone')}</td>
                   <td className="px-4 py-3 text-green-400 font-bold">{u.points} pts</td>
