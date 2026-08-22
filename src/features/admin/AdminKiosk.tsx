@@ -672,6 +672,44 @@ export default function AdminKiosk() {
         />
       )}
 
+            {/* Custom Change Client Modal */}
+      {showChangeClientModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#14141E] border border-zinc-800 rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-red-500 text-3xl">⚠️</span>
+              </div>
+              <h3 className="font-black text-white text-xl uppercase tracking-widest mb-2">¿Cambiar Cliente?</h3>
+              <p className="text-zinc-400 text-sm">
+                Al cambiar de cliente actual, <strong>el carrito se vaciará por completo</strong> y perderás los productos seleccionados.
+              </p>
+            </div>
+            <div className="p-4 bg-zinc-900/50 flex gap-4 border-t border-zinc-800">
+              <button 
+                onClick={() => setShowChangeClientModal(false)}
+                className="flex-1 py-3 text-white font-bold rounded-xl hover:bg-zinc-800 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  const currentMethod = deliveryMethod;
+                  clearCart();
+                  setDeliveryMethod(currentMethod);
+                  setOrderNotes('');
+                  setView('client');
+                  setShowChangeClientModal(false);
+                }}
+                className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl py-3 transition-colors shadow-lg shadow-red-600/20"
+              >
+                Sí, Cambiar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ESTILOS GLOBALES PARA EL TPV */}
       <style dangerouslySetInnerHTML={{__html: `
         .hide-scrollbar::-webkit-scrollbar { display: none; }
