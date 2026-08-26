@@ -7,6 +7,7 @@ import UserModal from './components/UserModal';
 import NotificationManager from './components/NotificationManager';
 import { useCartStore } from './store/cartStore';
 import { useAuthStore } from './store/authStore';
+import { useSettingsStore } from './store/settingsStore';
 import { useGuestOrderStore } from './store/guestOrderStore';
 import ReviewModal from './components/ReviewModal';
 import GuestRegistrationModal from './components/GuestRegistrationModal';
@@ -36,6 +37,9 @@ function App() {
   const cartItemsCount = useCartStore(state => state.items.length);
   const { orders, user } = useAuthStore();
   const guestOrder = useGuestOrderStore(state => state.guestOrder);
+  const fetchProfile = useAuthStore(state => state.fetchProfile);
+  const fetchSettings = useSettingsStore(state => state.fetchSettings);
+  const fetchOrders = useAuthStore(state => state.fetchOrders);
   
   const hasActiveOrder = user 
     ? (orders || []).some(o => ['pending', 'cooking', 'delivering', 'ready'].includes(o.status))
@@ -77,6 +81,14 @@ function App() {
       }
     };
     fetchStoreStatus();
+    
+    fetchOrders();
+    fetchSettings();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetchProfile(session.user.id);
+      }
+    });
 
     // Listen to Store Status changes
     const settingsChannel = supabase.channel('public:app_settings_global')

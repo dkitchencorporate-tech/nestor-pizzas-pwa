@@ -5,8 +5,10 @@ import { supabase } from '../lib/supabase';
 import { SumUpPaymentModal } from './SumUpPaymentModal';
 import { isStoreOpen, generateAvailableTimeSlots } from '../utils/timeUtils';
 import { useHardwareBack } from '../utils/useHardwareBack';
+import { useHardwareBack } from '../utils/useHardwareBack';
 import { emailService } from '../lib/emailService';
 import { useI18nStore } from '../store/i18nStore';
+import { useSettingsStore } from '../store/settingsStore';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -55,6 +57,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const isOpen = isStoreOpen();
   const availableSlots = generateAvailableTimeSlots(15);
 
+  const { deliveryFee, minOrderDelivery, juevesPromoFee } = useSettingsStore();
   const subtotal = getTotal();
   
   // Find eligible item for discount (Pizza or Burger)
@@ -66,17 +69,18 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   
   const discount = pointsRedeemed && eligibleDiscount > 0 ? eligibleDiscount : 0;
   
-  const needsSmallOrderFee = deliveryMethod === 'delivery' && (subtotal - discount) < 12;
-  const smallOrderFee = needsSmallOrderFee && acceptSmallOrderFee ? 1.50 : 0;
-  const finalTotal = Math.max(0, subtotal - discount) + smallOrderFee;
+  const hasJuevesLocos = items.some(item => item.productId === 999 || (item.name && item.name.includes('(Promo Jueves)')));
+
+  const needsSmallOrderFee = deliveryMethod === 'delivery' && (subtotal - discount) < minOrderDelivery;
+  const smallOrderFee = needsSmallOrderFee && acceptSmallOrderFee ? deliveryFee : 0;
+  const juevesSurcharge = deliveryMethod === 'delivery' && hasJuevesLocos ? juevesPromoFee : 0;
+  const finalTotal = Math.max(0, subtotal - discount) + smallOrderFee + juevesSurcharge;
   
   const userPoints = profile?.points || 0;
   const canRedeem = userPoints >= 25 && eligibleDiscount > 0;
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
   const validateGeofence = async (): Promise<boolean> => {
-    // Si el usuario introduce explícitamente el CP de Caniles, confiamos en la dirección
-    // y evitamos que el GPS bloquee la compra por imprecisiones.
     if (deliveryMethod === 'delivery' && addressCP.trim() === '18810') {
       return true;
     }
@@ -142,14 +146,11 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const processOrder = async () => {
     setIsProcessing(true);
     
-    // Generate the final address string to save
     const finalDeliveryAddress = deliveryMethod === 'delivery' 
       ? `${addressStreet}, Nº ${addressNumber}, CP ${addressCP} Caniles${addressNotes ? '. Notas: ' + addressNotes : ''}`
       : addressNotes ? `Notas/Mesa: ${addressNotes}` : 'Recogida en local';
 
-
     try {
-      // Prepare order items
       const orderItems = items.map(item => ({
         product_id: typeof item.productId === 'number' && item.productId < 1000 ? item.productId : null,
         quantity: item.quantity,
@@ -162,7 +163,6 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         }
       }));
 
-      // Insert Order and Items via secure RPC
       const { data: orderId, error: checkoutError } = await supabase.rpc('process_checkout', {
         p_user_id: user?.id || null,
         p_client_name: clientName,
@@ -172,12 +172,11 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         p_items: orderItems,
         p_points_redeemed: pointsRedeemed,
         p_small_order_fee_accepted: acceptSmallOrderFee,
-        p_ip_address: 'client', p_notes: orderNotes, p_payment_method: paymentMethod
+        p_ip_address: 'client', p_notes: addressNotes, p_payment_method: paymentMethod
       });
 
       if (checkoutError) throw checkoutError;
 
-      // Si el usuario está autenticado, actualizar sus datos de perfil (los puntos ahora los manejan los triggers de base de datos)
       if (user && profile) {
         await supabase
           .from('profiles')
@@ -189,12 +188,10 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           })
           .eq('id', user.id);
           
-        // Recargar perfil local y cargar pedidos para que el tracker funcione de inmediato
         useAuthStore.getState().fetchProfile(user.id);
         useAuthStore.getState().fetchOrders();
       }
 
-      // Clear kiosk data if used
       if (kioskClientInfo) {
         setKioskClientInfo(undefined);
       }
@@ -507,22 +504,38 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
         <div className="p-6 bg-zinc-950 text-white border-t border-zinc-800">
           {needsSmallOrderFee && (
-            <div className="mb-4 bg-orange-500/10 border border-orange-500/30 text-orange-400 p-3 sm:p-4 rounded-xl flex flex-col gap-2 transition-all">
-              <div className="flex items-center gap-2 font-medium text-xs sm:text-sm">
-                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                <span>{t('min_order_delivery')} <strong>12.00 €</strong>.</span>
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 space-y-3 mb-6">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p className="text-sm text-orange-400/90 leading-relaxed">
+                  El pedido mínimo para envíos a domicilio gratuitos es de <strong className="text-orange-400">{minOrderDelivery.toFixed(2).replace('.', ',')} €</strong>.
+                </p>
               </div>
-              <label className="flex items-center gap-3 mt-1 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  checked={acceptSmallOrderFee} 
-                  onChange={(e) => setAcceptSmallOrderFee(e.target.checked)} 
-                  className="w-4 h-4 text-orange-500 rounded border-orange-500/50 bg-black/50 cursor-pointer focus:ring-orange-500" 
+              <label className="flex items-center gap-3 p-3 bg-[#0A0A0E]/50 rounded-xl cursor-pointer hover:bg-white/5 transition-colors border border-white/5">
+                <input
+                  type="checkbox"
+                  checked={acceptSmallOrderFee}
+                  onChange={(e) => setAcceptSmallOrderFee(e.target.checked)}
+                  className="w-5 h-5 rounded bg-zinc-900 border-zinc-700 text-orange-500 focus:ring-orange-500/50 focus:ring-offset-0 transition-all"
                 />
-                <span className="text-xs sm:text-sm text-orange-200 group-hover:text-orange-100 transition-colors">{t('accept_surcharge')}</span>
+                <span className="text-sm text-gray-300">Aceptar recargo de {deliveryFee.toFixed(2).replace('.', ',')} € por pedido pequeño</span>
               </label>
             </div>
           )}
+
+          {deliveryMethod === 'delivery' && hasJuevesLocos && (
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 space-y-3 mb-6 flex items-start gap-3">
+              <svg className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-orange-400/90 leading-relaxed">
+                Las promociones especiales de <strong className="text-orange-400">Jueves Locos</strong> tienen un recargo por envío de <strong className="text-orange-400">{juevesPromoFee.toFixed(2).replace('.', ',')} €</strong>.
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-4">
             <div>
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">{t('total_to_pay')}</span>
