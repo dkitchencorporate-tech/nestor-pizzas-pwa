@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NESTOR_PRODUCTS, Product } from '../data/products';
 import { useCartStore } from '../store/cartStore';
 import { useI18nStore } from '../store/i18nStore';
+import { useHardwareBack } from '../hooks/useHardwareBack';
 
 interface PromoJuevesModalProps {
   onClose: () => void;
@@ -11,6 +12,8 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
   const [selectedPizzas, setSelectedPizzas] = useState<Product[]>([]);
   const addItem = useCartStore(state => state.addItem);
   const { t } = useI18nStore();
+  
+  useHardwareBack(true, onClose);
 
   // Developer Bypass: Set to true to test on any day. Set to false for production.
   const DEV_BYPASS = false;
