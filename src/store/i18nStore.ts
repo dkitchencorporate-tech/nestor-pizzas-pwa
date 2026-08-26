@@ -503,6 +503,7 @@ const dynamicDictionary: Record<string, string> = {
   'SALAMI': 'SALAMI',
   'SALCHICHAS': 'SAUSAGES',
   'TERNERA': 'BEEF',
+  'AROS DE CEBOLLA': 'ONION RINGS',
   'EXTRA MOZZARELLA': 'EXTRA MOZZARELLA',
   'ROQUEFORT': 'ROQUEFORT',
   'QUESO DE CABRA': 'GOAT CHEESE',

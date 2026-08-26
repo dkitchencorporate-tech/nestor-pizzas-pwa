@@ -351,10 +351,10 @@ export const NESTOR_PRODUCTS: Product[] = [
     },
     {
         id: 37, category: 'PARA ACOMPAÑAR',
-        name: 'ROSCAS DE INGREDIENTES',
+        name: 'AROS DE CEBOLLA',
         desc: '8 Und',
         price: 4.50,
-        badge: 'ROSCAS (8 UND)',
+        badge: 'AROS (8 UND)',
         img: './assets/img/products/p37_aros_cebolla.jpeg'
     },
     {
