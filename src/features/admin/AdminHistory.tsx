@@ -296,62 +296,114 @@ export default function AdminHistory() {
       {/* Printable Report Section (Only visible when printing) */}
       <div className="hidden print:block p-8 bg-white text-black min-h-screen w-full">
         <div className="text-center mb-8 border-b-2 border-black pb-4">
-          <h1 className="text-3xl font-black uppercase mb-1">Néstor Pizzas</h1>
-          <h2 className="text-xl text-gray-600 font-bold">Informe Contable de Cierre</h2>
-          <p className="text-sm mt-2 text-gray-500">
-            Rango Analizado: {dateFilter.toUpperCase()} | Generado: {new Date().toLocaleString('es-ES')}
+          <h1 className="text-4xl font-black uppercase mb-1">Néstor Pizzas</h1>
+          <h2 className="text-2xl text-gray-600 font-bold uppercase tracking-widest">Informe Contable y Cierre de Caja</h2>
+          <p className="text-sm mt-2 text-gray-500 font-mono">
+            RANGO: {dateFilter.toUpperCase()} | GENERADO: {new Date().toLocaleString('es-ES')}
           </p>
         </div>
 
-        <div className="flex justify-between mb-8 gap-4">
-          <div className="p-4 border border-gray-300 rounded-lg text-center w-[30%]">
-            <p className="text-xs font-bold text-gray-500 uppercase">Total Pedidos</p>
-            <p className="text-2xl font-black">{orders.length}</p>
-          </div>
-          <div className="p-4 border border-gray-300 rounded-lg text-center w-[30%]">
-            <p className="text-xs font-bold text-gray-500 uppercase">Total Entregados</p>
-            <p className="text-2xl font-black text-green-700">
-              {orders.filter(o => o.status === 'delivered').length}
-            </p>
-          </div>
-          <div className="p-4 border border-gray-300 rounded-lg text-center w-[30%] bg-gray-50">
-            <p className="text-xs font-bold text-gray-500 uppercase">Facturación Total</p>
-            <p className="text-2xl font-black">
-              {orders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + Number(o.total_amount), 0).toFixed(2)}€
-            </p>
-          </div>
-        </div>
+        {(() => {
+          // Filtrar solo entregados
+          const validOrders = orders.filter(o => o.status === 'delivered');
+          
+          // Agrupaciones
+          const deliveryOrders = validOrders.filter(o => o.delivery_method === 'delivery');
+          const pickupOrders = validOrders.filter(o => o.delivery_method === 'pickup');
+          const mesaOrders = validOrders.filter(o => o.delivery_method === 'local');
 
-        <table className="w-full text-left text-sm border-collapse">
-          <thead>
-            <tr className="border-b-2 border-black">
-              <th className="py-2">ID Ticket</th>
-              <th className="py-2">Fecha y Hora</th>
-              <th className="py-2">Tipo de Servicio</th>
-              <th className="py-2">Estado</th>
-              <th className="py-2 text-right">Total Cobrado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map(order => (
-              <tr key={order.id} className="border-b border-gray-200">
-                <td className="py-2 font-mono text-xs text-gray-600">{order.id.slice(0,8)}</td>
-                <td className="py-2">{new Date(order.created_at).toLocaleString('es-ES', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</td>
-                <td className="py-2 font-medium">{order.delivery_method === 'delivery' ? 'Domicilio' : 'Local'}</td>
-                <td className="py-2">
-                  <span className={order.status === 'delivered' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
-                    {order.status === 'delivered' ? 'Completado' : 'Cancelado'}
-                  </span>
-                </td>
-                <td className="py-2 text-right font-black">{order.total_amount}€</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          // Función de cálculo
+          const calc = (list: any[]) => {
+            const total = list.reduce((sum, o) => sum + Number(o.total_amount), 0);
+            const cash = list.filter(o => o.payment_method === 'cash').reduce((sum, o) => sum + Number(o.total_amount), 0);
+            const tpv = list.filter(o => o.payment_method === 'tpv').reduce((sum, o) => sum + Number(o.total_amount), 0);
+            const online = list.filter(o => o.payment_method === 'online' || !o.payment_method).reduce((sum, o) => sum + Number(o.total_amount), 0);
+            return { total, cash, tpv, online };
+          };
+
+          const deliveryMath = calc(deliveryOrders);
+          const pickupMath = calc(pickupOrders);
+          const mesaMath = calc(mesaOrders);
+          const totalMath = calc(validOrders);
+
+          return (
+            <div className="space-y-8">
+              {/* Resumen General */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="p-4 border-2 border-black rounded-xl text-center bg-gray-50">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Pedidos</p>
+                  <p className="text-3xl font-black">{validOrders.length}</p>
+                </div>
+                <div className="p-4 border-2 border-black rounded-xl text-center bg-gray-50">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Facturación Total</p>
+                  <p className="text-3xl font-black">{totalMath.total.toFixed(2)}€</p>
+                </div>
+                <div className="p-4 border-2 border-black rounded-xl text-center bg-green-100 border-green-800">
+                  <p className="text-xs font-bold text-green-800 uppercase tracking-widest">Total Efectivo (Caja)</p>
+                  <p className="text-3xl font-black text-green-700">{totalMath.cash.toFixed(2)}€</p>
+                </div>
+                <div className="p-4 border-2 border-black rounded-xl text-center bg-blue-100 border-blue-800">
+                  <p className="text-xs font-bold text-blue-800 uppercase tracking-widest">Total TPV + Online</p>
+                  <p className="text-3xl font-black text-blue-700">{(totalMath.tpv + totalMath.online).toFixed(2)}€</p>
+                </div>
+              </div>
+
+              {/* Desglose por Tipo */}
+              <div className="grid grid-cols-3 gap-6">
+                
+                {/* DOMICILIO */}
+                <div className="border border-gray-300 rounded-xl p-5 shadow-sm">
+                  <h3 className="text-lg font-black uppercase border-b border-gray-300 pb-2 mb-3">🛵 A Domicilio</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="font-bold">Pedidos:</span> <span>{deliveryOrders.length}</span></div>
+                    <div className="flex justify-between"><span className="font-bold">App/Online:</span> <span>{deliveryMath.online.toFixed(2)}€</span></div>
+                    <div className="flex justify-between"><span className="font-bold">TPV (Tarjeta):</span> <span>{deliveryMath.tpv.toFixed(2)}€</span></div>
+                    <div className="flex justify-between pt-2 border-t border-gray-200 mt-2 text-green-700"><span className="font-bold uppercase">Debe traer el repartidor:</span> <span className="font-black text-base">{deliveryMath.cash.toFixed(2)}€</span></div>
+                  </div>
+                  <div className="mt-4 bg-gray-100 p-2 rounded text-center">
+                    <span className="text-xs font-bold uppercase text-gray-500">Facturación Domicilio</span>
+                    <p className="text-xl font-black">{deliveryMath.total.toFixed(2)}€</p>
+                  </div>
+                </div>
+
+                {/* RECOGIDA */}
+                <div className="border border-gray-300 rounded-xl p-5 shadow-sm">
+                  <h3 className="text-lg font-black uppercase border-b border-gray-300 pb-2 mb-3">🛍️ Recogida</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="font-bold">Pedidos:</span> <span>{pickupOrders.length}</span></div>
+                    <div className="flex justify-between"><span className="font-bold">App/Online:</span> <span>{pickupMath.online.toFixed(2)}€</span></div>
+                    <div className="flex justify-between"><span className="font-bold">TPV (Tarjeta):</span> <span>{pickupMath.tpv.toFixed(2)}€</span></div>
+                    <div className="flex justify-between pt-2 border-t border-gray-200 mt-2 text-green-700"><span className="font-bold uppercase">Efectivo Recibido:</span> <span className="font-black text-base">{pickupMath.cash.toFixed(2)}€</span></div>
+                  </div>
+                  <div className="mt-4 bg-gray-100 p-2 rounded text-center">
+                    <span className="text-xs font-bold uppercase text-gray-500">Facturación Recogida</span>
+                    <p className="text-xl font-black">{pickupMath.total.toFixed(2)}€</p>
+                  </div>
+                </div>
+
+                {/* MESAS */}
+                <div className="border border-gray-300 rounded-xl p-5 shadow-sm">
+                  <h3 className="text-lg font-black uppercase border-b border-gray-300 pb-2 mb-3">🍴 Mesas (Local)</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="font-bold">Pedidos:</span> <span>{mesaOrders.length}</span></div>
+                    <div className="flex justify-between text-gray-400"><span className="font-bold">App/Online:</span> <span>N/A</span></div>
+                    <div className="flex justify-between"><span className="font-bold">TPV (Tarjeta):</span> <span>{mesaMath.tpv.toFixed(2)}€</span></div>
+                    <div className="flex justify-between pt-2 border-t border-gray-200 mt-2 text-green-700"><span className="font-bold uppercase">Efectivo Recibido:</span> <span className="font-black text-base">{mesaMath.cash.toFixed(2)}€</span></div>
+                  </div>
+                  <div className="mt-4 bg-gray-100 p-2 rounded text-center">
+                    <span className="text-xs font-bold uppercase text-gray-500">Facturación Local</span>
+                    <p className="text-xl font-black">{mesaMath.total.toFixed(2)}€</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          );
+        })()}
         
-        <div className="mt-12 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">
-          <p>Documento generado automáticamente por el TPV de Néstor Pizzas.</p>
-          <p>Uso exclusivo para auditoría contable y gestión empresarial. Los datos de carácter personal han sido excluidos conforme a la RGPD.</p>
+        <div className="mt-12 pt-4 border-t-2 border-black text-center text-xs text-gray-500 font-bold uppercase tracking-widest">
+          <p>Documento oficial generado automáticamente por el TPV de Néstor Pizzas Enterprise.</p>
+          <p>Los datos de carácter personal de los clientes han sido excluidos conforme a la RGPD.</p>
         </div>
       </div>
 

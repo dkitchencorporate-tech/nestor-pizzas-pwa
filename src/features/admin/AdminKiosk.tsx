@@ -373,77 +373,114 @@ export default function AdminKiosk() {
               ))}
             </div>
 
-            <div className="w-full bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl">
-              <h3 className="font-bold text-sm text-gray-400 uppercase tracking-widest mb-4 text-center">Asignar Cliente</h3>
-              <form onSubmit={handleSearch} className="flex gap-2">
-                <input 
-                  type="text" 
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por Teléfono, Nombre o Dirección..."
-                  className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-lg focus:outline-none focus:border-green-500 transition-colors"
-                />
-                <button type="submit" disabled={isSearching} className="bg-green-600 hover:bg-green-500 text-white px-6 rounded-xl font-bold transition-all">
-                  🔍 Buscar
-                </button>
-              </form>
-
-              {searchResults.length > 0 && (
-                <div className="mt-4 space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {searchResults.map((c, i) => (
-                    <div key={i} onClick={() => selectClient(c)} className="bg-zinc-800/80 hover:bg-zinc-700 p-4 rounded-xl cursor-pointer border border-zinc-700 flex items-center justify-between transition-all">
-                      <div>
-                        <p className="font-bold text-lg text-white">{c.full_name || 'Sin Nombre'}</p>
-                        <p className="text-sm text-gray-400 font-mono mt-0.5">{c.phone}</p>
-                        {c.address && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{formatAddress(c.address)}</p>}
-                      </div>
-                      <div className="flex flex-col items-end">
-                        {c.is_registered ? (
-                          <span className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full font-bold">USUARIO APP</span>
-                        ) : (
-                          <span className="bg-gray-500/20 text-gray-400 text-xs px-3 py-1 rounded-full font-bold">MOSTRADOR</span>
-                        )}
-                        {c.is_registered && ((c as any).points) !== undefined && (
-                          <span className="text-yellow-400 text-xs font-bold mt-2 font-mono">{((c as any).points)} pts</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {searchQuery && searchResults.length === 0 && !isSearching && (
-                <div className="mt-4 text-center p-6 bg-zinc-800/50 rounded-xl border border-dashed border-zinc-600">
-                  <p className="text-zinc-400 mb-4">No se encontró a nadie con "{searchQuery}"</p>
-                  <button onClick={() => { 
-                      setNewClientPhone(searchQuery); 
-                      setNewClientName('');
-                      setAddressStreet('');
-                      setAddressNumber('');
-                      setAddressCP('');
-                      setAddressNotes('');
-                      setIsCreateModalOpen(true); 
-                  }} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all">
-                    ➕ Crear Cliente Nuevo
+            {deliveryMethod !== 'local' && (
+              <div className="w-full bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl">
+                <h3 className="font-bold text-sm text-gray-400 uppercase tracking-widest mb-4 text-center">Asignar Cliente</h3>
+                <form onSubmit={handleSearch} className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Buscar por Teléfono, Nombre o Dirección..."
+                    className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-lg focus:outline-none focus:border-green-500 transition-colors"
+                  />
+                  <button type="submit" disabled={isSearching} className="bg-green-600 hover:bg-green-500 text-white px-6 rounded-xl font-bold transition-all">
+                    🔍 Buscar
                   </button>
-                </div>
-              )}
-            </div>
+                </form>
 
-            {deliveryMethod === 'local' && (
-              <div className="mt-6 w-full flex flex-col gap-3">
-                <input 
-                  type="text" 
-                  placeholder="Ej: Mesa 1, Mesa José (Opcional)" 
-                  value={tableName}
-                  onChange={(e) => setTableName(e.target.value)}
-                  className="w-full bg-[#1A1A24] text-white p-4 rounded-xl border border-zinc-700 outline-none focus:border-green-500 transition-colors"
-                />
-                <button onClick={skipClientAssignment} className="w-full py-4 bg-green-600/20 text-green-500 hover:bg-green-600/30 font-bold tracking-wider text-sm transition-colors border border-transparent rounded-xl">
-                  {tableName.trim() ? 'Continuar con este nombre ➔' : 'Continuar sin asignar cliente ➔'}
-                </button>
+                {searchResults.length > 0 && (
+                  <div className="mt-4 space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    {searchResults.map((c, i) => (
+                      <div key={i} onClick={() => selectClient(c)} className="bg-zinc-800/80 hover:bg-zinc-700 p-4 rounded-xl cursor-pointer border border-zinc-700 flex items-center justify-between transition-all">
+                        <div>
+                          <p className="font-bold text-lg text-white">{c.full_name || 'Sin Nombre'}</p>
+                          <p className="text-sm text-gray-400 font-mono mt-0.5">{c.phone}</p>
+                          {c.address && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{formatAddress(c.address)}</p>}
+                        </div>
+                        <div className="flex flex-col items-end">
+                          {c.is_registered ? (
+                            <span className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full font-bold">USUARIO APP</span>
+                          ) : (
+                            <span className="bg-gray-500/20 text-gray-400 text-xs px-3 py-1 rounded-full font-bold">MOSTRADOR</span>
+                          )}
+                          {c.is_registered && ((c as any).points) !== undefined && (
+                            <span className="text-yellow-400 text-xs font-bold mt-2 font-mono">{((c as any).points)} pts</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {searchQuery && searchResults.length === 0 && !isSearching && (
+                  <div className="mt-4 text-center p-6 bg-zinc-800/50 rounded-xl border border-dashed border-zinc-600">
+                    <p className="text-zinc-400 mb-4">No se encontró a nadie con "{searchQuery}"</p>
+                    <button onClick={() => { 
+                        setNewClientPhone(searchQuery); 
+                        setNewClientName('');
+                        setAddressStreet('');
+                        setAddressNumber('');
+                        setAddressCP('');
+                        setAddressNotes('');
+                        setIsCreateModalOpen(true); 
+                    }} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                      ➕ Crear Cliente Nuevo
+                    </button>
+                  </div>
+                )}
+                
+                {clientInfo && (
+                  <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl relative">
+                    <button onClick={() => setClientInfo(undefined)} className="absolute top-2 right-2 text-zinc-500 hover:text-white">✕</button>
+                    <h4 className="font-bold text-green-400 text-lg mb-1">Cliente Asignado:</h4>
+                    <p className="text-white font-bold">{clientInfo.full_name}</p>
+                    <p className="text-zinc-400 text-sm font-mono">{clientInfo.phone}</p>
+                    {clientInfo.address && <p className="text-zinc-500 text-xs mt-1">{formatAddress(clientInfo.address)}</p>}
+                  </div>
+                )}
               </div>
             )}
+
+            {deliveryMethod === 'local' && (
+              <div className="w-full flex flex-col gap-3">
+                <input 
+                  type="text" 
+                  placeholder="Ej: Mesa 1, Barra, José (Opcional)" 
+                  value={tableName}
+                  onChange={(e) => setTableName(e.target.value)}
+                  className="w-full bg-zinc-900 text-white p-4 rounded-xl border border-zinc-700 outline-none focus:border-green-500 transition-colors"
+                />
+              </div>
+            )}
+            
+            {/* Payment Method Selector (Only for Delivery/Pickup) */}
+            {deliveryMethod !== 'local' && clientInfo && (
+              <div className="w-full mt-6">
+                <h3 className="font-bold text-sm text-gray-400 uppercase tracking-widest mb-4 text-center">Método de Pago</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => setPaymentMethod('cash')} className={`py-4 rounded-xl font-bold uppercase tracking-wider transition-all border ${paymentMethod === 'cash' ? 'bg-green-500/20 text-green-400 border-green-500' : 'bg-zinc-900 text-zinc-500 border-zinc-800'}`}>
+                    💵 Efectivo
+                  </button>
+                  <button onClick={() => setPaymentMethod('tpv')} className={`py-4 rounded-xl font-bold uppercase tracking-wider transition-all border ${paymentMethod === 'tpv' ? 'bg-blue-500/20 text-blue-400 border-blue-500' : 'bg-zinc-900 text-zinc-500 border-zinc-800'}`}>
+                    💳 Tarjeta (TPV)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="w-full mt-8 flex gap-4">
+              <button onClick={() => setView('catalog')} className="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold tracking-wider text-sm transition-colors rounded-xl">
+                ← Volver
+              </button>
+              <button 
+                onClick={handleProcessOrder}
+                disabled={isProcessing || (deliveryMethod !== 'local' && !clientInfo)}
+                className={`flex-[2] py-4 font-black tracking-wider text-sm transition-all rounded-xl ${isProcessing || (deliveryMethod !== 'local' && !clientInfo) ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 text-white shadow-lg'}`}
+              >
+                {isProcessing ? 'Enviando...' : (editingOrder ? 'ACTUALIZAR PEDIDO' : 'ENVIAR A COCINA ➔')}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -523,28 +560,7 @@ export default function AdminKiosk() {
           {/* PANEL DERECHO: TICKET Y CLIENTE */}
           <div className="w-[400px] flex flex-col gap-4">
             
-            {/* Info del Cliente */}
-            <div className="bg-[#14141E] border border-zinc-800 rounded-3xl p-5 flex flex-col shadow-xl shrink-0">
-              <div className="flex justify-between items-start mb-3">
-                <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${deliveryMethod === 'local' ? 'bg-green-500/20 text-green-400' : deliveryMethod === 'pickup' ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}`}>
-                  {deliveryMethod === 'local' ? '🍴 Local/Mesa' : deliveryMethod === 'pickup' ? '🛍️ Recogida' : '🛵 Domicilio'}
-                </span>
-                <button onClick={() => setShowChangeClientModal(true)} className="text-xs text-zinc-400 hover:text-white underline">Cambiar</button>
-              </div>
-              
-              {clientInfo ? (
-                <div>
-                  <h4 className="font-bold text-white text-lg">{clientInfo.full_name}</h4>
-                  <p className="text-zinc-400 font-mono text-sm">{clientInfo.phone}</p>
-                  {clientInfo.address && <p className="text-zinc-500 text-xs mt-1">{formatAddress(clientInfo.address)}</p>}
-                </div>
-              ) : (
-                <div>
-                  <h4 className="font-bold text-zinc-500 text-lg">Mesa Sin Asignar</h4>
-                  <p className="text-zinc-600 text-xs">Pedido Anónimo</p>
-                </div>
-              )}
-            </div>
+            {/* Remove client info box from Catalog view */}
 
             {/* Ticket de Compra */}
             <div className="bg-[#14141E] border border-zinc-800 rounded-3xl flex-1 flex flex-col shadow-xl overflow-hidden">
@@ -622,16 +638,16 @@ export default function AdminKiosk() {
                 
                 <button
                   onClick={() => {
-                    if (editingOrder || clientInfo) {
-                      handleProcessOrder();
+                    if (deliveryMethod === 'local' && editingOrder) {
+                      handleProcessOrder(); // If it's a mesa order being edited, we can just save it.
                     } else {
                       setView('client');
                     }
                   }}
-                  disabled={isProcessing || items.length === 0}
-                  className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-base transition-all ${isProcessing || items.length === 0 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 text-white shadow-[0_0_25px_rgba(22,163,74,0.4)] hover:shadow-[0_0_35px_rgba(22,163,74,0.6)]'}`}
+                  disabled={items.length === 0}
+                  className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest text-base transition-all ${items.length === 0 ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 text-white shadow-[0_0_25px_rgba(22,163,74,0.4)] hover:shadow-[0_0_35px_rgba(22,163,74,0.6)]'}`}
                 >
-                  {isProcessing ? 'Procesando...' : (editingOrder || clientInfo ? 'ENVIAR A COCINA' : 'SIGUIENTE: ASIGNAR CLIENTE/MESA ➔')}
+                  {editingOrder && deliveryMethod === 'local' ? 'GUARDAR MESA' : 'SIGUIENTE ➔'}
                 </button>
               </div>
             </div>

@@ -11,7 +11,7 @@ export default function AdminOrders() {
   const { startEditingOrder } = useAdminUiStore();
   const { t, tDynamic } = useI18nStore();
   const [orders, setOrders] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'pending' | 'cooking' | 'ready' | 'delivered'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'cooking' | 'ready' | 'delivered' | 'mesas'>('pending');
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [silencedCount, setSilencedCount] = useState<number>(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -167,29 +167,11 @@ export default function AdminOrders() {
   const workingDayStart = getWorkingDayStart();
 
   // Derived filtered arrays
-  const pending = orders.filter(o => o.status === 'pending');
-
-  useEffect(() => {
-    if (isOpeningAlarm) {
-      if (audioRef.current && audioRef.current.paused && isAudioArmed) {
-        audioRef.current.play().catch(e => console.log('Audio autoplay blocked', e));
-      }
-      return;
-    }
-
-    // Si hay más pendientes que los que hemos silenciado, significa que entró uno nuevo
-    if (pending.length > silencedCount) {
-      if (audioRef.current && audioRef.current.paused && isAudioArmed) {
-        audioRef.current.play().catch(e => console.log('Audio autoplay blocked', e));
-      }
-    } else if (pending.length === 0) {
-      stopAudio();
-      setSilencedCount(0);
-    }
-  }, [pending.length, silencedCount, isOpeningAlarm, isAudioArmed]);
-
-  const cooking = orders.filter(o => o.status === 'cooking');
-  const ready = orders.filter(o => o.status === 'ready' || o.status === 'delivering');
+  const pending = orders.filter(o => o.status === 'pending' && o.delivery_method !== 'local');
+  const cooking = orders.filter(o => o.status === 'cooking' && o.delivery_method !== 'local');
+  const ready = orders.filter(o => (o.status === 'ready' || o.status === 'delivering') && o.delivery_method !== 'local');
+  const mesas = orders.filter(o => o.delivery_method === 'local' && o.status !== 'delivered' && o.status !== 'cancelled');
+  
   const delivered = orders.filter(o => {
     if (o.status !== 'delivered' && o.status !== 'cancelled') return false;
     return new Date(o.created_at).getTime() >= workingDayStart;
@@ -201,10 +183,23 @@ export default function AdminOrders() {
       case 'cooking': return cooking;
       case 'ready': return ready;
       case 'delivered': return delivered;
+      case 'mesas': return mesas;
     }
   };
 
   const currentList = getFilteredOrders();
+
+  const [mesaToPay, setMesaToPay] = useState<string | null>(null);
+
+  const handleCobrarMesa = async (id: string, method: string) => {
+    await supabase.from('orders').update({ 
+      status: 'delivered', 
+      payment_method: method 
+    }).eq('id', id);
+    setMesaToPay(null);
+    setExpandedOrderId(null);
+    fetchOrders();
+  };
 
   const toggleAccordion = (id: string) => {
     if (expandedOrderId === id) {
@@ -281,6 +276,12 @@ export default function AdminOrders() {
           className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'ready' ? 'border-blue-500 text-blue-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
           {t('delivery_ready')} ({ready.length})
+        </button>
+        <button 
+          onClick={() => setActiveTab('mesas')}
+          className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'mesas' ? 'border-orange-500 text-orange-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+        >
+          🍴 Mesas ({mesas.length})
         </button>
         <button 
           onClick={() => setActiveTab('delivered')}
@@ -454,16 +455,35 @@ export default function AdminOrders() {
                             </div>
                           )}
 
-                          {(order.status === 'delivering' || order.status === 'ready') && (
+                          {(order.status === 'delivering' || order.status === 'ready') && order.delivery_method !== 'local' && (
                             <div className="flex gap-3">
                               <button onClick={() => updateOrderStatus(order.id, 'delivered')} className="flex-1 bg-zinc-800 hover:bg-green-600 text-white text-sm font-bold py-3.5 rounded-xl transition-all">
                                 Finalizar Pedido (Entregado)
                               </button>
                             </div>
                           )}
+
+                          {order.delivery_method === 'local' && order.status !== 'delivered' && order.status !== 'cancelled' && (
+                            <div className="mt-4 pt-4 border-t border-zinc-800">
+                              {mesaToPay === order.id ? (
+                                <div className="space-y-3">
+                                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest text-center">¿Cómo pagó el cliente?</p>
+                                  <div className="flex gap-2">
+                                    <button onClick={() => handleCobrarMesa(order.id, 'cash')} className="flex-1 bg-green-600/20 text-green-500 hover:bg-green-600 hover:text-white border border-green-500/50 text-sm font-bold py-3 rounded-xl transition-all">💵 Efectivo</button>
+                                    <button onClick={() => handleCobrarMesa(order.id, 'tpv')} className="flex-1 bg-blue-600/20 text-blue-500 hover:bg-blue-600 hover:text-white border border-blue-500/50 text-sm font-bold py-3 rounded-xl transition-all">💳 Tarjeta (TPV)</button>
+                                  </div>
+                                  <button onClick={() => setMesaToPay(null)} className="w-full text-xs text-zinc-500 hover:text-white mt-2">Cancelar</button>
+                                </div>
+                              ) : (
+                                <button onClick={() => setMesaToPay(order.id)} className="w-full bg-green-600 hover:bg-green-500 text-white text-sm font-bold py-4 rounded-xl transition-all shadow-[0_0_15px_rgba(22,163,74,0.3)]">
+                                  💸 Cobrar y Finalizar Mesa
+                                </button>
+                              )}
+                            </div>
+                          )}
                           
                           {(order.status === 'delivered' || order.status === 'cancelled') && (
-                            <p className="text-center text-zinc-500 font-bold text-sm uppercase">Este pedido ya está cerrado.</p>
+                            <p className="text-center text-zinc-500 font-bold text-sm uppercase mt-4">Este pedido ya está cerrado.</p>
                           )}
                         </div>
                       </div>
