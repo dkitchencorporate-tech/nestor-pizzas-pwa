@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase';
 import { SumUpPaymentModal } from './SumUpPaymentModal';
 import { isStoreOpen, generateAvailableTimeSlots } from '../utils/timeUtils';
 import { useHardwareBack } from '../utils/useHardwareBack';
-import { useHardwareBack } from '../utils/useHardwareBack';
 import { emailService } from '../lib/emailService';
 import { useI18nStore } from '../store/i18nStore';
 import { useSettingsStore } from '../store/settingsStore';
