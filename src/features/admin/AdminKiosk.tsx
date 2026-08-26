@@ -353,7 +353,7 @@ export default function AdminKiosk() {
   };
 
   return (
-    <div className="h-full flex bg-[#0A0A0E] text-white overflow-hidden relative">
+    <div className="h-full flex bg-[#0A0A0E] text-white overflow-hidden relative print:h-auto print:overflow-visible print:block print:bg-white print:text-black">
       
       {/* Notification Toast */}
       {kioskNotification && (
@@ -370,7 +370,7 @@ export default function AdminKiosk() {
       {/* VISTA 1: ASIGNACIÓN DE CLIENTE */}
       {/* ============================================================ */}
       {view === 'client' && (
-        <div className="w-full h-full flex items-center justify-center p-4">
+        <div className="w-full h-full flex items-center justify-center p-4 print:hidden">
           <div className="w-full max-w-xl bg-[#14141E] border border-zinc-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center">
             <h2 className="text-3xl font-display font-black uppercase tracking-widest text-white mb-2">Nuevo Ticket</h2>
             <p className="text-gray-400 mb-8 text-center text-sm">Selecciona cómo se entregará el pedido y a quién.</p>
@@ -504,7 +504,7 @@ export default function AdminKiosk() {
       {/* VISTA 2: CATÁLOGO Y TICKET */}
       {/* ============================================================ */}
       {view === 'catalog' && (
-        <div className="w-full h-full flex gap-4 p-4">
+        <div className="w-full h-full flex gap-4 p-4 print:hidden">
           
           {/* PANEL IZQUIERDO: CATÁLOGO CON SCROLL CONTINUO */}
           <div className="flex-1 bg-[#14141E] border border-zinc-800 rounded-3xl flex flex-col overflow-hidden">
@@ -777,6 +777,9 @@ export default function AdminKiosk() {
           </div>
         </div>
       )}
+
+      {/* Componente invisible para impresión térmica (Adiciones a mesa) */}
+      {printingAdditionalOrder && <TicketPrinter order={printingAdditionalOrder} />}
 
       {/* ESTILOS GLOBALES PARA EL TPV */}
       <style dangerouslySetInnerHTML={{__html: `

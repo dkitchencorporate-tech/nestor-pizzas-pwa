@@ -438,7 +438,7 @@ export default function AdminOrders() {
 
                         {/* Actions Buttons based on status */}
                         <div className="pt-2">
-                          {order.status === 'pending' && (
+                          {order.status === 'pending' && order.delivery_method !== 'local' && (
                             <div className="space-y-2">
                               <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest text-center">Aceptar y Enviar a Cocina</p>
                               <div className="flex gap-2">
@@ -450,7 +450,7 @@ export default function AdminOrders() {
                             </div>
                           )}
 
-                          {order.status === 'cooking' && (
+                          {order.status === 'cooking' && order.delivery_method !== 'local' && (
                             <div className="flex gap-3">
                               <button onClick={() => updateOrderStatus(order.id, isDelivery ? 'delivering' : 'ready')} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3.5 rounded-xl transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)]">
                                 {t('mark_as')} {isDelivery ? t('status_delivering_title').toUpperCase() : t('status_ready_pickup_title').toUpperCase()}
