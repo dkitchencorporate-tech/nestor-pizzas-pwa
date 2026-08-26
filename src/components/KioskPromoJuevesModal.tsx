@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NESTOR_PRODUCTS, Product } from '../data/products';
 import { CartItem } from '../store/cartStore';
 import { useI18nStore } from '../store/i18nStore';
-import { useHardwareBack } from '../hooks/useHardwareBack';
+import { useHardwareBack } from '../utils/useHardwareBack';
 
 interface PromoJuevesModalProps {
   onClose: () => void;

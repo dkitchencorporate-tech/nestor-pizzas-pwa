@@ -2,12 +2,12 @@
   "name": "Néstor Pizzas | Pedidos Oficial Caniles",
   "short_name": "Néstor App",
   "description": "App Oficial de Pedidos, Carta Digital Interactiva, Club VIP y Sorteos de Néstor Pizzas en Caniles y Baza. Tu 1 pizza.",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0A0E",
   "theme_color": "#16A34A",
   "orientation": "portrait",
-  "scope": "./",
+  "scope": "/",
   "icons": [
     {
       "src": "./assets/brand/icon-192x192.png",

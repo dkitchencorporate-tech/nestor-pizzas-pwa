@@ -2,12 +2,12 @@
   "name": "Kitchen POS | Néstor Pizzas",
   "short_name": "Kitchen POS",
   "description": "Panel de Administración y Recepción de Pedidos para Néstor Pizzas.",
-  "start_url": "./admin",
+  "start_url": "/admin",
   "display": "standalone",
   "background_color": "#0A0A0E",
   "theme_color": "#16A34A",
   "orientation": "portrait",
-  "scope": "./",
+  "scope": "/",
   "icons": [
     {
       "src": "./assets/brand/admin-icon-192x192.png",
