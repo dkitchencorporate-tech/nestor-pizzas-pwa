@@ -17,10 +17,18 @@ interface IngredientsModalProps {
 export default function KioskIngredientsModal({ product, onClose, onAdd }: IngredientsModalProps) {
   useHardwareBack(true, onClose);
   const { t } = useI18nStore();
-  
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [activeHalf, setActiveHalf] = useState<'full' | 'left' | 'right'>('full');
-  const [pizzaBase, setPizzaBase] = useState<'Normal' | 'Blanca' | 'Maxxi'>('Normal');
+  const isPizzasBlancas = product.category_id === 'PIZZAS BLANCAS';
+  const isNuestrasPizzas = product.category_id === 'NUESTRAS PIZZAS';
+  const isPorIngredientes = product.category_id === 'POR INGREDIENTES' || product.id === 22;
+  const isMaxxiPizza = product.name.toUpperCase().includes('MAZZI') || product.name.toUpperCase().includes('MAXXI');
+
+  const [pizzaBase, setPizzaBase] = useState<'Normal' | 'Blanca' | 'Maxxi'>(() => {
+    if (isPizzasBlancas) return 'Blanca';
+    if (isMaxxiPizza) return 'Maxxi';
+    return 'Normal';
+  });
   const [itemNotes, setItemNotes] = useState('');
 
   const BASE_PRICE = product.price;
@@ -181,29 +189,37 @@ export default function KioskIngredientsModal({ product, onClose, onAdd }: Ingre
           
           
           {/* Selector de Base */}
-          <div className="mb-4">
-            <h4 className="text-white font-bold mb-2 uppercase tracking-wider text-sm flex items-center gap-2">🍕 Seleccionar Base</h4>
-            <div className="flex gap-2 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
-              <button 
-                onClick={() => setPizzaBase('Normal')}
-                className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Normal' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-green-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
-              >
-                Normal
-              </button>
-              <button 
-                onClick={() => setPizzaBase('Blanca')}
-                className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Blanca' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-blue-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
-              >
-                Blanca
-              </button>
-              <button 
-                onClick={() => setPizzaBase('Maxxi')}
-                className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Maxxi' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-orange-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
-              >
-                Maxxi (+3€)
-              </button>
+          {!isMaxxiPizza && (
+            <div className="mb-4">
+              <h4 className="text-white font-bold mb-2 uppercase tracking-wider text-sm flex items-center gap-2">🍕 Seleccionar Base</h4>
+              <div className="flex gap-2 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+                {(!isPizzasBlancas) && (
+                  <button 
+                    onClick={() => setPizzaBase('Normal')}
+                    className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Normal' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-green-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                  >
+                    Normal
+                  </button>
+                )}
+                {(!isNuestrasPizzas) && (
+                  <button 
+                    onClick={() => setPizzaBase('Blanca')}
+                    className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Blanca' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-blue-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                  >
+                    Blanca
+                  </button>
+                )}
+                {(!isPorIngredientes) && (
+                  <button 
+                    onClick={() => setPizzaBase('Maxxi')}
+                    className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Maxxi' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-orange-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
+                  >
+                    Maxxi (+3€)
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Notas Adicionales */}
           <div className="mb-4">
