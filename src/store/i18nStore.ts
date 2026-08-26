@@ -474,6 +474,7 @@ const dynamicDictionary: Record<string, string> = {
   // Categories
   'PROMOCIONES': 'PROMOTIONS',
   'NUESTRAS PIZZAS': 'OUR PIZZAS',
+  'CALZONES': 'CALZONES',
   'PIZZAS BLANCAS': 'WHITE PIZZAS',
   'NUESTRAS PATATAS': 'OUR FRIES',
   'NUESTRAS BURGUERS': 'OUR BURGERS',
