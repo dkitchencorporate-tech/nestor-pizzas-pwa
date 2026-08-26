@@ -70,6 +70,7 @@ export default function AdminKiosk() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [printingAdditionalOrder, setPrintingAdditionalOrder] = useState<any>(null);
   
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -272,27 +273,44 @@ export default function AdminKiosk() {
 
       // Imprimir directamente desde el kiosko solo si es una adición a mesa
       if (editingOrder) {
+        
+        // Formatear items viejos para que se reconozcan como ya pedidos
+        const oldItems = editingOrder.order_items ? editingOrder.order_items.map((item: any) => ({
+           ...item,
+           is_old: true
+        })) : [];
+
+        // Formatear items nuevos
+        const newItems = formattedItems.map((fi: any) => ({
+            quantity: fi.quantity,
+            unit_price: fi.unit_price,
+            product_id: fi.product_id,
+            customization_details: fi.customization_details,
+            is_new: true
+        }));
+
         const mockOrder = {
           ...editingOrder,
           id: editingOrder.id,
           created_at: new Date().toISOString(),
-          total_amount: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+          total_amount: editingOrder.total_amount + items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
           discount_applied: 0,
           delivery_method: editingOrder.delivery_method,
-          client_name: editingOrder.client_name + ' (ADICIONAL)',
-          order_items: formattedItems.map((fi: any) => ({
-            quantity: fi.quantity,
-            unit_price: fi.unit_price,
-            product_id: fi.product_id,
-            customization_details: fi.customization_details
-          }))
+          client_name: editingOrder.client_name,
+          order_items: [...oldItems, ...newItems],
+          is_mesa_addition: true // Flag to tell TicketPrinter this is an addition
         };
 
         const success1 = await sendToNetworkPrinter(mockOrder);
         const success2 = await sendToNetworkPrinter(mockOrder);
         
         if (!success1 && !success2) {
-           console.warn('Network printer failed. Skipping local print for Mesa additions as requested.');
+           // Fallback temporal para que el cliente pueda probar el formato del ticket visualmente en PDF
+           setPrintingAdditionalOrder(mockOrder);
+           setTimeout(() => {
+             window.print();
+             setTimeout(() => setPrintingAdditionalOrder(null), 1000);
+           }, 300);
         }
       }
 
@@ -775,6 +793,9 @@ export default function AdminKiosk() {
           </div>
         </div>
       )}
+
+      {/* Componente invisible para impresión térmica (Adiciones a mesa) */}
+      {printingAdditionalOrder && <TicketPrinter order={printingAdditionalOrder} />}
 
       {/* ESTILOS GLOBALES PARA EL TPV */}
       <style dangerouslySetInnerHTML={{__html: `
