@@ -11,7 +11,7 @@ interface PromoJuevesModalProps {
 
 export default function KioskPromoJuevesModal({ onClose, onAdd }: PromoJuevesModalProps) {
   const [selectedPizzas, setSelectedPizzas] = useState<Product[]>([]);
-  const { t } = useI18nStore();
+  const { t, tDynamic, lang } = useI18nStore() as any;
   
   useHardwareBack(true, onClose);
 
@@ -96,8 +96,12 @@ export default function KioskPromoJuevesModal({ onClose, onAdd }: PromoJuevesMod
                   className={`bg-zinc-800/50 border border-zinc-700/50 hover:border-green-500/50 rounded-2xl p-3 flex flex-col justify-between transition-all cursor-pointer group ${!isJueves ? 'opacity-50 pointer-events-none' : ''}`}
                 >
                   <div>
-                    <span className="font-bold text-white text-xs sm:text-sm block leading-tight">{pizza.name}</span>
-                    <span className="text-[10px] text-zinc-400 block mt-1 line-clamp-2">{pizza.desc}</span>
+                    <span className="font-bold text-white text-xs sm:text-sm block leading-tight">
+                      {lang === 'en' && pizza.name_en ? pizza.name_en : tDynamic(pizza.name)}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block mt-1 line-clamp-2">
+                      {lang === 'en' && pizza.description_en ? pizza.description_en : tDynamic(pizza.desc)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between mt-3">
                     <span className="font-bold text-zinc-500 text-xs line-through">{pizza.price.toFixed(2)}€</span>

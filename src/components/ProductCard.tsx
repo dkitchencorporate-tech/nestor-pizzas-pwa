@@ -51,12 +51,12 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onCustomize }: ProductCardProps) {
-  const { t, tDynamic, language } = useI18nStore() as any;
+  const { t, tDynamic, lang } = useI18nStore() as any;
   const [showSauceModal, setShowSauceModal] = useState(false);
   const [showAddToCartModal, setShowAddToCartModal] = useState(false);
 
-  const displayName = language === 'en' && product.name_en ? product.name_en : product.name;
-  const displayDesc = language === 'en' && product.description_en ? product.description_en : product.desc;
+  const displayName = lang === 'en' && product.name_en ? product.name_en : tDynamic(product.name);
+  const displayDesc = lang === 'en' && product.description_en ? product.description_en : tDynamic(product.desc);
 
   const handleAdd = () => {
     // Si es Pizza Margarita (ID 22) o Mazzi Pizza (ID 23), o Jueves Locos (999), mostrar personalizador
