@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -14,10 +15,30 @@ export function usePWAInstall() {
       setInstallPrompt(e as BeforeInstallPromptEvent);
     };
 
+    const handleAppInstalled = async () => {
+      console.log('PWA was installed!');
+      const isAdmin = window.location.pathname.startsWith('/admin');
+      
+      // Intentar guardar en Supabase (fallará en silencio si la tabla no existe aún)
+      try {
+        await supabase.from('pwa_analytics').insert([
+          { 
+            device_type: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop',
+            app_type: isAdmin ? 'admin' : 'public',
+            user_agent: navigator.userAgent
+          }
+        ]);
+      } catch (err) {
+        console.error('Error tracking PWA install:', err);
+      }
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 

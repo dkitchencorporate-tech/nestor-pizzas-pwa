@@ -7,6 +7,7 @@ import AdminKiosk from '../features/admin/AdminKiosk';
 import AdminAnalytics from '../features/admin/AdminAnalytics';
 import AdminHistory from '../features/admin/AdminHistory';
 import AdminPrinterSettings from '../features/admin/AdminPrinterSettings';
+import AdminPwaAnalytics from '../features/admin/AdminPwaAnalytics';
 import { supabase } from '../lib/supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useAdminUiStore } from '../store/adminUiStore';
@@ -275,11 +276,18 @@ export default function AdminDashboard() {
           >
             📊 {t('analytics')}
           </button>
-          <button 
-            onClick={() => setActiveTab('printers')}
+          <button
+            onClick={() => { setActiveTab('printers'); setIsSidebarOpen(false); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'printers' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
           >
-            🖨️ Configuración Impresoras
+            🖨️ <span className="uppercase tracking-wider">Impresoras</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('pwa'); setIsSidebarOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'pwa' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+          >
+            📱 <span className="uppercase tracking-wider">PWA Analytics</span>
           </button>
 
           <div className="pt-4 mt-4 border-t border-zinc-800">
@@ -293,7 +301,6 @@ export default function AdminDashboard() {
           </div>
         </nav>
 
-        {/* Global Controls */}
         <div className="p-4 border-t border-zinc-800 space-y-3">
           <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
             <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('emergency_closure')}</h4>
@@ -332,6 +339,7 @@ export default function AdminDashboard() {
         <div className={activeTab === 'kiosk' ? 'block h-full' : 'hidden'}><AdminKiosk /></div>
         <div className={activeTab === 'catalog' ? 'block h-full' : 'hidden'}><AdminCatalog /></div>
         <div className={activeTab === 'analytics' ? 'block h-full' : 'hidden'}><AdminAnalytics /></div>
+        <div className={activeTab === 'pwa' ? 'block h-full overflow-y-auto pt-16 sm:pt-4' : 'hidden'}><AdminPwaAnalytics /></div>
         <div className={activeTab === 'printers' ? 'block h-full overflow-y-auto pt-16 sm:pt-4' : 'hidden'}>
           <div className="p-4 sm:p-8">
             <AdminPrinterSettings />

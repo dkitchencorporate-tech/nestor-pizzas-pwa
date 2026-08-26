@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type AdminTab = 'orders' | 'history' | 'kiosk' | 'catalog' | 'analytics' | 'printers';
+export type AdminTab = 'orders' | 'history' | 'kiosk' | 'catalog' | 'analytics' | 'printers' | 'pwa';
 
 interface AdminUiState {
   activeTab: AdminTab;
