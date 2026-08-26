@@ -44,11 +44,48 @@ export function usePWAInstall() {
 
   const promptToInstall = async () => {
     if (!installPrompt) {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isAdmin = window.location.pathname.startsWith('/admin');
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
+      if (isStandalone) {
+        alert('¡Ya estás usando la App instalada!');
+        return;
+      }
+
+      if (isIOS) {
+         alert('Para instalar en iPhone/iPad:\n1. Pulsa el botón "Compartir" de Safari (cuadrado con flecha).\n2. Selecciona "Añadir a la pantalla de inicio".');
+         return;
+      }
+
+      // Auto-Cache Busting: Si es Android/PC y falla, intentamos purgar la caché automáticamente
+      if (!sessionStorage.getItem('pwa_cache_cleared') && !isAdmin) {
+        sessionStorage.setItem('pwa_cache_cleared', 'true');
+        
+        try {
+          // Purgar Service Workers fantasmas
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) await r.unregister();
+          }
+          // Purgar caché del navegador que bloquea el manifest
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }
+        } catch (e) {
+          console.error('Error purgando caché:', e);
+        }
+        
+        alert('Optimizando conexión para habilitar la descarga segura...\n\nLa página se recargará automáticamente.');
+        window.location.reload();
+        return;
+      }
+
       if (isAdmin) {
-        alert('La aplicación de Administración ya está instalada o tu navegador bloqueó el aviso.\n\nNota: Si ya habías instalado Néstor Pizzas antes, prueba a borrarla de tu pantalla de inicio, limpiar la caché de Chrome, y volver a pulsar este botón.\n\nEn iPhone/iPad: Abre Safari, pulsa "Compartir" y "Añadir a la pantalla de inicio".');
+        alert('La aplicación de Administración ya está instalada o tu navegador bloqueó el aviso.\n\nNota: Si ya habías instalado Néstor Pizzas antes, prueba a borrarla de tu pantalla de inicio y limpiar la caché.');
       } else {
-        alert('Parece que la aplicación ya está instalada en tu dispositivo o tu navegador requiere que limpies la caché para mostrar el aviso de descarga de nuevo.\n\nSi no ves la App en tu móvil:\n1. Ve a los Ajustes de Chrome -> Borrar datos de navegación (Caché).\n2. Vuelve a entrar a nestorpizzas.es.\n\nEn iPhone/iPad: Pulsa el botón "Compartir" de Safari y luego "Añadir a la pantalla de inicio".');
+        alert('El sistema de tu teléfono indica que la aplicación ya está instalada.\n\nSi no la ves en tu pantalla de inicio, el sistema Android la ha bloqueado internamente. Para solucionarlo:\n\n1. Ve a los Ajustes de tu teléfono.\n2. Busca la App "Néstor Pizzas" y dale a Desinstalar.\n3. Vuelve a intentarlo.');
       }
       return;
     }
