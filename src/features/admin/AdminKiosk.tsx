@@ -305,19 +305,7 @@ export default function AdminKiosk() {
         const success2 = await sendToNetworkPrinter(mockOrder);
         
         if (!success1 && !success2) {
-           // Fallback temporal para que el cliente pueda probar el formato del ticket visualmente en PDF
-           setPrintingAdditionalOrder(mockOrder);
-           setTimeout(() => {
-             window.print();
-             setTimeout(() => {
-                setPrintingAdditionalOrder(null);
-                showKioskNotif('¡Añadido a la mesa correctamente!', 'success');
-                resetKiosk();
-                setOrderNotes('');
-                finishEditingOrder(); // Volver a órdenes después de imprimir
-             }, 1000);
-           }, 300);
-           return; // Salimos para no ejecutar el cleanup síncrono de abajo
+           console.warn('Network printer failed. No local printing in mostrador for Mesa additions as requested.');
         }
       }
 
