@@ -191,14 +191,14 @@ export default function KioskIngredientsModal({ product, onClose, onAdd }: Ingre
           {/* Selector de Base */}
           {!isMaxxiPizza && (
             <div className="mb-4">
-              <h4 className="text-white font-bold mb-2 uppercase tracking-wider text-sm flex items-center gap-2">🍕 Seleccionar Base</h4>
+              <h4 className="text-white font-bold mb-2 uppercase tracking-wider text-sm flex items-center gap-2">🍕 {t('select_base')}</h4>
               <div className="flex gap-2 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
                 {(!isPizzasBlancas) && (
                   <button 
                     onClick={() => setPizzaBase('Normal')}
                     className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Normal' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-green-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                   >
-                    Normal
+                    {t('base_normal')}
                   </button>
                 )}
                 {(!isNuestrasPizzas) && (
@@ -206,7 +206,7 @@ export default function KioskIngredientsModal({ product, onClose, onAdd }: Ingre
                     onClick={() => setPizzaBase('Blanca')}
                     className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Blanca' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-blue-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                   >
-                    Blanca
+                    {t('base_blanca')}
                   </button>
                 )}
                 {(!isPorIngredientes) && (
@@ -214,7 +214,7 @@ export default function KioskIngredientsModal({ product, onClose, onAdd }: Ingre
                     onClick={() => setPizzaBase('Maxxi')}
                     className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${pizzaBase === 'Maxxi' ? 'bg-zinc-700 text-white shadow-md border-b-2 border-orange-500' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'}`}
                   >
-                    Maxxi (+3€)
+                    {t('base_maxxi')}
                   </button>
                 )}
               </div>
@@ -223,10 +223,10 @@ export default function KioskIngredientsModal({ product, onClose, onAdd }: Ingre
           
           {/* Notas Adicionales */}
           <div className="mb-4">
-            <label className="text-white font-bold mb-2 uppercase tracking-wider text-sm flex items-center gap-2">📝 Notas Especiales</label>
+            <label className="text-white font-bold mb-2 uppercase tracking-wider text-sm flex items-center gap-2">📝 {t('special_notes')}</label>
             <input 
               type="text" 
-              placeholder="Ej. Sin cebolla, extra tostada..." 
+              placeholder={t('pizza_notes_placeholder')}
               value={itemNotes} 
               onChange={(e) => setItemNotes(e.target.value)} 
               className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:border-green-500 outline-none"
@@ -251,18 +251,19 @@ export default function KioskIngredientsModal({ product, onClose, onAdd }: Ingre
             <div className="flex flex-wrap gap-2">
               {NESTOR_INGREDIENTS_OFICIAL.map(ing => {
                 const isIngSelected = selectedIngredients.includes(ing + (activeHalf === 'left' ? ' (Mitad Izq)' : activeHalf === 'right' ? ' (Mitad Der)' : ''));
+                const isSel = selectedIngredients.includes(ing + (activeHalf === 'left' ? ' (Mitad Izq)' : activeHalf === 'right' ? ' (Mitad Der)' : ''));
                 return (
                   <button
                     key={ing}
                     onClick={() => toggleIngredient(ing)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
-                      isIngSelected 
+                      isSel 
                         ? 'bg-green-500 text-white border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.4)]' 
                         : 'bg-zinc-900 text-gray-300 border-zinc-800 hover:border-green-500/50 hover:bg-zinc-800'
                     }`}
                   >
-                    {ing}
-                    {isIngSelected && <span className="ml-2 bg-black/20 px-1.5 rounded text-xs">+1€</span>}
+                    {tDynamic(ing)}
+                    {isSel && <span className="ml-2 bg-black/20 px-1.5 rounded text-xs">+1€</span>}
                   </button>
                 )
               })}
