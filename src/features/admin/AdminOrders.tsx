@@ -400,7 +400,8 @@ export default function AdminOrders() {
                                 )}
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                           
                           {order.discount_applied > 0 && (
                             <div className="flex justify-between text-sm border-t border-zinc-800/50 pt-2 mt-2">
