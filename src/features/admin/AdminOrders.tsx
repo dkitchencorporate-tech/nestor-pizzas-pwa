@@ -332,6 +332,7 @@ export default function AdminOrders() {
                       {order.status === 'ready' || order.status === 'delivering' ? (isDelivery ? '🛵' : '🛍️') : ''}
                       {order.status === 'delivered' && '✅'}
                       {order.status === 'cancelled' && '❌'}
+                      {order.delivery_method === 'local' && order.status !== 'delivered' && order.status !== 'cancelled' && '🍴'}
                     </div>
                     
                     <div>
@@ -350,7 +351,9 @@ export default function AdminOrders() {
                         <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-mono uppercase tracking-widest">#{order.id.slice(0,5)}</span>
                       </div>
                       <div className="flex gap-3 text-xs font-medium mt-1">
-                        <span className={isDelivery ? 'text-blue-400' : 'text-purple-400'}>{isDelivery ? t('delivery_method_home') : t('delivery_method_pickup')}</span>
+                        <span className={isDelivery ? 'text-blue-400' : (order.delivery_method === 'local' ? 'text-orange-400' : 'text-purple-400')}>
+                          {isDelivery ? t('delivery_method_home') : (order.delivery_method === 'local' ? 'Mesa / Local' : t('delivery_method_pickup'))}
+                        </span>
                         <span className="text-zinc-400">{new Date(order.created_at).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
                         {order.discount_applied > 0 && <span className="text-green-500 font-bold ml-2">🎫 -{order.discount_applied}€ ({t('vip')})</span>}
                         {order.status === 'cancelled' && <span className="text-red-500 font-bold ml-2">{t('cancelled')}</span>}

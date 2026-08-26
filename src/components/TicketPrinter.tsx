@@ -26,7 +26,7 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
         </p>
         
         <h2 className="text-2xl font-black border-b-2 border-black pb-2 mb-2 uppercase">
-          {isDelivery ? t('ticket_delivery') : t('ticket_pickup')}
+          {order.delivery_method === 'local' ? 'MESA / LOCAL' : (isDelivery ? t('ticket_delivery') : t('ticket_pickup'))}
         </h2>
         {order.estimated_ready_at && (
           <p className="text-xl font-black bg-black text-white py-1 uppercase mb-2">

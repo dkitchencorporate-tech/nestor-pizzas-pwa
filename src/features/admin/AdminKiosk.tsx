@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useKioskCartStore, KioskClientInfo } from '../../store/kioskCartStore';
 import { useAdminUiStore } from '../../store/adminUiStore';
+import { sendToNetworkPrinter } from '../../utils/printerService';
+import TicketPrinter from '../../components/TicketPrinter';
 import KioskSauceModal from '../../components/KioskSauceModal';
 import KioskIngredientsModal from '../../components/KioskIngredientsModal';
 import KioskPromoJuevesModal from '../../components/KioskPromoJuevesModal';
 import { CartItem } from '../../store/cartStore';
 import { formatAddress } from '../../utils/addressUtils';
+
 interface Category {
   id: string;
   name: string;
@@ -49,7 +52,6 @@ export default function AdminKiosk() {
     if (editingOrder) {
       clearCart();
       setDeliveryMethod(editingOrder.delivery_method || 'local');
-      setOrderNotes(editingOrder.notes || '');
       setView('catalog');
       if (editingOrder.client_phone) {
         setClientInfo({
@@ -61,26 +63,14 @@ export default function AdminKiosk() {
       }
       setDeliveryMethod(editingOrder.delivery_method || 'local');
       
-      // Load items
-      if (editingOrder.order_items) {
-        editingOrder.order_items.forEach((item: any) => {
-           // We need to match the cart item structure
-           addItem({
-             productId: item.product_id,
-             name: item.customization_details?.name || 'Producto Editado',
-             price: item.unit_price,
-             quantity: item.quantity,
-             notes: item.customization_details?.notes || '',
-             extras: item.customization_details?.extras || []
-           });
-        });
-      }
+      // We purposefully DO NOT load existing items into the cart, 
+      // so the cart only contains NEW items to be added.
     }
   }, [editingOrder]);
 
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [printingAdditionalOrder, setPrintingAdditionalOrder] = useState<any>(null);
   
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -269,24 +259,49 @@ export default function AdminKiosk() {
       };
 
       if (editingOrder) {
-         rpcName = 'update_kiosk_order';
+         rpcName = 'add_items_to_kiosk_order';
          rpcParams = {
             p_order_id: editingOrder.id,
-            p_total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-            p_status: 'pending',
-            p_items: formattedItems,
-            p_notes: orderNotes,
-            p_payment_method: paymentMethod
+            p_extra_total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            p_items: formattedItems
          };
       }
 
       const { data, error } = await supabase.rpc(rpcName, rpcParams);
 
-
       if (error) throw error;
 
+      // Imprimir directamente desde el kiosko solo si es una adición a mesa
+      if (editingOrder) {
+        const mockOrder = {
+          ...editingOrder,
+          id: editingOrder.id,
+          created_at: new Date().toISOString(),
+          total_amount: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+          discount_applied: 0,
+          delivery_method: editingOrder.delivery_method,
+          client_name: editingOrder.client_name + ' (ADICIONAL)',
+          order_items: formattedItems.map((fi: any) => ({
+            quantity: fi.quantity,
+            unit_price: fi.unit_price,
+            product_id: fi.product_id,
+            customization_details: fi.customization_details
+          }))
+        };
 
-      showKioskNotif(editingOrder ? '¡Pedido actualizado correctamente!' : '¡Pedido procesado correctamente!', 'success');
+        const success1 = await sendToNetworkPrinter(mockOrder);
+        const success2 = await sendToNetworkPrinter(mockOrder);
+        
+        if (!success1 && !success2) {
+          setPrintingAdditionalOrder(mockOrder);
+          setTimeout(() => {
+            window.print();
+            setTimeout(() => setPrintingAdditionalOrder(null), 1000);
+          }, 300);
+        }
+      }
+
+      showKioskNotif(editingOrder ? '¡Añadido a la mesa correctamente!' : '¡Pedido procesado correctamente!', 'success');
       resetKiosk();
       setOrderNotes('');
       if (editingOrder) {
@@ -560,7 +575,13 @@ export default function AdminKiosk() {
           {/* PANEL DERECHO: TICKET Y CLIENTE */}
           <div className="w-[400px] flex flex-col gap-4">
             
-            {/* Remove client info box from Catalog view */}
+            {editingOrder && (
+              <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-2xl p-4 flex items-center justify-center">
+                <span className="font-bold text-yellow-500 uppercase tracking-widest text-sm text-center">
+                  ➕ Añadiendo a: {editingOrder.client_name}
+                </span>
+              </div>
+            )}
 
             {/* Ticket de Compra */}
             <div className="bg-[#14141E] border border-zinc-800 rounded-3xl flex-1 flex flex-col shadow-xl overflow-hidden">
