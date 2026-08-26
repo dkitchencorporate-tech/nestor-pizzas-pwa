@@ -44,7 +44,12 @@ export function usePWAInstall() {
 
   const promptToInstall = async () => {
     if (!installPrompt) {
-      alert('La aplicación ya está instalada en este dispositivo o el navegador no soporta la instalación directa.\n\nNota: La App de Pedidos y el Panel de Administración (Kitchen POS) son la MISMA aplicación (PWA). Si ya instalaste "Néstor Pizzas", puedes usar ese mismo icono para entrar como administrador.\n\nEn iPhone/iPad: Abre Safari, pulsa "Compartir" y selecciona "Añadir a la pantalla de inicio".');
+      const isAdmin = window.location.pathname.startsWith('/admin');
+      if (isAdmin) {
+        alert('La aplicación de Administración ya está instalada o tu navegador bloqueó el aviso.\n\nNota: Si ya habías instalado Néstor Pizzas antes, prueba a borrarla de tu pantalla de inicio, limpiar la caché de Chrome, y volver a pulsar este botón.\n\nEn iPhone/iPad: Abre Safari, pulsa "Compartir" y "Añadir a la pantalla de inicio".');
+      } else {
+        alert('Parece que la aplicación ya está instalada en tu dispositivo o tu navegador requiere que limpies la caché para mostrar el aviso de descarga de nuevo.\n\nSi no ves la App en tu móvil:\n1. Ve a los Ajustes de Chrome -> Borrar datos de navegación (Caché).\n2. Vuelve a entrar a nestorpizzas.es.\n\nEn iPhone/iPad: Pulsa el botón "Compartir" de Safari y luego "Añadir a la pantalla de inicio".');
+      }
       return;
     }
 
