@@ -378,12 +378,18 @@ export default function AdminOrders() {
                       {/* Left: Items */}
                       <div>
                         <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('product_summary')}</h4>
-                        <div className="space-y-2">
-                          {order.order_items?.map((item: any) => (
-                            <div key={item.id} className="flex gap-3 text-sm border-b border-zinc-800/50 pb-2">
-                              <span className="font-black text-white w-6 shrink-0">{item.quantity}x</span>
+                        <div className="space-y-3 pl-2 sm:pl-4">
+                          {order.order_items?.map((item: any, index: number) => {
+                            const orderTime = new Date(order.created_at).getTime();
+                            const itemTime = item.created_at ? new Date(item.created_at).getTime() : orderTime;
+                            const isNewAddition = (itemTime - orderTime) > 60000;
+
+                            return (
+                            <div key={index} className={`flex items-start gap-4 ${isNewAddition ? 'bg-green-500/10 border-l-2 border-green-500 p-2 rounded-r-lg' : ''}`}>
+                              <span className="font-black text-white whitespace-nowrap">{item.quantity}x</span>
                               <div className="flex-1 text-zinc-300">
                                 <span>{item.customization_details?.name ? tDynamic(item.customization_details.name) : (item.products?.name ? tDynamic(item.products.name) : t('unknown_product'))}</span>
+                                {isNewAddition && <span className="ml-2 bg-green-500 text-white text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider">Nuevo</span>}
                                 {item.customization_details?.notes && (
                                   <p 
                                     className="text-xs text-orange-400 mt-1 font-bold"

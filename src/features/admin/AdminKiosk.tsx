@@ -70,7 +70,6 @@ export default function AdminKiosk() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [printingAdditionalOrder, setPrintingAdditionalOrder] = useState<any>(null);
   
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -293,11 +292,7 @@ export default function AdminKiosk() {
         const success2 = await sendToNetworkPrinter(mockOrder);
         
         if (!success1 && !success2) {
-          setPrintingAdditionalOrder(mockOrder);
-          setTimeout(() => {
-            window.print();
-            setTimeout(() => setPrintingAdditionalOrder(null), 1000);
-          }, 300);
+           console.warn('Network printer failed. Skipping local print for Mesa additions as requested.');
         }
       }
 
@@ -576,9 +571,12 @@ export default function AdminKiosk() {
           <div className="w-[400px] flex flex-col gap-4">
             
             {editingOrder && (
-              <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-2xl p-4 flex items-center justify-center">
+              <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-2xl p-4 flex flex-col items-center justify-center gap-2">
                 <span className="font-bold text-yellow-500 uppercase tracking-widest text-sm text-center">
                   ➕ Añadiendo a: {editingOrder.client_name}
+                </span>
+                <span className="text-xs text-yellow-500/70 text-center font-medium">
+                  Los productos añadidos se enviarán directo a cocina. No se imprimirá comprobante en mostrador.
                 </span>
               </div>
             )}
@@ -777,9 +775,6 @@ export default function AdminKiosk() {
           </div>
         </div>
       )}
-
-      {/* Componente invisible para impresión térmica (Adiciones a mesa) */}
-      {printingAdditionalOrder && <TicketPrinter order={printingAdditionalOrder} />}
 
       {/* ESTILOS GLOBALES PARA EL TPV */}
       <style dangerouslySetInnerHTML={{__html: `
