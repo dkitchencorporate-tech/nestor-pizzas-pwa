@@ -186,10 +186,6 @@ export default function AdminKiosk() {
       if (error) throw error;
 
       // Asignar cliente y pasar al catálogo
-      const currentMethod = deliveryMethod;
-      clearCart();
-      setDeliveryMethod(currentMethod);
-      setOrderNotes('');
       setClientInfo({
         id: newId,
         full_name: newClientName,
@@ -216,10 +212,6 @@ export default function AdminKiosk() {
   };
 
   const selectClient = (client: KioskClientInfo) => {
-    const currentMethod = deliveryMethod;
-    clearCart();
-    setDeliveryMethod(currentMethod);
-    setOrderNotes('');
     setClientInfo(client);
     setSearchQuery('');
     setSearchResults([]);
@@ -227,8 +219,6 @@ export default function AdminKiosk() {
   };
 
   const skipClientAssignment = () => {
-    clearCart();
-    setOrderNotes('');
     setClientInfo({
       full_name: tableName.trim() ? tableName.trim() : 'Mesa / Local',
       phone: '000000000',
@@ -727,7 +717,7 @@ export default function AdminKiosk() {
               </div>
               <h3 className="font-black text-white text-xl uppercase tracking-widest mb-2">¿Cambiar Cliente?</h3>
               <p className="text-zinc-400 text-sm">
-                Al cambiar de cliente actual, <strong>el carrito se vaciará por completo</strong> y perderás los productos seleccionados.
+                Vas a reasignar este pedido a otro cliente. Tus productos seleccionados <strong>no se borrarán</strong>.
               </p>
             </div>
             <div className="p-4 bg-zinc-900/50 flex gap-4 border-t border-zinc-800">
@@ -739,10 +729,6 @@ export default function AdminKiosk() {
               </button>
               <button 
                 onClick={() => {
-                  const currentMethod = deliveryMethod;
-                  clearCart();
-                  setDeliveryMethod(currentMethod);
-                  setOrderNotes('');
                   setView('client');
                   setShowChangeClientModal(false);
                 }}
