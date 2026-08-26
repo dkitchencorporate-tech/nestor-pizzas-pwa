@@ -16,7 +16,7 @@ interface IngredientsModalProps {
 
 export default function KioskIngredientsModal({ product, onClose, onAdd }: IngredientsModalProps) {
   useHardwareBack(true, onClose);
-  const { t } = useI18nStore();
+  const { t, tDynamic } = useI18nStore() as any;
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [activeHalf, setActiveHalf] = useState<'full' | 'left' | 'right'>('full');
   const isPizzasBlancas = product.category_id === 'PIZZAS BLANCAS';

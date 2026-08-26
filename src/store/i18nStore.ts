@@ -474,6 +474,11 @@ const dictionary: Translations = {
   emergency_closure: { es: 'Cierre de Emergencia', en: 'Emergency Closure' },
   vip_discount_applied: { es: 'Descuento Club VIP Aplicado', en: 'VIP Club Discount Applied' },
   client_details: { es: 'Datos del Cliente', en: 'Client Details' },
+  
+  // Error Boundary
+  error_title: { es: '¡Ups! Algo salió mal.', en: 'Oops! Something went wrong.' },
+  error_desc: { es: 'Nuestros hornos han tenido un pequeño fallo técnico. Por favor, recarga la página para volver a la normalidad.', en: 'Our ovens had a small technical failure. Please, reload the page to return to normal.' },
+  reload_page: { es: 'Recargar Página', en: 'Reload Page' },
 };
 
 const dynamicDictionary: Record<string, string> = {

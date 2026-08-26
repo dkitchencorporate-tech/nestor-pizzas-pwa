@@ -15,7 +15,7 @@ interface IngredientsModalProps {
 
 export default function IngredientsModal({ product, onClose }: IngredientsModalProps) {
   useHardwareBack(true, onClose);
-  const { t } = useI18nStore();
+  const { t, tDynamic } = useI18nStore() as any;
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [activeHalf, setActiveHalf] = useState<'full' | 'left' | 'right'>('full');

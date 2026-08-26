@@ -1,5 +1,26 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
+// Note: ErrorBoundary can't use zustand hooks directly, so we'll read from localStorage manually
+// or fallback to Spanish
+const getTranslation = (key: string) => {
+  try {
+    const store = localStorage.getItem('nestor-i18n');
+    if (store) {
+      const parsed = JSON.parse(store);
+      const lang = parsed.state?.lang || 'es';
+      if (lang === 'en') {
+        if (key === 'error_title') return 'Oops! Something went wrong.';
+        if (key === 'error_desc') return 'Our ovens had a small technical failure. Please, reload the page to return to normal.';
+        if (key === 'reload_page') return 'Reload Page';
+      }
+    }
+  } catch(e) {}
+  if (key === 'error_title') return '¡Ups! Algo salió mal.';
+  if (key === 'error_desc') return 'Nuestros hornos han tenido un pequeño fallo técnico. Por favor, recarga la página para volver a la normalidad.';
+  if (key === 'reload_page') return 'Recargar Página';
+  return key;
+};
+
 interface Props {
   children: ReactNode;
 }
@@ -28,21 +49,19 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#0A0A0E] flex flex-col items-center justify-center p-6 text-center text-white font-display">
-          <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mb-6">
-            <svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+        <div className="min-h-screen bg-[#0A0A0E] flex flex-col items-center justify-center p-4 text-white">
+          <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+            <span className="text-3xl">⚠️</span>
           </div>
-          <h1 className="text-3xl font-black mb-2">¡Ups! Algo salió mal.</h1>
-          <p className="text-zinc-400 max-w-md mb-8">
-            Nuestros hornos han tenido un pequeño fallo técnico. Por favor, recarga la página para volver a la normalidad.
+          <h1 className="text-3xl font-black mb-2">{getTranslation('error_title')}</h1>
+          <p className="text-zinc-400 text-center max-w-md mb-8">
+            {getTranslation('error_desc')}
           </p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
-            className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+            className="px-6 py-3 bg-green-500 hover:bg-green-400 text-white font-bold rounded-xl transition-all"
           >
-            Recargar Página
+            {getTranslation('reload_page')}
           </button>
         </div>
       );
