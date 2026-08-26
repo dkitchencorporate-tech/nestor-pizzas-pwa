@@ -380,9 +380,8 @@ export default function AdminOrders() {
                         <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('product_summary')}</h4>
                         <div className="space-y-3 pl-2 sm:pl-4">
                           {order.order_items?.map((item: any, index: number) => {
-                            const orderTime = new Date(order.created_at).getTime();
-                            const itemTime = item.created_at ? new Date(item.created_at).getTime() : orderTime;
-                            const isNewAddition = (itemTime - orderTime) > 60000;
+                            const itemTime = item.created_at ? new Date(item.created_at).getTime() : new Date(order.created_at).getTime();
+                            const isNewAddition = (Date.now() - itemTime) < 15 * 60000; // Added in the last 15 minutes
 
                             return (
                             <div key={index} className={`flex items-start gap-4 ${isNewAddition ? 'bg-green-500/10 border-l-2 border-green-500 p-2 rounded-r-lg' : ''}`}>

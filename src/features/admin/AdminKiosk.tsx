@@ -309,8 +309,15 @@ export default function AdminKiosk() {
            setPrintingAdditionalOrder(mockOrder);
            setTimeout(() => {
              window.print();
-             setTimeout(() => setPrintingAdditionalOrder(null), 1000);
+             setTimeout(() => {
+                setPrintingAdditionalOrder(null);
+                showKioskNotif('¡Añadido a la mesa correctamente!', 'success');
+                resetKiosk();
+                setOrderNotes('');
+                finishEditingOrder(); // Volver a órdenes después de imprimir
+             }, 1000);
            }, 300);
+           return; // Salimos para no ejecutar el cleanup síncrono de abajo
         }
       }
 
