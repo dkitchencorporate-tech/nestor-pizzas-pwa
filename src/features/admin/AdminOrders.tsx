@@ -154,6 +154,40 @@ export default function AdminOrders() {
     fetchOrders();
   };
 
+  const handleAcceptMesa = async (id: string, order: any) => {
+    stopAudio();
+    
+    // Identificar los items que no han sido enviados a cocina
+    const unsentItems = order.order_items?.filter((item: any) => !item.customization_details?.is_sent_to_kitchen) || [];
+    
+    if (unsentItems.length > 0) {
+      // Formatear el pedido para imprimir solo los nuevos o marcarlos
+      const orderToPrint = {
+        ...order,
+        order_items: order.order_items.map((item: any) => ({
+          ...item,
+          is_new: !item.customization_details?.is_sent_to_kitchen,
+          is_old: item.customization_details?.is_sent_to_kitchen
+        }))
+      };
+      
+      await handlePrint(orderToPrint);
+
+      // Actualizar la base de datos para marcar estos items como enviados
+      for (const item of unsentItems) {
+        const newDetails = { ...item.customization_details, is_sent_to_kitchen: true };
+        await supabase.from('order_items').update({ customization_details: newDetails }).eq('id', item.id);
+      }
+    }
+    
+    // Si la mesa estaba en pending, la pasamos a cooking
+    if (order.status === 'pending') {
+      await supabase.from('orders').update({ status: 'cooking' }).eq('id', id);
+    }
+    
+    fetchOrders();
+  };
+
   // Calculate the start of the current "working day" (05:00 AM cutoff)
   const getWorkingDayStart = () => {
     const now = new Date();
@@ -167,7 +201,7 @@ export default function AdminOrders() {
   const workingDayStart = getWorkingDayStart();
 
   // Derived filtered arrays
-  const pending = orders.filter(o => o.status === 'pending' && o.delivery_method !== 'local');
+  const pending = orders.filter(o => (o.status === 'pending' || (o.delivery_method === 'local' && o.order_items?.some((i: any) => !i.customization_details?.is_sent_to_kitchen))) && o.delivery_method !== 'local');
   const cooking = orders.filter(o => o.status === 'cooking' && o.delivery_method !== 'local');
   const ready = orders.filter(o => (o.status === 'ready' || o.status === 'delivering') && o.delivery_method !== 'local');
   const mesas = orders.filter(o => o.delivery_method === 'local' && o.status !== 'delivered' && o.status !== 'cancelled');
@@ -303,13 +337,15 @@ export default function AdminOrders() {
           currentList.map(order => {
             const isExpanded = expandedOrderId === order.id;
             const isDelivery = order.delivery_method === 'delivery';
+            const hasUnsentMesaItems = order.delivery_method === 'local' && order.order_items?.some((i: any) => !i.customization_details?.is_sent_to_kitchen);
+            const isAlerting = order.status === 'pending' || hasUnsentMesaItems;
             const isTPV = order.order_items?.[0]?.customization_details?.is_tpv_order === true;
 
             return (
               <div 
                 key={order.id} 
                 className={`bg-[#14141E] border rounded-2xl overflow-hidden transition-all duration-300 ${
-                  order.status === 'pending' ? 'border-red-500/80 shadow-[0_0_25px_rgba(239,68,68,0.5)] animate-pulse' : 
+                  isAlerting ? 'border-red-500/80 shadow-[0_0_25px_rgba(239,68,68,0.5)] animate-pulse' : 
                   isTPV ? 'border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]' :
                   isExpanded ? 'border-zinc-500 shadow-xl' : 'border-zinc-800 hover:border-zinc-700'
                 }`}
@@ -321,14 +357,14 @@ export default function AdminOrders() {
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center text-xl font-bold ${
-                      order.status === 'pending' ? 'bg-red-500/20 text-red-500 border border-red-500/50' :
+                      isAlerting ? 'bg-red-500/20 text-red-500 border border-red-500/50' :
                       order.status === 'cooking' ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/50' :
                       order.status === 'ready' || order.status === 'delivering' ? 'bg-blue-500/20 text-blue-500 border border-blue-500/50' :
                       order.status === 'cancelled' ? 'bg-zinc-800/80 text-zinc-500 border border-zinc-700' :
                       'bg-green-500/20 text-green-500 border border-green-500/50'
                     }`}>
-                      {order.status === 'pending' && '🚨'}
-                      {order.status === 'cooking' && '🔥'}
+                      {isAlerting && '🚨'}
+                      {order.status === 'cooking' && !hasUnsentMesaItems && '🔥'}
                       {order.status === 'ready' || order.status === 'delivering' ? (isDelivery ? '🛵' : '🛍️') : ''}
                       {order.status === 'delivered' && '✅'}
                       {order.status === 'cancelled' && '❌'}
@@ -388,7 +424,10 @@ export default function AdminOrders() {
                               <span className="font-black text-white whitespace-nowrap">{item.quantity}x</span>
                               <div className="flex-1 text-zinc-300">
                                 <span>{item.customization_details?.name ? tDynamic(item.customization_details.name) : (item.products?.name ? tDynamic(item.products.name) : t('unknown_product'))}</span>
-                                {isNewAddition && <span className="ml-2 bg-green-500 text-white text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider">Nuevo</span>}
+                                {order.delivery_method === 'local' && !item.customization_details?.is_sent_to_kitchen && (
+                                  <span className="ml-2 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">Pendiente</span>
+                                )}
+                                {isNewAddition && order.delivery_method !== 'local' && <span className="ml-2 bg-green-500 text-white text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider">Nuevo</span>}
                                 {item.customization_details?.notes && (
                                   <p 
                                     className="text-xs text-orange-400 mt-1 font-bold"
@@ -444,6 +483,20 @@ export default function AdminOrders() {
 
                         {/* Actions Buttons based on status */}
                         <div className="pt-2">
+                          
+                          {/* Botón Aceptar Mesa */}
+                          {order.delivery_method === 'local' && (order.status === 'pending' || hasUnsentMesaItems) && (
+                            <div className="space-y-2 mb-4 border-b border-zinc-800 pb-4">
+                              <p className="text-xs font-bold text-red-500 uppercase tracking-widest text-center animate-pulse">¡Nuevos Productos en Mesa!</p>
+                              <button 
+                                onClick={() => handleAcceptMesa(order.id, order)} 
+                                className="w-full bg-red-600 hover:bg-red-500 text-white text-sm font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)] flex items-center justify-center gap-2"
+                              >
+                                <span>🔥</span> Aceptar y Enviar Nuevos a Cocina
+                              </button>
+                            </div>
+                          )}
+
                           {order.status === 'pending' && order.delivery_method !== 'local' && (
                             <div className="space-y-2">
                               <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest text-center">Aceptar y Enviar a Cocina</p>

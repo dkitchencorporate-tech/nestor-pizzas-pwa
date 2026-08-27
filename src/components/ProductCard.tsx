@@ -2,6 +2,7 @@ import { useState } from 'react';
 import DOMPurify from 'dompurify';
 import SauceModal from './SauceModal';
 import AddToCartModal from './AddToCartModal';
+import SubcategoryModal from './SubcategoryModal';
 import { useI18nStore } from '../store/i18nStore';
 
 interface Product {
@@ -16,6 +17,8 @@ interface Product {
   badge: string;
   img?: string;
   img_url?: string;
+  isGroup?: boolean;
+  subProducts?: Product[];
 }
 
 // Utilidad para resaltar ingredientes en la descripción
@@ -56,6 +59,7 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
   const { t, tDynamic, lang } = useI18nStore() as any;
   const [showSauceModal, setShowSauceModal] = useState(false);
   const [showAddToCartModal, setShowAddToCartModal] = useState(false);
+  const [showSubcategoryModal, setShowSubcategoryModal] = useState(false);
 
   const rawName = product.name || '';
   const rawNameEn = product.name_en || '';
@@ -66,6 +70,12 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
   const displayDesc = lang === 'en' && rawDescEn ? rawDescEn : tDynamic(rawDesc);
 
   const handleAdd = () => {
+    // Si es un grupo de subcategoría, mostrar modal de subcategoría
+    if (product.isGroup) {
+      setShowSubcategoryModal(true);
+      return;
+    }
+
     // Si es Pizza Margarita (ID 22) o Mazzi Pizza (ID 23), o Jueves Locos (999), mostrar personalizador
     
     const isPizza = product.category?.includes('PIZZA') || product.category === 'NUESTRAS PIZZAS' || product.category === 'PIZZAS BLANCAS' || product.category === 'MAZZI PIZZAS';
@@ -108,9 +118,15 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
           )}
 
           {/* Precio */}
-          <span className="absolute bottom-3 right-3 z-20 bg-black border-2 border-green-500/70 text-white font-display font-black text-lg sm:text-xl px-4 py-1.5 rounded-xl shadow-2xl leading-none">
-            {(product.price || 0).toFixed(2).replace('.', ',')} €
-          </span>
+          {!product.isGroup ? (
+            <span className="absolute bottom-3 right-3 z-20 bg-black border-2 border-green-500/70 text-white font-display font-black text-lg sm:text-xl px-4 py-1.5 rounded-xl shadow-2xl leading-none">
+              {(product.price || 0).toFixed(2).replace('.', ',')} €
+            </span>
+          ) : (
+            <span className="absolute bottom-3 right-3 z-20 bg-black/80 border-2 border-zinc-500/50 text-white font-display font-bold text-xs sm:text-sm px-3 py-1.5 rounded-xl shadow-2xl">
+              {t('from')} {(product.price || 0).toFixed(2).replace('.', ',')} €
+            </span>
+          )}
         </div>
 
         <div className="p-5 flex flex-col flex-1 gap-3">
@@ -124,10 +140,14 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
           {/* Botón de pedido */}
           <button
             onClick={handleAdd}
-            className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-green-600 hover:to-green-700 text-white font-display font-black py-3.5 rounded-2xl text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg hover:shadow-[0_10px_25px_-5px_rgba(22,163,74,0.4)] flex items-center justify-center gap-2"
+            className={`w-full font-display font-black py-3.5 rounded-2xl text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 ${
+              product.isGroup 
+                ? 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700' 
+                : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-green-600 hover:to-green-700 text-white hover:shadow-[0_10px_25px_-5px_rgba(22,163,74,0.4)]'
+            }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
-            <span>{t('order_now')}</span>
+            {!product.isGroup && <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>}
+            <span>{product.isGroup ? t('view_options') : t('order_now')}</span>
           </button>
         </div>
       </div>
@@ -138,6 +158,10 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
 
       {showAddToCartModal && (
         <AddToCartModal product={product} onClose={() => setShowAddToCartModal(false)} />
+      )}
+
+      {showSubcategoryModal && product.isGroup && (
+        <SubcategoryModal productGroup={product} onClose={() => setShowSubcategoryModal(false)} />
       )}
     </>
   );
