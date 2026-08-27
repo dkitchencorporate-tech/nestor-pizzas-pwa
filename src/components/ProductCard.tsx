@@ -9,8 +9,9 @@ interface Product {
   category: string;
   name: string;
   name_en?: string;
-  desc: string;
+  description?: string;
   description_en?: string;
+  desc?: string; // Legacy fallback
   price: number;
   badge: string;
   img?: string;
@@ -19,6 +20,7 @@ interface Product {
 
 // Utilidad para resaltar ingredientes en la descripción
 const highlightIngredients = (desc: string) => {
+  if (!desc) return null;
   // Ingredientes clave a resaltar (en mayúsculas/minúsculas)
   const keyIngredients = ['mozzarella', 'tomate', 'york', 'queso de cabra', 'cebolla', 'carne kebab', 'salsa kebab', 'piña', 'champiñón', 'atún', 'bacon', 'serrano', 'salami', 'salchichas', 'gambas', 'delicias de mar', 'peperoni', 'ternera', 'salsa picante', 'salsa barbacoa', 'salsa cheddar', 'salsa boloñesa', 'pollo al curry', 'salsa carbonara', 'nata', 'huevo', 'cinco quesos', 'pulled pork', 'salsa BBQ', 'doble cheddar', 'hamburguesa artesana'];
   
@@ -55,8 +57,13 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
   const [showSauceModal, setShowSauceModal] = useState(false);
   const [showAddToCartModal, setShowAddToCartModal] = useState(false);
 
-  const displayName = lang === 'en' && product.name_en ? product.name_en : tDynamic(product.name);
-  const displayDesc = lang === 'en' && product.description_en ? product.description_en : tDynamic(product.desc);
+  const rawName = product.name || '';
+  const rawNameEn = product.name_en || '';
+  const displayName = lang === 'en' && rawNameEn ? rawNameEn : tDynamic(rawName);
+
+  const rawDesc = product.description || product.desc || '';
+  const rawDescEn = product.description_en || '';
+  const displayDesc = lang === 'en' && rawDescEn ? rawDescEn : tDynamic(rawDesc);
 
   const handleAdd = () => {
     // Si es Pizza Margarita (ID 22) o Mazzi Pizza (ID 23), o Jueves Locos (999), mostrar personalizador
@@ -109,9 +116,9 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
         <div className="p-5 flex flex-col flex-1 gap-3">
           <div className="flex-1">
             <h3 className="font-display font-black text-lg sm:text-xl text-white uppercase tracking-wide leading-tight group-hover:text-green-400 transition-colors">
-              {displayName || tDynamic(product.name)}
+              {displayName}
             </h3>
-            {highlightIngredients(displayDesc || tDynamic(product.desc || ''))}
+            {highlightIngredients(displayDesc)}
           </div>
 
           {/* Botón de pedido */}

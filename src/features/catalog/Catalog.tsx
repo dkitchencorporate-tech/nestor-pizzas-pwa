@@ -48,7 +48,7 @@ export default function Catalog() {
               category_id: sub.category_id,
               name: sub.name,
               name_en: sub.name_en,
-              desc: sub.description || `Selecciona tus opciones de ${sub.name.toLowerCase()}`,
+              description: sub.description || `Selecciona tus opciones de ${sub.name.toLowerCase()}`,
               description_en: sub.description_en || `Select your ${sub.name_en.toLowerCase()} options`,
               price: minPrice,
               img_url: sub.img_url || subProducts[0].img_url,
@@ -326,7 +326,7 @@ export default function Catalog() {
                   )}
                 </div>
                 <p className="text-sm text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed pt-1">
-                  {(lang === 'en' && cat.description_en) ? cat.description_en : tDynamic(cat.desc || cat.description)}
+                  {(lang === 'en' && cat.description_en) ? cat.description_en : tDynamic(cat.description || cat.desc || '')}
                 </p>
                 <div className="w-16 h-0.5 bg-green-500/50 mx-auto mt-4 rounded-full"></div>
               </div>

@@ -24,7 +24,10 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
   const [groupQuantities, setGroupQuantities] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState('');
   const addItem = useCartStore(state => state.addItem);
-  const { t, tDynamic } = useI18nStore();
+  const { t, tDynamic, lang } = useI18nStore() as any;
+
+  const displayName = lang === 'en' && (product as any).name_en ? (product as any).name_en : tDynamic(product.name);
+  const displayDesc = lang === 'en' && (product as any).description_en ? (product as any).description_en : tDynamic(product.desc || '');
 
   const finalPrice = product.isGroup && product.subProducts
     ? Object.entries(groupQuantities).reduce((acc, [id, qty]) => {
@@ -81,13 +84,13 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
         <div className="p-5 pt-6 sm:pt-6 border-b border-zinc-800 bg-gradient-to-r from-zinc-900 to-[#14141E] flex items-start justify-between shrink-0">
           <div>
             <h2 className="font-display font-black text-xl text-white uppercase tracking-wider pr-4">
-              {tDynamic(product.name)}
+              {displayName}
             </h2>
             {!product.isGroup && (
               <p className="text-green-400 font-bold mt-1 text-lg">{product.price.toFixed(2).replace('.', ',')} €</p>
             )}
             {product.isGroup && (
-              <p className="text-zinc-400 text-sm mt-1">{product.desc ? tDynamic(product.desc) : t('choose_options')}</p>
+              <p className="text-zinc-400 text-sm mt-1">{displayDesc || t('choose_options')}</p>
             )}
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors bg-zinc-900 hover:bg-zinc-800 p-2 rounded-xl shrink-0">
@@ -105,7 +108,9 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
                 {product.subProducts.map(sub => (
                   <div key={sub.id} className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-3">
                     <div className="flex flex-col">
-                      <span className="text-white font-bold text-sm">{tDynamic(sub.name)}</span>
+                      <span className="text-white font-bold text-sm">
+                        {lang === 'en' && sub.name_en ? sub.name_en : tDynamic(sub.name)}
+                      </span>
                       <span className="text-green-400 font-bold text-sm">{sub.price.toFixed(2).replace('.', ',')} €</span>
                     </div>
                     <div className="flex items-center gap-3">

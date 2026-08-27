@@ -15,7 +15,8 @@ interface IngredientsModalProps {
 
 export default function IngredientsModal({ product, onClose }: IngredientsModalProps) {
   useHardwareBack(true, onClose);
-  const { t, tDynamic } = useI18nStore() as any;
+  const { t, tDynamic, lang } = useI18nStore() as any;
+  const displayName = lang === 'en' && (product as any).name_en ? (product as any).name_en : tDynamic(product.name);
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [activeHalf, setActiveHalf] = useState<'full' | 'left' | 'right'>('full');
@@ -237,7 +238,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
 
           <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
              <div className="flex justify-between items-center mb-1">
-                <h4 className="text-white font-bold uppercase text-lg">{product.name} {t('base_label')}</h4>
+                <h4 className="text-white font-bold uppercase text-lg">{displayName} {t('base_label')}</h4>
                 <span className="text-green-400 font-bold text-lg">{BASE_PRICE.toFixed(2).replace('.', ',')}€</span>
              </div>
              <p className="text-sm text-gray-400">33cm - {product.desc}</p>
