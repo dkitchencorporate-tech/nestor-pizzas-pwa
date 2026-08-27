@@ -328,6 +328,9 @@ const dictionary: Translations = {
   config_pizza_ingredients: { es: 'Configura tu pizza seleccionando tus ingredientes favoritos (+1,00€/ud)', en: 'Configure your pizza by selecting your favorite ingredients (+1.00€/ea)' },
   base_label: { es: '(BASE)', en: '(BASE)' },
   add_extra_ingredients: { es: 'Añade Ingredientes Extras', en: 'Add Extra Ingredients' },
+  new_pizza: { es: 'Nueva Pizza', en: 'New Pizza' },
+  from: { es: 'Desde', en: 'From' },
+  view_options: { es: 'Ver Opciones', en: 'View Options' },
   total_pizza: { es: 'Total Pizza', en: 'Total Pizza' },
   add_to_order: { es: 'AÑADIR AL PEDIDO', en: 'ADD TO ORDER' },
 
@@ -568,6 +571,7 @@ const dynamicDictionary: Record<string, string> = {
   'AGUAS': 'WATER',
   'CERVEZAS': 'BEERS',
   'REFRESCOS GRANDES': 'LARGE SOFT DRINKS',
+  'REFESCOS GRANDES': 'LARGE SOFT DRINKS',
   'REFRESCOS': 'SOFT DRINKS',
   'TINTOS': 'RED WINES',
   'NUGUETTS (6 UND)': 'NUGGETS (6 PCS)',
