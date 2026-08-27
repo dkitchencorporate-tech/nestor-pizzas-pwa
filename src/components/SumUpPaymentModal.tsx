@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useI18nStore } from '../store/i18nStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
 
 interface SumUpPaymentModalProps {

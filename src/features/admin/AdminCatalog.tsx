@@ -370,42 +370,6 @@ export default function AdminCatalog() {
         </>
       )}
 
-      {renameModal.isOpen && (
-        <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#14141E] border border-zinc-800 rounded-3xl p-6 w-full max-w-md shadow-2xl">
-            <h2 className="text-xl font-display font-black text-white uppercase mb-4">Renombrar: {renameModal.oldSub}</h2>
-            <p className="text-xs text-gray-400 mb-6">Esto actualizará el nombre de esta subcategoría en todos los productos que la tengan asignada. La App Pública se actualizará automáticamente.</p>
-            
-            <form onSubmit={handleRenameSubcategory} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-yellow-500 uppercase tracking-wider mb-2">Nuevo Nombre (ES)</label>
-                <input
-                  type="text"
-                  required
-                  value={renameModal.newSub}
-                  onChange={e => setRenameModal({...renameModal, newSub: e.target.value.toUpperCase()})}
-                  className="w-full bg-[#1A1A24] border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-yellow-500 outline-none uppercase"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Nuevo Nombre (EN)</label>
-                <input
-                  type="text"
-                  required
-                  value={renameModal.newSubEn}
-                  onChange={e => setRenameModal({...renameModal, newSubEn: e.target.value.toUpperCase()})}
-                  className="w-full bg-[#1A1A24] border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none uppercase"
-                />
-              </div>
-              <div className="flex gap-2 pt-4">
-                <button type="button" onClick={() => setRenameModal({...renameModal, isOpen: false})} className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-sm transition-colors">Cancelar</button>
-                <button type="submit" className="flex-1 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl text-sm transition-colors shadow-lg shadow-yellow-500/20">Renombrar a {renameModal.newSub}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {categoryModal.isOpen && (
         <AdminCategoryForm
           category={categoryModal.data}

@@ -20,9 +20,9 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [activeHalf, setActiveHalf] = useState<'full' | 'left' | 'right'>('full');
-  const isPizzasBlancas = product.category_id === 'PIZZAS BLANCAS';
-  const isNuestrasPizzas = product.category_id === 'NUESTRAS PIZZAS';
-  const isPorIngredientes = product.category_id === 'POR INGREDIENTES' || product.id === 22;
+  const isPizzasBlancas = product.category === 'PIZZAS BLANCAS';
+  const isNuestrasPizzas = product.category === 'NUESTRAS PIZZAS';
+  const isPorIngredientes = product.category === 'POR INGREDIENTES' || product.id === 22;
   const isMaxxiPizza = product.name.toUpperCase().includes('MAZZI') || product.name.toUpperCase().includes('MAXXI');
 
   const [pizzaBase, setPizzaBase] = useState<'Normal' | 'Blanca' | 'Maxxi'>(() => {
@@ -34,7 +34,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
   const addItem = useCartStore(state => state.addItem);
 
   const BASE_PRICE = product.price;
-  const isCustomPizza = product.name.toUpperCase().includes('MAZZI') || product.category_id === 'POR INGREDIENTES' || product.id === 22;
+  const isCustomPizza = product.name.toUpperCase().includes('MAZZI') || product.category === 'POR INGREDIENTES' || product.id === 22;
 
   const toggleIngredient = (baseIng: string) => {
     const suffix = activeHalf === 'left' ? ' (Mitad Izq)' : activeHalf === 'right' ? ' (Mitad Der)' : '';

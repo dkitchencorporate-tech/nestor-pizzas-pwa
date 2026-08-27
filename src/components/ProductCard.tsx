@@ -68,7 +68,7 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
   const handleAdd = () => {
     // Si es Pizza Margarita (ID 22) o Mazzi Pizza (ID 23), o Jueves Locos (999), mostrar personalizador
     
-    const isPizza = product.category_id?.includes('PIZZA') || product.category_id === 'NUESTRAS PIZZAS' || product.category_id === 'PIZZAS BLANCAS' || product.category_id === 'MAZZI PIZZAS';
+    const isPizza = product.category?.includes('PIZZA') || product.category === 'NUESTRAS PIZZAS' || product.category === 'PIZZAS BLANCAS' || product.category === 'MAZZI PIZZAS';
     if ((isPizza || product.id === 22 || product.id === 23 || product.id === 999) && onCustomize) {
 
       onCustomize(product);

@@ -593,7 +593,6 @@ const dynamicDictionary: Record<string, string> = {
   
   // Nombres de Productos Faltantes
   'MILANESA': 'MILANESE',
-  'CALABRESA': 'CALABRESE',
   'KEBAB': 'KEBAB',
   'FLORENTINA': 'FLORENTINE',
   'SICILIANA': 'SICILIAN',

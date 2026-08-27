@@ -121,7 +121,7 @@ function App() {
 
   if (currentView === 'admin') {
     return (
-      <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">Cargando Administración...</div>}>
+      <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">{t('loading')} Administración...</div>}>
         <AdminDashboard />
       </Suspense>
     );
@@ -153,7 +153,7 @@ function App() {
       {/* Main Catalog View */}
       {currentView === 'catalog' && (
         <>
-          <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">Cargando Catálogo...</div>}>
+          <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">{t('loading')} {t('catalog')}...</div>}>
             <Catalog />
           </Suspense>
 
@@ -223,7 +223,7 @@ function App() {
       )}
 
       {currentView === 'tracking' && (
-        <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">Cargando Seguimiento...</div>}>
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">{t('loading')} Tracking...</div>}>
           <OrderTracking onBack={() => setCurrentView('catalog')} />
         </Suspense>
       )}
