@@ -479,6 +479,26 @@ const dictionary: Translations = {
   error_title: { es: '¡Ups! Algo salió mal.', en: 'Oops! Something went wrong.' },
   error_desc: { es: 'Nuestros hornos han tenido un pequeño fallo técnico. Por favor, recarga la página para volver a la normalidad.', en: 'Our ovens had a small technical failure. Please, reload the page to return to normal.' },
   reload_page: { es: 'Recargar Página', en: 'Reload Page' },
+  
+  // Modals & New Strings
+  sumup_title: { es: 'Pago con Tarjeta', en: 'Card Payment' },
+  sumup_subtitle: { es: 'SumUp Secure Gateway', en: 'SumUp Secure Gateway' },
+  sumup_approved: { es: '¡Pago Aprobado!', en: 'Payment Approved!' },
+  sumup_success: { es: 'Transacción completada exitosamente.', en: 'Transaction completed successfully.' },
+  sumup_pending: { es: 'Widget de SumUp pendiente de credenciales.', en: 'SumUp Widget pending credentials.' },
+  sumup_waiting: { es: '(Esperando Client_ID y SDK Keys)', en: '(Waiting for Client_ID and SDK Keys)' },
+  sumup_cancelled: { es: 'El pago fue cancelado o rechazado. Por favor, intenta con otro método de pago o elige Recogida en local.', en: 'Payment was cancelled or rejected. Please try another payment method or choose Local Pickup.' },
+  
+  error_integrity: { es: 'Error de integridad en el pedido. Por favor, recarga la página e inténtalo de nuevo.', en: 'Order integrity error. Please reload the page and try again.' },
+  error_too_many: { es: 'Has realizado demasiados pedidos en poco tiempo. Espera unos minutos.', en: 'You have placed too many orders in a short time. Wait a few minutes.' },
+  error_unavailable: { es: 'Un artículo de tu carrito ya no está disponible. Por favor, retíralo e inténtalo de nuevo.', en: 'An item in your cart is no longer available. Please remove it and try again.' },
+  error_processing: { es: 'Hubo un error procesando el pedido. Por favor, inténtalo de nuevo.', en: 'There was an error processing the order. Please try again.' },
+  
+  geofence_no_support: { es: 'Tu navegador no soporta geolocalización. Necesitamos validar tu ubicación para asegurar que podrás disfrutar de nuestras pizzas calientes.', en: 'Your browser does not support geolocation. We need to validate your location to ensure you can enjoy our hot pizzas.' },
+  geofence_too_far: { es: 'Nuestro radio máximo para realizar pedidos por la app es de 10 km. Para pedidos excepcionales o de alto volumen, contáctanos.', en: 'Our maximum radius for app orders is 10 km. For exceptional or high-volume orders, contact us.' },
+  geofence_denied: { es: 'Necesitamos acceso a tu ubicación para verificar el radio de cobertura de Néstor Pizzas. Por favor, actívala en tu navegador.', en: 'We need access to your location to verify Néstor Pizzas coverage area. Please enable it in your browser.' },
+  distance_away: { es: 'Estás a', en: 'You are' },
+  km_from_caniles: { es: 'km de Caniles.', en: 'km from Caniles.' }
 };
 
 const dynamicDictionary: Record<string, string> = {
@@ -544,9 +564,19 @@ const dynamicDictionary: Record<string, string> = {
   'PICANTE': 'SPICY',
   'VEGANO': 'VEGAN',
   'VEGETARIANO': 'VEGETARIAN',
-  'CERVEZAS': 'BEERS',
-  'REFRESCOS': 'SOFT DRINKS',
+  'CALABRESA': 'CALABRESE',
   'AGUAS': 'WATER',
+  'CERVEZAS': 'BEERS',
+  'REFRESCOS GRANDES': 'LARGE SOFT DRINKS',
+  'REFRESCOS': 'SOFT DRINKS',
+  'TINTOS': 'RED WINES',
+  'NUGUETTS (6 UND)': 'NUGGETS (6 PCS)',
+  'AROS (8 UND)': 'ONION RINGS (8 PCS)',
+  'ALITAS (6 UND)': 'CHICKEN WINGS (6 PCS)',
+  'ALITAS (BARBACOA)': 'BBQ WINGS (6 PCS)',
+  'ALITAS (PICANTES)': 'SPICY WINGS (6 PCS)',
+  'DELICIAS DE POLLO': 'CHICKEN DELIGHTS',
+  'TEQUEÑOS (5 UND)': 'TEQUEÑOS (5 PCS)',
   'SOLO JUEVES': 'THURSDAYS ONLY',
   'JUEVES LOCOS (2X11€)': 'CRAZY THURSDAYS (2X11€)',
   'SALSA ALIOLI': 'AIOLI SAUCE',

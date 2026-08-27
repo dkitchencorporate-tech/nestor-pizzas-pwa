@@ -86,7 +86,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
     return new Promise<boolean>((resolve) => {
       if (!navigator.geolocation) {
-        setGeofenceError("Tu navegador no soporta geolocalización. Necesitamos validar tu ubicación para asegurar que podrás disfrutar de nuestras pizzas calientes.");
+        setGeofenceError(t('geofence_no_support'));
         resolve(false);
         return;
       }
@@ -105,7 +105,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
           
           if (distance > 10) {
-            setGeofenceError(`Estás a ${distance.toFixed(1)} km de Caniles. Nuestro radio máximo para realizar pedidos por la app es de 10 km. Para pedidos excepcionales o de alto volumen, contáctanos.`);
+            setGeofenceError(`${t('distance_away')} ${distance.toFixed(1)} ${t('km_from_caniles')} ${t('geofence_too_far')}`);
             resolve(false);
           } else {
             resolve(true);
@@ -113,7 +113,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         },
         (error) => {
           console.error(error);
-          setGeofenceError("Necesitamos acceso a tu ubicación para verificar el radio de cobertura de Néstor Pizzas. Por favor, actívala en tu navegador.");
+          setGeofenceError(t('geofence_denied'));
           resolve(false);
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -203,12 +203,12 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
     } catch (error: any) {
       console.error('Error procesando pedido:', error);
       const friendlyMsg = error?.message?.includes('Manipulación') 
-        ? 'Error de integridad en el pedido. Por favor, recarga la página e inténtalo de nuevo.'
+        ? t('error_integrity')
         : error?.message?.includes('Demasiados pedidos')
-        ? 'Has realizado demasiados pedidos en poco tiempo. Espera unos minutos.'
+        ? t('error_too_many')
         : error?.message?.includes('ya no está disponible')
-        ? `Un artículo de tu carrito ya no está disponible. Por favor, retíralo e inténtalo de nuevo.`
-        : 'Hubo un error procesando el pedido. Por favor, inténtalo de nuevo.';
+        ? t('error_unavailable')
+        : t('error_processing');
       setPaymentError(friendlyMsg);
     } finally {
       setIsProcessing(false);
@@ -225,7 +225,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </div>
-            <h3 className="font-display font-black text-2xl text-white mb-2 uppercase tracking-wide">¡Estás un poco lejos!</h3>
+            <h3 className="font-display font-black text-2xl text-white mb-2 uppercase tracking-wide">{t('far_away_title')}</h3>
             <p className="text-zinc-400 text-sm mb-6 leading-relaxed font-medium">
               {geofenceError}
             </p>
@@ -562,7 +562,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         isOpen={showPaymentModal} 
         onClose={() => {
           setShowPaymentModal(false);
-          setPaymentError('El pago fue cancelado o rechazado. Por favor, intenta con otro método de pago o elige Recogida en local.');
+          setPaymentError(t('sumup_cancelled'));
         }} 
         onSuccess={() => processOrder()} 
         amount={finalTotal} 
