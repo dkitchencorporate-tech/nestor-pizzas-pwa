@@ -11,7 +11,7 @@ import NotificationManager from '../../components/NotificationManager';
 import { useI18nStore } from '../../store/i18nStore';
 
 export default function Catalog() {
-  const { t, tDynamic } = useI18nStore();
+  const { t, tDynamic, lang } = useI18nStore() as any;
   const [activeCategory, setActiveCategory] = useState('TODOS');
   const [ingredientsProduct, setIngredientsProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
@@ -19,38 +19,41 @@ export default function Catalog() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaturationMode, setIsSaturationMode] = useState(false);
   const [isPromoOpen, setIsPromoOpen] = useState(false);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const [catsRes, prodsRes] = await Promise.all([
+      const [catsRes, subcatsRes, prodsRes] = await Promise.all([
         supabase.from('categories').select('*').order('sort_order'),
+        supabase.from('subcategories').select('*').order('sort_order'),
         supabase.from('products').select('*').eq('is_active', true)
       ]);
+      
       if (catsRes.data) setCategories(catsRes.data);
-      if (prodsRes.data) {
+      if (subcatsRes.data) setSubcategories(subcatsRes.data);
+      
+      if (prodsRes.data && subcatsRes.data) {
         let fetchedProducts = prodsRes.data;
+        let allSubcats = subcatsRes.data;
         
-        // Group Bebidas
-        const bebidas = fetchedProducts.filter(p => p.category_id === 'BEBIDAS' || p.category === 'BEBIDAS');
-        const nonBebidas = fetchedProducts.filter(p => p.category_id !== 'BEBIDAS' && p.category !== 'BEBIDAS');
+        const groupedSubcategories: any[] = [];
         
-        const groupedBebidas: any[] = [];
-        
-        // Find unique subcategories
-        const subcategories = [...new Set(bebidas.map(p => p.subcategory).filter(Boolean))];
-        
-        subcategories.forEach(sub => {
-          const subProducts = bebidas.filter(p => p.subcategory === sub);
+        allSubcats.forEach(sub => {
+          const subProducts = fetchedProducts.filter(p => p.subcategory_id === sub.id);
           if (subProducts.length > 0) {
-            groupedBebidas.push({
-              id: `group-${sub}`,
-              category_id: 'BEBIDAS',
-              name: String(sub).charAt(0).toUpperCase() + String(sub).slice(1).toLowerCase(), // Capitalize first letter
-              desc: `Selecciona tus opciones de ${String(sub).toLowerCase()}`,
-              price: subProducts[0].price,
-              img_url: subProducts[0].img_url,
-              badge: sub,
+            const minPrice = Math.min(...subProducts.map(p => p.price));
+            groupedSubcategories.push({
+              id: `subcat-${sub.id}`,
+              category_id: sub.category_id,
+              name: sub.name,
+              name_en: sub.name_en,
+              desc: sub.description || `Selecciona tus opciones de ${sub.name.toLowerCase()}`,
+              description_en: sub.description_en || `Select your ${sub.name_en.toLowerCase()} options`,
+              price: minPrice,
+              img_url: sub.img_url || subProducts[0].img_url,
+              badge: sub.name,
+              badge_en: sub.name_en,
               isGroup: true,
               subProducts: subProducts.sort((a: any, b: any) => a.price - b.price),
               is_active: true
@@ -58,10 +61,11 @@ export default function Catalog() {
           }
         });
 
-        // Add any bebidas that don't have a subcategory directly (just in case)
-        const orphanBebidas = bebidas.filter(p => !p.subcategory);
+        const rootProducts = fetchedProducts.filter(p => !p.subcategory_id);
         
-        setProducts([...nonBebidas, ...groupedBebidas, ...orphanBebidas]);
+        setProducts([...rootProducts, ...groupedSubcategories]);
+      } else if (prodsRes.data) {
+        setProducts(prodsRes.data);
       }
       setIsLoading(false);
       
@@ -313,13 +317,17 @@ export default function Catalog() {
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-white uppercase tracking-tight leading-none">
-                    {tDynamic(cat.name)}
+                    {(lang === 'en' && cat.name_en) ? cat.name_en : tDynamic(cat.name)}
                   </h2>
-                  {cat.subtitle && (
-                    <span className="text-green-400 font-mono text-sm font-bold">{tDynamic(cat.subtitle)}</span>
+                  {(cat.subtitle || cat.subtitle_en) && (
+                    <span className="text-green-400 font-mono text-sm font-bold">
+                      {(lang === 'en' && cat.subtitle_en) ? cat.subtitle_en : tDynamic(cat.subtitle)}
+                    </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed pt-1">{tDynamic(cat.desc)}</p>
+                <p className="text-sm text-gray-400 max-w-2xl mx-auto font-medium leading-relaxed pt-1">
+                  {(lang === 'en' && cat.description_en) ? cat.description_en : tDynamic(cat.desc || cat.description)}
+                </p>
                 <div className="w-16 h-0.5 bg-green-500/50 mx-auto mt-4 rounded-full"></div>
               </div>
 

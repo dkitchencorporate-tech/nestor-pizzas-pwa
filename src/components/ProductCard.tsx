@@ -96,7 +96,7 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
           {/* Badge */}
           {product.badge && (
             <span className="absolute top-3 left-3 z-20 bg-black border-2 border-green-500 text-white font-display font-black text-[10px] sm:text-xs uppercase tracking-wider px-3 py-1.5 rounded-xl shadow-2xl leading-none">
-              {tDynamic(product.badge)}
+              {(lang === 'en' && (product as any).badge_en) ? (product as any).badge_en : tDynamic(product.badge)}
             </span>
           )}
 

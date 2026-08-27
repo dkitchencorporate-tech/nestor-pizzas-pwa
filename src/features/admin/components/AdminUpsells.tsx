@@ -11,6 +11,7 @@ export default function AdminUpsells() {
   const [formData, setFormData] = useState({
     product_id: 0,
     category: 'RECOMENDACIÓN',
+    category_en: 'RECOMMENDATION',
     sort_order: 0
   });
 
@@ -23,7 +24,7 @@ export default function AdminUpsells() {
     // Fetch upsells (join with products to get name/price)
     const [upsellsRes, productsRes] = await Promise.all([
       supabase.from('upsells').select(`
-        id, category, sort_order, product_id,
+        id, category, category_en, sort_order, product_id,
         products (
           name, price, img_url, is_active
         )
@@ -46,6 +47,7 @@ export default function AdminUpsells() {
     setFormData({
       product_id: upsell.product_id,
       category: upsell.category,
+      category_en: upsell.category_en || '',
       sort_order: upsell.sort_order || 0
     });
     setIsEditing(true);
@@ -56,6 +58,7 @@ export default function AdminUpsells() {
     setFormData({
       product_id: products.length > 0 ? products[0].id : 0,
       category: 'RECOMENDACIÓN',
+      category_en: 'RECOMMENDATION',
       sort_order: upsells.length + 1
     });
     setIsEditing(true);
@@ -76,6 +79,7 @@ export default function AdminUpsells() {
       const { error } = await supabase.from('upsells').update({
         product_id: formData.product_id,
         category: formData.category,
+        category_en: formData.category_en,
         sort_order: formData.sort_order
       }).eq('id', currentUpsell.id);
       
@@ -84,6 +88,7 @@ export default function AdminUpsells() {
       const { error } = await supabase.from('upsells').insert([{
         product_id: formData.product_id,
         category: formData.category,
+        category_en: formData.category_en,
         sort_order: formData.sort_order
       }]);
       
@@ -132,16 +137,29 @@ export default function AdminUpsells() {
               <p className="text-[10px] text-zinc-500 mt-1">El precio y la información se sincronizan automáticamente con el producto original.</p>
             </div>
             
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Título de Grupo (Categoría del Modal)</label>
-              <input 
-                type="text" 
-                required 
-                value={formData.category} 
-                onChange={e => setFormData({...formData, category: e.target.value.toUpperCase()})} 
-                placeholder="EJ: SALSAS, ENTRANTES, POSTRES" 
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white uppercase" 
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Título de Grupo (ES)</label>
+                <input 
+                  type="text" 
+                  required 
+                  value={formData.category} 
+                  onChange={e => setFormData({...formData, category: e.target.value.toUpperCase()})} 
+                  placeholder="EJ: SALSAS" 
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white uppercase" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-blue-400 uppercase mb-2">Título de Grupo (EN)</label>
+                <input 
+                  type="text" 
+                  required 
+                  value={formData.category_en} 
+                  onChange={e => setFormData({...formData, category_en: e.target.value.toUpperCase()})} 
+                  placeholder="EJ: SAUCES" 
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white uppercase" 
+                />
+              </div>
             </div>
             
             <div>

@@ -1,26 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
 
-interface AdminProductFormProps {
-  product?: any;
-  categories: any[];
-  subcategories: any[];
+interface AdminSubcategoryFormProps {
+  subcategory?: any;
+  categoryId: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function AdminProductForm({ product, categories, subcategories, onClose, onSuccess }: AdminProductFormProps) {
+export default function AdminSubcategoryForm({ subcategory, categoryId, onClose, onSuccess }: AdminSubcategoryFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     name_en: '',
     description: '',
     description_en: '',
-    price: 0,
-    category_id: categories.length > 0 ? categories[0].id : '',
-    subcategory_id: '',
-    badge: '',
+    sort_order: 0,
     img_url: '',
-    is_active: true,
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,40 +24,30 @@ export default function AdminProductForm({ product, categories, subcategories, o
   const [imagePreview, setImagePreview] = useState<string>('');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isEditing = !!product;
+  const isEditing = !!subcategory;
 
   useEffect(() => {
     if (isEditing) {
       setFormData({
-        name: product.name || '',
-        name_en: product.name_en || '',
-        description: product.description || '',
-        description_en: product.description_en || '',
-        price: product.price || 0,
-        category_id: product.category_id || (categories.length > 0 ? categories[0].id : ''),
-        subcategory_id: product.subcategory_id || '',
-        badge: product.badge || '',
-        img_url: product.img_url || '',
-        is_active: product.is_active !== false,
+        name: subcategory.name || '',
+        name_en: subcategory.name_en || '',
+        description: subcategory.description || '',
+        description_en: subcategory.description_en || '',
+        sort_order: subcategory.sort_order || 0,
+        img_url: subcategory.img_url || '',
       });
-      if (product.img_url) {
-        setImagePreview(product.img_url);
+      if (subcategory.img_url) {
+        setImagePreview(subcategory.img_url);
       }
     }
-  }, [product, isEditing, categories]);
+  }, [subcategory, isEditing]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({ ...prev, [name]: checked }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: type === 'number' ? Number(value) : value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? Number(value) : value
+    }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,53 +103,45 @@ export default function AdminProductForm({ product, categories, subcategories, o
         finalImgUrl = publicUrlData.publicUrl;
       }
 
-      // Validar si la categoría actual permite la subcategoría seleccionada
-      const availableSubcats = subcategories.filter(s => s.category_id === formData.category_id);
-      let finalSubcatId = formData.subcategory_id;
-      if (finalSubcatId && !availableSubcats.find(s => s.id === finalSubcatId)) {
-        finalSubcatId = ''; // Clear if category changed
-      }
-
       const dataToSave = {
-        ...formData,
+        category_id: categoryId,
+        name: formData.name,
+        name_en: formData.name_en,
+        description: formData.description,
+        description_en: formData.description_en,
+        sort_order: formData.sort_order,
         img_url: finalImgUrl,
-        subcategory_id: finalSubcatId || null,
-        // Limpiamos campos legacy por si acaso
-        subcategory: null,
-        subcategory_en: null
       };
 
       if (isEditing) {
         const { error: updateError } = await supabase
-          .from('products')
+          .from('subcategories')
           .update(dataToSave)
-          .eq('id', product.id);
+          .eq('id', subcategory.id);
           
         if (updateError) throw updateError;
       } else {
         const { error: insertError } = await supabase
-          .from('products')
+          .from('subcategories')
           .insert([dataToSave]);
           
         if (insertError) throw insertError;
       }
       onSuccess();
     } catch (err: any) {
-      console.error('Error saving product:', err);
-      setError(err.message || 'Ocurrió un error al guardar el producto.');
+      console.error('Error saving subcategory:', err);
+      setError(err.message || 'Ocurrió un error al guardar la subcategoría.');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const availableSubcategories = subcategories.filter(s => s.category_id === formData.category_id);
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
       <div className="bg-[#14141E] border border-zinc-800 rounded-3xl p-6 w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-display font-black text-white uppercase">
-            {isEditing ? 'Editar Producto' : 'Nuevo Producto'}
+            {isEditing ? 'Editar Subcategoría' : 'Nueva Subcategoría'}
           </h2>
           <button onClick={onClose} className="p-2 rounded-full bg-zinc-800/50 hover:bg-zinc-700 text-gray-400 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -180,9 +157,8 @@ export default function AdminProductForm({ product, categories, subcategories, o
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
-            {/* Image Upload Box */}
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Imagen del Producto (Max 2MB - JPG, PNG, WEBP)</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Imagen de Subcategoría (Max 2MB - JPG, PNG, WEBP)</label>
               <div 
                 className="w-full bg-[#1A1A24] border-2 border-dashed border-zinc-700 hover:border-green-500 rounded-xl p-4 text-center cursor-pointer transition-colors relative overflow-hidden"
                 onClick={() => fileInputRef.current?.click()}
@@ -197,7 +173,7 @@ export default function AdminProductForm({ product, categories, subcategories, o
                 ) : (
                   <div className="py-8 flex flex-col items-center justify-center text-gray-400">
                     <svg className="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <span className="text-sm font-medium">Haz clic para seleccionar o subir foto</span>
+                    <span className="text-sm font-medium">Haz clic para seleccionar o subir foto oficial</span>
                   </div>
                 )}
                 <input 
@@ -212,136 +188,67 @@ export default function AdminProductForm({ product, categories, subcategories, o
 
             <div className="grid grid-cols-2 gap-4 md:col-span-2">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nombre del Producto (ES)</label>
+                <label className="block text-xs font-bold text-yellow-500 uppercase tracking-wider mb-2">Nombre Subcategoría (ES)</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  placeholder="Ej: Pizza Margarita"
-                  className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors uppercase"
+                  placeholder="Ej: Refrescos Grandes"
+                  className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500 transition-colors uppercase"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Nombre del Producto (EN)</label>
+                <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Nombre Subcategoría (EN)</label>
                 <input
                   type="text"
                   name="name_en"
                   value={formData.name_en}
                   onChange={handleChange}
                   required
-                  placeholder="Ej: Margherita Pizza"
+                  placeholder="Ej: Large Sodas"
                   className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors uppercase"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Precio (€)</label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                required
-                min="0"
-                step="0.01"
-                placeholder="Ej: 9.50"
-                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Categoría</label>
-              <select
-                name="category_id"
-                value={formData.category_id}
-                onChange={handleChange}
-                required
-                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors"
-              >
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {availableSubcategories.length > 0 && (
-              <div className="md:col-span-2 p-4 bg-zinc-800/30 border border-zinc-700 rounded-xl">
-                <div>
-                  <label className="block text-xs font-bold text-yellow-500 uppercase tracking-wider mb-2">
-                    Subcategoría (Opcional)
-                  </label>
-                  <select
-                    name="subcategory_id"
-                    value={formData.subcategory_id}
-                    onChange={handleChange}
-                    className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500 transition-colors"
-                  >
-                    <option value="">-- Sin Subcategoría --</option>
-                    {availableSubcategories.map(sub => (
-                      <option key={sub.id} value={sub.id}>{sub.name} ({sub.name_en})</option>
-                    ))}
-                  </select>
-                </div>
-                <p className="text-[10px] text-gray-400 mt-2">
-                  Agrupará este producto bajo esta subcategoría visual en la App Pública.
-                </p>
-              </div>
-            )}
-
             <div className="grid grid-cols-2 gap-4 md:col-span-2">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Descripción ES (Ingredientes)</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Descripción ES (Opcional)</label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  required
-                  rows={3}
-                  placeholder="Ej: Tomate, mozzarella y albahaca fresca"
+                  rows={2}
+                  placeholder="Ej: Refrescos de 2 litros..."
                   className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors resize-none"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Descripción EN (Ingredientes)</label>
+                <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Descripción EN (Opcional)</label>
                 <textarea
                   name="description_en"
                   value={formData.description_en}
                   onChange={handleChange}
-                  required
-                  rows={3}
-                  placeholder="Ej: Tomato, mozzarella and fresh basil"
+                  rows={2}
+                  placeholder="Ej: 2 liters sodas..."
                   className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
                 />
               </div>
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Etiqueta (Badge / Opcional)</label>
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Orden de Visualización</label>
               <input
-                type="text"
-                name="badge"
-                value={formData.badge}
+                type="number"
+                name="sort_order"
+                value={formData.sort_order}
                 onChange={handleChange}
-                placeholder="Ej: NUEVO, PICANTE"
-                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors uppercase"
+                min="0"
+                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors"
               />
-            </div>
-            
-            <div className="md:col-span-2 flex items-center mt-2 bg-[#1A1A24] p-4 rounded-xl border border-zinc-700/50">
-              <input
-                type="checkbox"
-                id="is_active"
-                name="is_active"
-                checked={formData.is_active}
-                onChange={handleChange}
-                className="w-5 h-5 rounded border-zinc-600 text-green-500 focus:ring-green-500 focus:ring-offset-zinc-900 bg-zinc-800"
-              />
-              <label htmlFor="is_active" className="ml-3 text-sm font-medium text-white cursor-pointer">
-                Producto Activo (Visible en la carta)
-              </label>
+              <p className="text-[10px] text-gray-500 mt-1">Número menor aparece primero (0, 1, 2...).</p>
             </div>
           </div>
 
@@ -358,7 +265,7 @@ export default function AdminProductForm({ product, categories, subcategories, o
               disabled={isSubmitting}
               className="flex-1 py-4 rounded-2xl font-bold bg-green-500 text-black hover:bg-green-400 transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? 'Guardando...' : 'Guardar Producto'}
+              {isSubmitting ? 'Guardando...' : 'Guardar Subcategoría'}
             </button>
           </div>
         </form>

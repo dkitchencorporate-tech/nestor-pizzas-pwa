@@ -11,8 +11,11 @@ export default function AdminCategoryForm({ category, onClose, onSuccess }: Admi
   const [formData, setFormData] = useState({
     id: '',
     name: '',
+    name_en: '',
     subtitle: '',
+    subtitle_en: '',
     description: '',
+    description_en: '',
     sort_order: 0,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,8 +28,11 @@ export default function AdminCategoryForm({ category, onClose, onSuccess }: Admi
       setFormData({
         id: category.id,
         name: category.name || '',
+        name_en: category.name_en || '',
         subtitle: category.subtitle || '',
+        subtitle_en: category.subtitle_en || '',
         description: category.description || '',
+        description_en: category.description_en || '',
         sort_order: category.sort_order || 0,
       });
     }
@@ -60,8 +66,11 @@ export default function AdminCategoryForm({ category, onClose, onSuccess }: Admi
           .from('categories')
           .update({
             name: formData.name,
+            name_en: formData.name_en,
             subtitle: formData.subtitle,
+            subtitle_en: formData.subtitle_en,
             description: formData.description,
+            description_en: formData.description_en,
             sort_order: formData.sort_order
           })
           .eq('id', category.id);
@@ -118,41 +127,81 @@ export default function AdminCategoryForm({ category, onClose, onSuccess }: Admi
             </div>
           )}
 
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nombre Público</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              placeholder="Ej: Nuestras Pizzas"
-              className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nombre Público (ES)</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                placeholder="Ej: Nuestras Pizzas"
+                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Nombre Público (EN)</label>
+              <input
+                type="text"
+                name="name_en"
+                value={formData.name_en}
+                onChange={handleChange}
+                required
+                placeholder="Ej: Our Pizzas"
+                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Subtítulo (Opcional)</label>
-            <input
-              type="text"
-              name="subtitle"
-              value={formData.subtitle}
-              onChange={handleChange}
-              placeholder="Ej: 33 cm"
-              className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Subtítulo ES (Opcional)</label>
+              <input
+                type="text"
+                name="subtitle"
+                value={formData.subtitle}
+                onChange={handleChange}
+                placeholder="Ej: 33 cm"
+                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Subtítulo EN (Opcional)</label>
+              <input
+                type="text"
+                name="subtitle_en"
+                value={formData.subtitle_en}
+                onChange={handleChange}
+                placeholder="Ej: 13 inches"
+                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Descripción (Opcional)</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              placeholder="Ej: Base de tomate natural..."
-              className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors resize-none"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Descripción ES (Opcional)</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Ej: Base de tomate natural..."
+                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Descripción EN (Opcional)</label>
+              <textarea
+                name="description_en"
+                value={formData.description_en}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Ej: Natural tomato base..."
+                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
+              />
+            </div>
           </div>
 
           <div>
