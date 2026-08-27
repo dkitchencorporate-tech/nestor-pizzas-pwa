@@ -245,8 +245,9 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-          <button 
+        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+          <nav className="p-4 space-y-2 flex-1">
+            <button 
             onClick={() => setActiveTab('orders')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'orders' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
           >
@@ -329,6 +330,7 @@ export default function AdminDashboard() {
               Volver a la Tienda
             </button>
           </div>
+        </div>
         </div>
       </aside>
 
