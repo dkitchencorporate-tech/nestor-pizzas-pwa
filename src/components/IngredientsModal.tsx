@@ -20,9 +20,9 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
   
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [activeHalf, setActiveHalf] = useState<'full' | 'left' | 'right'>('full');
-  const isPizzasBlancas = product.category === 'PIZZAS BLANCAS';
-  const isNuestrasPizzas = product.category === 'NUESTRAS PIZZAS';
-  const isPorIngredientes = product.category === 'POR INGREDIENTES' || product.id === 22;
+  const isPizzasBlancas = (product as any).category_id === 'PIZZAS BLANCAS' || product.category === 'PIZZAS BLANCAS';
+  const isNuestrasPizzas = (product as any).category_id === 'NUESTRAS PIZZAS' || product.category === 'NUESTRAS PIZZAS';
+  const isPorIngredientes = (product as any).category_id === 'POR INGREDIENTES' || product.category === 'POR INGREDIENTES' || product.id === 22;
   const isMaxxiPizza = product.name.toUpperCase().includes('MAZZI') || product.name.toUpperCase().includes('MAXXI');
 
   const [pizzaBase, setPizzaBase] = useState<'Normal' | 'Blanca' | 'Maxxi'>(() => {
