@@ -213,7 +213,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0E] text-white flex flex-col md:flex-row font-sans relative print:bg-white print:text-black">
+    <div className="h-screen w-screen overflow-hidden bg-[#0A0A0E] text-white flex flex-col md:flex-row font-sans relative print:bg-white print:text-black">
       
       {/* Mobile Toggle Button overlay if sidebar is closed */}
       {!isSidebarOpen && (
@@ -333,7 +333,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 h-screen overflow-hidden relative print:h-auto print:overflow-visible print:block">
+      <main className="flex-1 h-full overflow-hidden relative print:h-auto print:overflow-visible print:block">
         <div className={activeTab === 'orders' ? 'block h-full' : 'hidden'}><AdminOrders /></div>
         <div className={activeTab === 'history' ? 'block h-full' : 'hidden'}><AdminHistory /></div>
         <div className={activeTab === 'kiosk' ? 'block h-full' : 'hidden'}><AdminKiosk /></div>
