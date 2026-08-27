@@ -571,7 +571,6 @@ const dynamicDictionary: Record<string, string> = {
   'AGUAS': 'WATER',
   'CERVEZAS': 'BEERS',
   'REFRESCOS GRANDES': 'LARGE SOFT DRINKS',
-  'REFESCOS GRANDES': 'LARGE SOFT DRINKS',
   'REFRESCOS': 'SOFT DRINKS',
   'TINTOS': 'RED WINES',
   'NUGUETTS (6 UND)': 'NUGGETS (6 PCS)',
