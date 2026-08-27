@@ -257,7 +257,7 @@ export default function AdminCatalog() {
             <div className="space-y-8 pb-10">
               {categories.map(category => {
                 const categoryProducts = products.filter(p => p.category_id === category.id);
-                const isBebidas = category.name.toUpperCase() === 'BEBIDAS';
+                const categorySubcats = subcategories.filter(s => s.category_id === category.id);
                 
                 return (
                   <div key={category.id} className="bg-[#14141E] border border-zinc-800 rounded-3xl p-6 shadow-xl">
