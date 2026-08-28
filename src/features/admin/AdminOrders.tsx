@@ -6,7 +6,7 @@ import { useI18nStore } from '../../store/i18nStore';
 import DOMPurify from 'dompurify';
 import { formatAddress } from '../../utils/addressUtils';
 import { useAdminUiStore } from '../../store/adminUiStore';
-import { armAlarm, startAlarm, stopAlarm } from '../../utils/orderAlarm';
+import { armAlarm, startAlarm, stopAlarm, isArmed } from '../../utils/orderAlarm';
 
 export default function AdminOrders() {
   const { startEditingOrder } = useAdminUiStore();
@@ -17,12 +17,11 @@ export default function AdminOrders() {
   const [silencedCount, setSilencedCount] = useState<number>(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [printingOrder, setPrintingOrder] = useState<any>(null);
-  const [isAudioArmed, setIsAudioArmed] = useState<boolean>(
-    (window as any).isAudioUnlocked || localStorage.getItem('nestor_audio_armed') === 'true' || false
-  );
+  // isAudioArmed: SIEMPRE false al cargar. El AudioContext muere con cada recarga.
+  // El encargado DEBE pulsar "ACTIVAR ALARMA" una vez por sesión (política del navegador).
+  const [isAudioArmed, setIsAudioArmed] = useState<boolean>(false);
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
   const [isOpeningAlarm, setIsOpeningAlarm] = useState(false);
-  // Track last known pending count to detect genuinely NEW orders
   const prevPendingCountRef = useRef<number>(-1);
 
   useEffect(() => {
@@ -33,8 +32,8 @@ export default function AdminOrders() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async () => {
         console.log('🔔 Nuevo pedido recibido — disparando alarma.');
         fetchOrders();
-        // ✅ FIX: await startAlarm() para que pueda reanudar el AudioContext si fue suspendido
-        if ((window as any).isAudioUnlocked) {
+        // Usar isArmed() (fuente de verdad del módulo) en lugar de window flags
+        if (isArmed()) {
           setIsAlarmRinging(true);
           await startAlarm();
         }
@@ -58,9 +57,9 @@ export default function AdminOrders() {
         const [openHour, openMin] = openTime.split(':').map(Number);
         if (now.getHours() === openHour && now.getMinutes() === openMin) {
           setIsOpeningAlarm(true);
-          if ((window as any).isAudioUnlocked) {
+          if (isArmed()) {
             setIsAlarmRinging(true);
-            startAlarm();
+            void startAlarm();
           }
         }
       }
@@ -114,12 +113,10 @@ export default function AdminOrders() {
 
   const armAudio = async () => {
     try {
-      await armAlarm(); // Desbloquea el AudioContext con el gesto de usuario
+      await armAlarm(); // Crea y desbloquea el AudioContext con el gesto del usuario
       setIsAudioArmed(true);
-      (window as any).isAudioUnlocked = true;
-      localStorage.setItem('nestor_audio_armed', 'true');
-      // Breve toque de confirmación para que el encargado sepa que está activo
-      startAlarm();
+      // Beep de confirmación corto para que el encargado sepa que está activo
+      await startAlarm();
       setTimeout(() => stopAlarm(), 1800);
     } catch (e) {
       console.warn('No se pudo armar la alarma:', e);
