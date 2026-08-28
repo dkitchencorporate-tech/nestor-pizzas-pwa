@@ -3,19 +3,19 @@
  * Motor de alarma de pedidos basado en Web Audio API.
  * Sin archivos externos. Sin dependencia de red.
  * Genera una sirena pulsante bifrecuencia ultra-audible.
+ *
+ * BUG FIX: stopAlarm ya NO suspende el AudioContext.
+ * Suspenderlo lo dejaba en estado 'suspended' y startAlarm()
+ * abortaba silenciosamente al comprobar audioCtx.state !== 'running'.
  */
 
 let audioCtx: AudioContext | null = null;
-let gainNode: GainNode | null = null;
-let oscillator1: OscillatorNode | null = null;
-let oscillator2: OscillatorNode | null = null;
 let alarmInterval: ReturnType<typeof setInterval> | null = null;
 let isPlaying = false;
 
-/**
- * Crea el contexto de audio y arma el sistema.
- * DEBE llamarse desde un evento de click del usuario (política del navegador).
- */
+// ─────────────────────────────────────────────
+// ARMAR (llamar desde un click de usuario)
+// ─────────────────────────────────────────────
 export function armAlarm(): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
@@ -23,7 +23,7 @@ export function armAlarm(): Promise<void> {
         audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
       if (audioCtx.state === 'suspended') {
-        audioCtx.resume().then(() => resolve()).catch(reject);
+        audioCtx.resume().then(resolve).catch(reject);
       } else {
         resolve();
       }
@@ -33,10 +33,9 @@ export function armAlarm(): Promise<void> {
   });
 }
 
-/**
- * Genera un pulso de beep corto con la frecuencia indicada.
- * Crea y destruye sus propios nodos para que cada beep sea limpio.
- */
+// ─────────────────────────────────────────────
+// GENERAR UN BEEP CORTO (auto-destruye sus nodos)
+// ─────────────────────────────────────────────
 function playBeep(frequency: number, duration: number, volume: number = 1.0) {
   if (!audioCtx || audioCtx.state !== 'running') return;
 
@@ -46,76 +45,73 @@ function playBeep(frequency: number, duration: number, volume: number = 1.0) {
   osc.connect(gain);
   gain.connect(audioCtx.destination);
 
-  osc.type = 'square'; // Onda cuadrada → sonido más agudo, penetrante y molesto
+  osc.type = 'square'; // Onda cuadrada: máxima penetración sonora
   osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
 
-  // Volumen máximo con ataque y decay para sonar como alarma real
   gain.gain.setValueAtTime(0, audioCtx.currentTime);
   gain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 0.01);
-  gain.gain.linearRampToValueAtTime(volume * 0.8, audioCtx.currentTime + duration - 0.02);
+  gain.gain.linearRampToValueAtTime(volume * 0.85, audioCtx.currentTime + duration - 0.02);
   gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
 
   osc.start(audioCtx.currentTime);
   osc.stop(audioCtx.currentTime + duration);
 }
 
-/**
- * Patrón de sirena bifrecuencia: hace un ciclo completo (alto + bajo) → silencio → repite.
- * Esto es lo más alarmante posible para el encargado de la cocina.
- */
-function sireneCycle() {
-  // Beep agudo
-  playBeep(1200, 0.12, 1.0);
+// ─────────────────────────────────────────────
+// CICLO DE SIRENA bifrecuencia (7 tonos, ~1.3s)
+// ─────────────────────────────────────────────
+function sirenCycle() {
+  // Grupo 1: cuatro pings agudos rápidos
+  playBeep(1300, 0.12, 1.0);
+  setTimeout(() => playBeep(950,  0.12, 1.0), 140);
+  setTimeout(() => playBeep(1300, 0.12, 1.0), 280);
+  setTimeout(() => playBeep(950,  0.12, 1.0), 420);
 
-  setTimeout(() => playBeep(900, 0.12, 1.0), 130);
-  setTimeout(() => playBeep(1200, 0.12, 1.0), 260);
-  setTimeout(() => playBeep(900, 0.12, 1.0), 390);
-
-  // Segundo grupo con tono más grave (efecto bimodal)
-  setTimeout(() => playBeep(660, 0.18, 0.9), 620);
-  setTimeout(() => playBeep(880, 0.18, 0.9), 850);
-  setTimeout(() => playBeep(660, 0.18, 0.9), 1080);
+  // Grupo 2: tres pulsos de alerta más graves
+  setTimeout(() => playBeep(680,  0.20, 0.95), 660);
+  setTimeout(() => playBeep(900,  0.20, 0.95), 920);
+  setTimeout(() => playBeep(680,  0.20, 0.95), 1150);
 }
 
-/**
- * Inicia la alarma en modo continuo hasta que se llame a stopAlarm().
- */
-export function startAlarm() {
+// ─────────────────────────────────────────────
+// INICIAR ALARMA — intenta reanudar el contexto si está suspendido
+// ─────────────────────────────────────────────
+export async function startAlarm() {
   if (isPlaying) return;
-  if (!audioCtx || audioCtx.state !== 'running') return;
+  if (!audioCtx) return;
+
+  // FIX CLAVE: si el contexto fue suspendido (p.ej. por política del navegador),
+  // lo reanudamos antes de intentar reproducir.
+  if (audioCtx.state === 'suspended') {
+    try {
+      await audioCtx.resume();
+    } catch (_) {
+      return; // Si no se puede reanudar (sin gesto), abortamos sin error
+    }
+  }
+
+  if (audioCtx.state !== 'running') return;
 
   isPlaying = true;
-  sireneCycle(); // Primer ciclo inmediato
+  sirenCycle(); // Ciclo inmediato
 
   alarmInterval = setInterval(() => {
-    sireneCycle();
-  }, 1800); // Repite cada 1.8 segundos
+    sirenCycle();
+  }, 1800); // Repite cada 1.8 s
 }
 
-/**
- * Detiene completamente la alarma.
- */
+// ─────────────────────────────────────────────
+// DETENER ALARMA — solo cancela el intervalo.
+// NO suspende el AudioContext (ese era el bug).
+// ─────────────────────────────────────────────
 export function stopAlarm() {
   isPlaying = false;
   if (alarmInterval !== null) {
     clearInterval(alarmInterval);
     alarmInterval = null;
   }
-  // Silencio inmediato cerrando el contexto y reabriendo para futuros usos
-  if (audioCtx && audioCtx.state === 'running') {
-    audioCtx.suspend();
-  }
-}
-
-/**
- * Reanuda el contexto (por si fue suspendido) y vuelve a sonar.
- */
-export async function resumeAndStart() {
-  if (!audioCtx) return;
-  if (audioCtx.state === 'suspended') {
-    await audioCtx.resume();
-  }
-  startAlarm();
+  // ✅ NO llamamos a audioCtx.suspend() aquí.
+  // Suspenderlo impedía que startAlarm() sonara en el siguiente pedido.
 }
 
 export function isAlarmArmed(): boolean {

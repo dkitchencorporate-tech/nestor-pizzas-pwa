@@ -30,13 +30,13 @@ export default function AdminOrders() {
     
     // Realtime subscription — fires alarm on new INSERT
     const channel = supabase.channel('realtime_orders')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async () => {
         console.log('🔔 Nuevo pedido recibido — disparando alarma.');
         fetchOrders();
-        // ✅ FIX PRINCIPAL: Disparar la alarma inmediatamente en cada nuevo pedido
+        // ✅ FIX: await startAlarm() para que pueda reanudar el AudioContext si fue suspendido
         if ((window as any).isAudioUnlocked) {
           setIsAlarmRinging(true);
-          startAlarm();
+          await startAlarm();
         }
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
@@ -88,7 +88,8 @@ export default function AdminOrders() {
     // Solo sonar si hay más pedidos pendientes de los que estaban silenciados
     if (pendingCount > silencedCount && isAudioArmed) {
       setIsAlarmRinging(true);
-      startAlarm();
+      // Uso void para llamar a la función async dentro de useEffect
+      void startAlarm();
     } else if (pendingCount <= silencedCount) {
       setIsAlarmRinging(false);
       stopAlarm();
