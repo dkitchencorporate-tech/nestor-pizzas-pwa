@@ -191,8 +191,6 @@ export default function AdminKiosk() {
     setAddressCP('');
     setAddressNotes('');
     setIsCreateModalOpen(false);
-
-      setView('catalog');
     } catch (error: any) {
       console.error('Error creando cliente:', error);
       alert(error.message || 'Error al crear cliente.');
@@ -205,7 +203,6 @@ export default function AdminKiosk() {
     setClientInfo(client);
     setSearchQuery('');
     setSearchResults([]);
-    setView('catalog');
   };
 
   const skipClientAssignment = () => {
