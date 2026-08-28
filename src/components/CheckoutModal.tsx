@@ -52,6 +52,9 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [acceptSmallOrderFee, setAcceptSmallOrderFee] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'physical'>('online');
   const [scheduledTime, setScheduledTime] = useState<string>(isStoreOpen() ? 'asap' : (generateAvailableTimeSlots(15)[0] || 'asap'));
+  // Pantalla de éxito para recogida (reemplaza la pantalla de tracking)
+  const [isPickupSuccess, setIsPickupSuccess] = useState(false);
+  const [pickupOrderId, setPickupOrderId] = useState<string | null>(null);
 
   const isOpen = isStoreOpen();
   const availableSlots = generateAvailableTimeSlots(15);
@@ -83,6 +86,9 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
   const validateGeofence = async (): Promise<boolean> => {
+    // ✅ FIX 1: Recogida en local nunca necesita validación geográfica
+    if (deliveryMethod === 'pickup') return true;
+    // Domicilio en Caniles (CP 18810) → bypass directo
     if (deliveryMethod === 'delivery' && addressCP.trim() === '18810') {
       return true;
     }
@@ -138,7 +144,10 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       return;
     }
 
-    if (paymentMethod === 'online' || deliveryMethod === 'delivery') {
+    // ✅ FIX 2: Recogida NUNCA abre SumUp — procesa directamente
+    // Domicilio con pago online → SumUp
+    // Domicilio con pago físico → procesa directo
+    if (deliveryMethod === 'delivery' && paymentMethod === 'online') {
       setShowPaymentModal(true);
     } else {
       processOrder();
@@ -202,7 +211,19 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       if (user?.email) emailService.sendOrderConfirmation(user.email, orderDataForEmail);
       emailService.sendOrderToAdmin(orderDataForEmail);
 
-      onSuccess({ id: orderId }, !user);
+      // ✅ FIX 3: Para recogida mostramos pantalla de confirmación interna
+      // Para domicilio llamamos onSuccess directamente (va a tracking)
+      if (deliveryMethod === 'pickup') {
+        setPickupOrderId(String(orderId));
+        setIsPickupSuccess(true);
+        useCartStore.getState().clearCart();
+        if (user) {
+          useAuthStore.getState().fetchProfile(user.id);
+          useAuthStore.getState().fetchOrders();
+        }
+      } else {
+        onSuccess({ id: orderId }, !user);
+      }
     } catch (error: any) {
       console.error('Error procesando pedido:', error);
       const friendlyMsg = error?.message?.includes('Manipulación') 
@@ -220,6 +241,42 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   return (
     <div className="fixed inset-0 z-[1100] bg-black/85 backdrop-blur-md flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 overflow-y-auto no-scrollbar">
+
+      {/* ✅ FIX 3: Pantalla de confirmación de recogida */}
+      {isPickupSuccess && (
+        <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-green-500 to-emerald-400"></div>
+            {/* Ícono check animado */}
+            <div className="w-24 h-24 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-5 border-2 border-green-500/40 animate-scale-in">
+              <svg className="w-12 h-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest block mb-1">Pedido Confirmado</span>
+            <h2 className="font-display font-black text-2xl text-white uppercase mb-3">🍕 ¡Listo!
+            </h2>
+            <p className="text-zinc-400 text-sm leading-relaxed mb-6">
+              Tu pedido ha sido recibido. <strong className="text-white">Ven a recogerlo al local</strong> en unos <strong className="text-green-400">20–25 minutos</strong>.
+            </p>
+            {/* Dirección del local */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-6 text-left space-y-1">
+              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Dónde recoger</p>
+              <p className="text-white font-bold text-sm">🏍 Néstor Pizzas</p>
+              <p className="text-zinc-400 text-xs">Calle Alcalde Felip, 9 — Caniles</p>
+              <a href="tel:+34679761987" className="text-green-400 text-xs font-bold flex items-center gap-1 mt-1">
+                <span>📞</span> 679 761 987
+              </a>
+            </div>
+            <button
+              onClick={() => { setIsPickupSuccess(false); onClose(); }}
+              className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl uppercase tracking-wider text-sm transition-all shadow-[0_0_25px_rgba(34,197,94,0.3)] hover:scale-105"
+            >
+              Perfecto, ¡gracias!
+            </button>
+          </div>
+        </div>
+      )}
       
       {geofenceError && (
         <div className="absolute inset-0 z-[1200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
@@ -548,7 +605,13 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               onClick={handleCheckoutClick} 
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
             >
-              {isProcessing ? t('processing') : (paymentMethod === 'online' || deliveryMethod === 'delivery' ? t('pay_online_btn') : t('confirm_order_btn'))}
+              {isProcessing ? t('processing') : (
+                deliveryMethod === 'pickup'
+                  ? t('confirm_order_btn')  // Recogida: siempre "Confirmar"
+                  : paymentMethod === 'online'
+                  ? t('pay_online_btn')     // Domicilio online: "Pagar online"
+                  : t('confirm_order_btn')  // Domicilio físico: "Confirmar"
+              )}
             </button>
           </div>
         </div>
