@@ -1,6 +1,11 @@
 # 🍕 ARCHIVO DE RELEVO Y AUDITORÍA MAESTRA: NÉSTOR PIZZAS PWA
-**Documento de Traspaso Operativo / Handoff Técnico para Retomar el Proyecto**  
-**Fecha de Generación:** 21 de Agosto de 2026  
+> ⚠️ **[DOCUMENTO DESACTUALIZADO / OBSOLETO — NO USAR]**  
+> Este documento contiene estados preliminares que han sido superados por las últimas sesiones.  
+> **Para el estado oficial, arquitectura vigente y directivas actualizadas, consulte exclusivamente:**  
+> 👉 [DOCUMENTO_MAESTRO_CONSOLIDADO_VIGENTE.md](./DOCUMENTO_MAESTRO_CONSOLIDADO_VIGENTE.md)
+
+**Documento de Traspaso Operativo / Handoff Técnico para Retomar el Proyecto (Histórico)**  
+**Fecha de Generación Original:** 21 de Agosto de 2026  
 **Ubicación del Proyecto:** `/root/workspace/nestor-pizzas-pwa`  
 **Cliente:** Néstor Pizzas (Caniles & Baza, Granada)  
 **Desarrollado y Supervisado por:** Architect.Sys  

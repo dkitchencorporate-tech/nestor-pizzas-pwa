@@ -1,7 +1,11 @@
 # 🍕 REPORTE MAESTRO DE AUDITORÍA INTEGRAL DE CÓDIGO & ARQUITECTURA
+> ℹ️ **[INFORME DE AUDITORÍA INICIAL / HISTÓRICO]**  
+> Para consultar el estado consolidado vigente, reglas inquebrantables y roadmap actual:  
+> 👉 [DOCUMENTO_MAESTRO_CONSOLIDADO_VIGENTE.md](../DOCUMENTO_MAESTRO_CONSOLIDADO_VIGENTE.md)
+
 ## PROYECTO: NÉSTOR PIZZAS PWA (CANILES & BAZA)
 **Elaborado por:** Dirección Técnica & Arquitectura de Software — **Architect.Sys**  
-**Fecha de Auditoría:** Agosto 2026  
+**Fecha de Auditoría Inicial:** Agosto 2026  
 **Entorno de Ejecución Local:** `http://localhost:5174` (Vite v8.2.1 / Node.js / React 19)  
 **Despliegue de Producción:** Vercel SPA (`/` y `/admin`)  
 **Backend / BaaS:** Supabase Cloud (`https://jlchjamoejkzahaeimec.supabase.co`)

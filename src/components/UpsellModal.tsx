@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useHardwareBack } from '../utils/useHardwareBack';
 import { useCartStore } from '../store/cartStore';
 import { useI18nStore } from '../store/i18nStore';
+import SauceModal from './SauceModal';
 
 interface UpsellModalProps {
   onClose: () => void;
@@ -16,6 +17,7 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
   const [isLoading, setIsLoading] = useState(true);
   const [upsellsData, setUpsellsData] = useState<any[]>([]);
   const [addedItems, setAddedItems] = useState<number[]>([]);
+  const [sauceProduct, setSauceProduct] = useState<any | null>(null);
   
   // Simulated shuffle just toggles re-render or re-fetches for now
   const [shuffleKey, setShuffleKey] = useState(0);
@@ -58,6 +60,10 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
 
   const handleAdd = (item: any) => {
     const prod = item.products;
+    if (prod.id === 33 || prod.name?.toUpperCase().includes('GAJO')) {
+      setSauceProduct(prod);
+      return;
+    }
     addItem({
       id: crypto.randomUUID(),
       productId: prod.id, 
@@ -66,7 +72,7 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
       quantity: 1,
       notes: ''
     });
-    setAddedItems([...addedItems, prod.id]);
+    setAddedItems(prev => [...prev, prod.id]);
   };
 
   const shuffleDynamicUpsells = () => {
@@ -153,6 +159,16 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
           </button>
         </div>
       </div>
+
+      {sauceProduct && (
+        <SauceModal
+          product={sauceProduct}
+          onClose={() => {
+            setAddedItems(prev => [...prev, sauceProduct.id]);
+            setSauceProduct(null);
+          }}
+        />
+      )}
     </div>
   );
 }

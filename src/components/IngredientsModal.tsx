@@ -52,7 +52,9 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
   };
 
   const ingredientsCost = selectedIngredients.length * 1.00; // +1€ por ingrediente adicional
-  const baseCost = pizzaBase === 'Maxxi' ? 3.00 : 0;
+  // Si el producto YA es Mazzi Pizza, su precio base ya incluye la masa especial (baseCost = 0€)
+  // El suplemento de +3€ solo se aplica si se amplía a masa Maxxi desde otra pizza
+  const baseCost = (!isMaxxiPizza && pizzaBase === 'Maxxi') ? 3.00 : 0;
   const finalPrice = BASE_PRICE + ingredientsCost + baseCost;
 
   const handleAddToCart = () => {
@@ -60,7 +62,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
       ? ` + ${selectedIngredients.join(', ')}` 
       : '';
     
-    const baseText = pizzaBase !== 'Normal' ? ` (Base ${pizzaBase})` : '';
+    const baseText = (!isMaxxiPizza && pizzaBase !== 'Normal') ? ` (Base ${pizzaBase})` : '';
     addItem({
       id: crypto.randomUUID(),
       productId: product.id,
@@ -241,7 +243,10 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
                 <h4 className="text-white font-bold uppercase text-lg">{displayName} {t('base_label')}</h4>
                 <span className="text-green-400 font-bold text-lg">{BASE_PRICE.toFixed(2).replace('.', ',')}€</span>
              </div>
-             <p className="text-sm text-gray-400">33cm - {product.desc}</p>
+             <p className="text-sm text-gray-400">
+               {isMaxxiPizza ? '31cm · 5 Quesos' : (product as any).category_id === 'CALZONES' ? '' : '33cm · '}
+               {product.description ? tDynamic(product.description) : product.desc ? tDynamic(product.desc) : ''}
+             </p>
           </div>
 
           {/* Ingredients Selection */}

@@ -1,4 +1,9 @@
-# CHECKLIST DE AUDITORÍA Y CONTROL MILIMÉTRICO (V 3.0 - ENTERPRISE)
+# CHECKLIST DE AUDITORÍA Y CONTROL MILIMÉTRICO (V 3.0 - HISTÓRICO)
+> ⚠️ **[DOCUMENTO DESACTUALIZADO / OBSOLETO — NO USAR]**  
+> Este checklist corresponde a etapas intermedias del proyecto.  
+> **Para el estado oficial, arquitectura vigente y directivas actualizadas, consulte exclusivamente:**  
+> 👉 [DOCUMENTO_MAESTRO_CONSOLIDADO_VIGENTE.md](./DOCUMENTO_MAESTRO_CONSOLIDADO_VIGENTE.md)
+
 **Rol:** @agency-engineering-code-reviewer
 
 ## MÓDULO 1: UI/UX GLOBAL Y NAVEGACIÓN BASE (CABECERA Y ARRANQUE)

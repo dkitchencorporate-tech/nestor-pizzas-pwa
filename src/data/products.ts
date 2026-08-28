@@ -11,7 +11,8 @@ export interface Product {
     category: string;
     name: string;
     name_en?: string;
-    desc: string;
+    desc?: string;
+    description?: string;
     description_en?: string;
     price: number;
     badge: string;
@@ -50,7 +51,7 @@ export const NESTOR_CATEGORIES: Category[] = [
     {
         id: 'CALZONES',
         name: 'CALZONES',
-        subtitle: '33 ø',
+        subtitle: null,
         desc: 'Masa cerrada al horno con ingredientes frescos'
     },
     {
@@ -81,7 +82,7 @@ export const NESTOR_CATEGORIES: Category[] = [
         id: 'MAZZI PIZZAS',
         name: 'MAZZI PIZZAS',
         subtitle: '31 ø',
-        desc: 'Nuestra masa artesana, exquisita mezcla de cinco quesos, una lámina de masa, nuestra base y la selección que más te apetezca. *Unidades limitadas'
+        desc: 'Variedad y mezcla de quesos sobre lámina de masa y base especial. *Unidades limitadas'
     },
     {
         id: 'SECRET BURGUER',
@@ -127,6 +128,7 @@ export const NESTOR_PRODUCTS: Product[] = [
         id: 999, category: 'PROMOCIONES',
         name: 'Jueves Locos (2x11€)',
         desc: 'Dos pizzas por 11 euros. Promoción válida solo los jueves. (Pulsa para configurar)',
+        description: 'Dos pizzas por 11 euros. Promoción válida solo los jueves.',
         price: 11.00,
         badge: 'SOLO JUEVES',
         img: './assets/img/products/jueves_locos_2_pizzas.png'
@@ -138,7 +140,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 1, category: 'NUESTRAS PIZZAS',
         name: 'MILANESA',
-        desc: 'Base margarita o nata. york',
+        desc: 'Jamón york.',
+        description: 'Jamón york.',
         price: 6.50,
         badge: 'BASE + YORK',
         img: './assets/img/products/p01_pizza_milanesa.jpeg'
@@ -146,7 +149,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 2, category: 'NUESTRAS PIZZAS',
         name: 'CALABRESA',
-        desc: 'Base margarita o nata. york y queso de cabra',
+        desc: 'Jamón york y queso de cabra.',
+        description: 'Jamón york y queso de cabra.',
         price: 7.50,
         badge: 'YORK Y QUESO DE CABRA',
         img: './assets/img/products/p02_pizza_calabresa.jpeg'
@@ -154,7 +158,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 3, category: 'NUESTRAS PIZZAS',
         name: 'KEBAB',
-        desc: 'Base margarita o nata. cebolla, carne kebab y salsa kebab',
+        desc: 'Cebolla, carne kebab y salsa kebab.',
+        description: 'Cebolla, carne kebab y salsa kebab.',
         price: 8.50,
         badge: 'CARNE KEBAB Y SALSA',
         img: './assets/img/products/p03_pizza_kebab.jpeg'
@@ -162,7 +167,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 4, category: 'NUESTRAS PIZZAS',
         name: 'FLORENTINA',
-        desc: 'Base margarita o nata. york, piña y extra de mozzarella',
+        desc: 'Jamón york, piña y extra de mozzarella.',
+        description: 'Jamón york, piña y extra de mozzarella.',
         price: 8.50,
         badge: 'YORK, PIÑA Y MOZZARELLA',
         img: './assets/img/products/p04_pizza_florentina.jpeg'
@@ -170,7 +176,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 5, category: 'NUESTRAS PIZZAS',
         name: 'SICILIANA',
-        desc: 'Base margarita o nata. champiñón, york y atún',
+        desc: 'Champiñón, jamón york y atún.',
+        description: 'Champiñón, jamón york y atún.',
         price: 8.50,
         badge: 'CHAMPIÑÓN, YORK Y ATÚN',
         img: './assets/img/products/p05_pizza_siciliana.jpeg'
@@ -178,7 +185,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 6, category: 'NUESTRAS PIZZAS',
         name: 'NAPOLITANA',
-        desc: 'Base margarita o nata. champiñón, bacon y serrano',
+        desc: 'Champiñón, bacon y jamón serrano.',
+        description: 'Champiñón, bacon y jamón serrano.',
         price: 8.50,
         badge: 'CHAMPIÑÓN, BACON Y SERRANO',
         img: './assets/img/products/p06_pizza_napolitana.jpeg'
@@ -186,7 +194,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 7, category: 'NUESTRAS PIZZAS',
         name: 'VENECIANA',
-        desc: 'Base margarita o nata. york, salami y salchichas',
+        desc: 'Jamón york, salami y salchichas.',
+        description: 'Jamón york, salami y salchichas.',
         price: 8.50,
         badge: 'YORK, SALAMI Y SALCHICHAS',
         img: './assets/img/products/p07_pizza_veneciana.jpeg'
@@ -194,7 +203,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 8, category: 'NUESTRAS PIZZAS',
         name: 'GENOVESA',
-        desc: 'Base margarita o nata. champiñón, gambas y atún',
+        desc: 'Champiñón, gambas y atún.',
+        description: 'Champiñón, gambas y atún.',
         price: 8.50,
         badge: 'CHAMPIÑÓN, GAMBAS Y ATÚN',
         img: './assets/img/products/p08_pizza_genovesa.jpeg'
@@ -202,7 +212,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 9, category: 'NUESTRAS PIZZAS',
         name: 'PARMESANA',
-        desc: 'Base margarita o nata. Exquisita mezcla de 4 quesos (SIN queso azul)',
+        desc: 'Exquisita mezcla de 4 quesos (sin queso azul).',
+        description: 'Exquisita mezcla de 4 quesos (sin queso azul).',
         price: 8.50,
         badge: 'MEZCLA 4 QUESOS',
         img: './assets/img/products/p11_pizza_4quesos_sin_azul.png'
@@ -210,7 +221,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 10, category: 'NUESTRAS PIZZAS',
         name: 'MARINERA',
-        desc: 'Base margarita o nata. atún, gambas y delicias de mar',
+        desc: 'Atún, gambas y delicias de mar.',
+        description: 'Atún, gambas y delicias de mar.',
         price: 8.50,
         badge: 'ATÚN, GAMBAS Y MAR',
         img: './assets/img/products/p10_pizza_marinera.jpeg'
@@ -218,7 +230,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 11, category: 'NUESTRAS PIZZAS',
         name: 'CANILERA',
-        desc: 'Base margarita o nata. serrano, pollo, pimiento verde y alioli gratinado',
+        desc: 'Jamón serrano, pimiento verde, pollo y alioli.',
+        description: 'Jamón serrano, pimiento verde, pollo y alioli.',
         price: 9.50,
         badge: 'ESPECIALIDAD CANILES',
         img: './assets/img/products/p11_pizza_canilera.jpeg'
@@ -226,7 +239,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 12, category: 'NUESTRAS PIZZAS',
         name: 'TOSCANA',
-        desc: 'Base margarita o nata. peperoni, ternera, cebolla y salsa picante',
+        desc: 'Peperoni, ternera, cebolla y salsa picante.',
+        description: 'Peperoni, ternera, cebolla y salsa picante.',
         price: 9.50,
         badge: 'PEPERONI Y SALSA PICANTE',
         img: './assets/img/products/p12_pizza_toscana.jpeg'
@@ -234,7 +248,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 13, category: 'NUESTRAS PIZZAS',
         name: 'TEXANA',
-        desc: 'Base margarita o nata. bacon, ternera, cebolla y salsa barbacoa',
+        desc: 'Bacon, ternera, cebolla y salsa barbacoa.',
+        description: 'Bacon, ternera, cebolla y salsa barbacoa.',
         price: 9.50,
         badge: 'BACON Y SALSA BARBACOA',
         img: './assets/img/products/p13_pizza_texana.jpeg'
@@ -242,7 +257,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 14, category: 'NUESTRAS PIZZAS',
         name: 'ROMANA',
-        desc: 'Base margarita o nata. champiñón, pimiento rojo, pimiento verde y cebolla',
+        desc: 'Cebolla, pimientos y champiñones.',
+        description: 'Cebolla, pimientos y champiñones.',
         price: 9.50,
         badge: 'VERDURAS Y CHAMPIÑÓN',
         img: './assets/img/products/p14_pizza_romana.jpeg'
@@ -250,7 +266,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 15, category: 'NUESTRAS PIZZAS',
         name: 'AMERICANA',
-        desc: 'Base margarita o nata. bacon, ternera, y salsa cheddar',
+        desc: 'Bacon, ternera y salsa cheddar.',
+        description: 'Bacon, ternera y salsa cheddar.',
         price: 8.50,
         badge: 'BACON Y SALSA CHEDDAR',
         img: './assets/img/products/p15_pizza_americana.jpeg'
@@ -258,7 +275,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 16, category: 'NUESTRAS PIZZAS',
         name: 'BOLOÑESA',
-        desc: 'Base margarita o nata. salsa boloñesa',
+        desc: 'Salsa boloñesa casera.',
+        description: 'Salsa boloñesa casera.',
         price: 8.50,
         badge: 'SALSA BOLOÑESA',
         img: './assets/img/products/p16_pizza_bolonesa.jpeg'
@@ -333,18 +351,20 @@ export const NESTOR_PRODUCTS: Product[] = [
     },
     {
         id: 34, category: 'NUESTRAS PATATAS',
-        name: 'GRATINADAS CHEDDAR',
-        desc: 'Llevan bacon y salsa cheddar',
+        name: 'GRATINADAS BACON Y SALSA CHEDDAR',
+        desc: 'Patatas gratinadas con bacon y salsa cheddar',
+        description: 'Patatas gratinadas con bacon y salsa cheddar.',
         price: 7.50,
-        badge: 'GRATINADAS CHEDDAR',
+        badge: 'BACON Y CHEDDAR',
         img: './assets/img/products/p34_gratinadas_cheddar.jpeg'
     },
     {
         id: 35, category: 'NUESTRAS PATATAS',
-        name: 'GRATINADAS MORISCA',
-        desc: 'Llevan bacon y salsa cheddar, gratinadas con salsa morisca',
+        name: 'GRATINADAS BACON Y SALSA MORISCA',
+        desc: 'Patatas gratinadas con bacon y salsa morisca',
+        description: 'Patatas gratinadas con bacon y salsa morisca.',
         price: 7.50,
-        badge: 'GRATINADAS MORISCA',
+        badge: 'BACON Y MORISCA',
         img: './assets/img/products/p35_gratinadas_morisca.jpeg'
     },
 
@@ -394,7 +414,8 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 23, category: 'MAZZI PIZZAS',
         name: 'MAZZI PIZZA',
-        desc: 'Masa artesana, cinco quesos, lámina de masa y base. ¡Añade tus ingredientes!',
+        desc: 'Variedad y mezcla de quesos sobre lámina de masa y base especial.',
+        description: 'Variedad y mezcla de quesos sobre lámina de masa y base especial.',
         price: 8.50,
         badge: 'BASE · 5 QUESOS',
         img: './assets/img/products/p27_maxi_pizza_nueva.png'
@@ -407,6 +428,7 @@ export const NESTOR_PRODUCTS: Product[] = [
         id: 39, category: 'ALGO MÁS',
         name: 'SPAGUETTI BOLOÑESA',
         desc: 'Spaguetti con salsa boloñesa casera',
+        description: 'Pasta tradicional con salsa boloñesa casera.',
         price: 6.50,
         badge: 'PASTA BOLOÑESA',
         img: './assets/img/products/p39_spaguetti_bolonesa.jpeg'
@@ -415,6 +437,7 @@ export const NESTOR_PRODUCTS: Product[] = [
         id: 40, category: 'ALGO MÁS',
         name: 'SPAGUETTI CARBONARA',
         desc: 'Spaguetti con cremosa salsa carbonara',
+        description: 'Pasta tradicional con salsa carbonara cremosa y bacon.',
         price: 6.50,
         badge: 'PASTA CARBONARA',
         img: './assets/img/products/p40_spaguetti_carbonara.jpeg'
@@ -423,6 +446,7 @@ export const NESTOR_PRODUCTS: Product[] = [
         id: 41, category: 'ALGO MÁS',
         name: 'POLLO AL CURRY CON ARROZ',
         desc: 'Pollo al curry con arroz',
+        description: 'Pechuga de pollo al curry acompañada de arroz blanco.',
         price: 9.00,
         badge: 'ESPECIAL CURRY',
         img: './assets/img/products/p41_pollo_curry_arroz.jpeg'
@@ -430,16 +454,18 @@ export const NESTOR_PRODUCTS: Product[] = [
     {
         id: 42, category: 'ALGO MÁS',
         name: 'PIZZA DULCE',
-        desc: 'consultar pizza dulce del mes',
+        desc: 'Crema de avellanas y chocolate',
+        description: 'Deliciosa crema de avellanas y chocolate.',
         price: 5.00,
-        badge: 'POSTRE ARTESANO ★ NEW',
-        img: './assets/img/products/p42_pizza_dulce.jpeg'
+        badge: 'POSTRE ARTESANO',
+        img: './assets/img/products/p42_pizza_dulce.png'
     },
     {
         id: 53, category: 'ALGO MÁS',
         name: 'BURGUER CRUJIENTE',
         desc: 'Pollo crujiente, lechuga, cheddar loncha y bacon',
-        price: 7.40,
+        description: 'Pollo crujiente, lechuga, cheddar en loncha y bacon.',
+        price: 6.90,
         badge: 'POLLO CRUJIENTE',
         img: './assets/img/products/p54_burguer_crujiente.png'
     },
@@ -447,7 +473,8 @@ export const NESTOR_PRODUCTS: Product[] = [
         id: 54, category: 'ALGO MÁS',
         name: 'BOCATA EXTREMEÑO',
         desc: 'Escalope de pollo, bacon y cheddar loncha, acompañado de salsa morisca',
-        price: 8.40,
+        description: 'Escalope de pollo, bacon, cheddar en loncha y salsa morisca.',
+        price: 7.90,
         badge: 'ESCALOPE POLLO',
         img: './assets/img/products/p53_bocata_extremeno.png'
     },
@@ -455,7 +482,8 @@ export const NESTOR_PRODUCTS: Product[] = [
         id: 55, category: 'ALGO MÁS',
         name: 'BOCATA SERRANITO',
         desc: 'Escalope de lomo, pimiento verde y jamón serrano, acompañado de salsa alioli',
-        price: 8.40,
+        description: 'Escalope de lomo, pimiento verde, jamón serrano y salsa alioli.',
+        price: 7.90,
         badge: 'ESCALOPE LOMO',
         img: './assets/img/products/p55_bocata_serranito.png'
     },
@@ -467,24 +495,27 @@ export const NESTOR_PRODUCTS: Product[] = [
         id: 50, category: 'SECRET BURGUER',
         name: 'CHEDDAR LOVE',
         desc: '100 gramos de carne de ternera, queso cheddar, bacon y salsa cheddar',
-        price: 10.40,
-        badge: 'LIMITED',
+        description: '100g de ternera, cheddar, bacon y salsa cheddar.',
+        price: 9.90,
+        badge: 'SECRET BURGUER',
         img: './assets/img/products/secret_burger_cheddar_love_1786580857322.png'
     },
     {
         id: 51, category: 'SECRET BURGUER',
         name: 'CABRONA',
         desc: '100 gramos de carne de ternera, queso de cabra, cebolla caramelizada y salsa miel-mostaza',
-        price: 10.40,
-        badge: 'LIMITED',
+        description: '100g de ternera, queso de cabra, cebolla caramelizada y salsa miel-mostaza.',
+        price: 9.90,
+        badge: 'SECRET BURGUER',
         img: './assets/img/products/secret_burger_cabrona_1786580864855.png'
     },
     {
         id: 52, category: 'SECRET BURGUER',
         name: 'PULLED BBQ',
         desc: '100 gramos de carne de ternera, queso cheddar, pulled pork y salsa barbacoa',
-        price: 10.40,
-        badge: 'LIMITED',
+        description: '100g de ternera, cheddar, pulled pork y salsa barbacoa.',
+        price: 9.90,
+        badge: 'SECRET BURGUER',
         img: './assets/img/products/secret_burger_pulled_bbq_1786580874530.png'
     },
 
