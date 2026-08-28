@@ -29,7 +29,12 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
       let addr = order.delivery_address;
       try {
         if (typeof addr === 'string') addr = JSON.parse(addr);
-        text += `DIRECCION: ${addr.street} ${addr.door || ''}\n`;
+        let fullAddress = addr.street || '';
+        if (addr.number) fullAddress += `, Nº ${addr.number}`;
+        if (addr.door) fullAddress += `, ${addr.door}`;
+        if (addr.cp) fullAddress += `, CP ${addr.cp}`;
+        if (addr.notes) fullAddress += ` - Notas: ${addr.notes}`;
+        text += `DIRECCION: ${fullAddress}\n`;
       } catch(e) {
         text += `DIRECCION: ${addr}\n`;
       }
