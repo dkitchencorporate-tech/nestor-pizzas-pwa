@@ -68,11 +68,14 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   
   const discount = pointsRedeemed && eligibleDiscount > 0 ? eligibleDiscount : 0;
   
-  const hasJuevesLocos = items.some(item => item.productId === 999 || (item.name && item.name.includes('(Promo Jueves)')));
+  const hasJuevesLocos = items.some(item => 
+    item.productId === 999 || 
+    (item.name && (item.name.includes('(Promo Jueves)') || item.name.toUpperCase().includes('JUEVES') || item.name.toUpperCase().includes('THURSDAY')))
+  );
 
   const needsSmallOrderFee = deliveryMethod === 'delivery' && (subtotal - discount) < minOrderDelivery;
   const smallOrderFee = needsSmallOrderFee && acceptSmallOrderFee ? deliveryFee : 0;
-  const juevesSurcharge = deliveryMethod === 'delivery' && hasJuevesLocos ? juevesPromoFee : 0;
+  const juevesSurcharge = deliveryMethod === 'delivery' && hasJuevesLocos ? (juevesPromoFee !== undefined ? juevesPromoFee : 1.00) : 0;
   const finalTotal = Math.max(0, subtotal - discount) + smallOrderFee + juevesSurcharge;
   
   const userPoints = profile?.points || 0;

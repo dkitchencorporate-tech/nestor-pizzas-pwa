@@ -15,8 +15,8 @@ export default function KioskPromoJuevesModal({ onClose, onAdd }: PromoJuevesMod
   
   useHardwareBack(true, onClose);
 
-  // Developer Bypass: Set to true to test on any day.
-  const DEV_BYPASS = true;
+  // Developer Bypass: Set to true to test on any day. Set to false for production.
+  const DEV_BYPASS = false;
   const isJueves = new Date().getDay() === 4 || DEV_BYPASS;
 
   const validPizzas = NESTOR_PRODUCTS.filter(p => p.category === 'NUESTRAS PIZZAS');

@@ -140,13 +140,13 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
           {/* Botón de pedido */}
           <button
             onClick={handleAdd}
-            className={`w-full font-display font-black py-3.5 rounded-2xl text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 ${
-              product.isGroup 
-                ? 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700' 
-                : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-green-600 hover:to-green-700 text-white hover:shadow-[0_10px_25px_-5px_rgba(22,163,74,0.4)]'
-            }`}
+            className="w-full font-display font-black py-3.5 rounded-2xl text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-green-600 hover:to-green-700 text-white hover:shadow-[0_10px_25px_-5px_rgba(22,163,74,0.4)] active:scale-95"
           >
-            {!product.isGroup && <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>}
+            {product.isGroup ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
+            )}
             <span>{product.isGroup ? t('view_options') : t('order_now')}</span>
           </button>
         </div>
