@@ -6,6 +6,7 @@ import { useI18nStore } from '../../store/i18nStore';
 import DOMPurify from 'dompurify';
 import { formatAddress } from '../../utils/addressUtils';
 import { useAdminUiStore } from '../../store/adminUiStore';
+import { armAlarm, startAlarm, stopAlarm } from '../../utils/orderAlarm';
 
 export default function AdminOrders() {
   const { startEditingOrder } = useAdminUiStore();
@@ -19,24 +20,26 @@ export default function AdminOrders() {
   const [isAudioArmed, setIsAudioArmed] = useState<boolean>(
     (window as any).isAudioUnlocked || localStorage.getItem('nestor_audio_armed') === 'true' || false
   );
+  const [isAlarmRinging, setIsAlarmRinging] = useState(false);
   const [isOpeningAlarm, setIsOpeningAlarm] = useState(false);
-  
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Track last known pending count to detect genuinely NEW orders
+  const prevPendingCountRef = useRef<number>(-1);
 
   useEffect(() => {
     fetchOrders();
-
-    // Setup audio (fuerte y ruidoso)
-    audioRef.current = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
-    audioRef.current.loop = true; 
     
-    // Realtime subscription
+    // Realtime subscription — fires alarm on new INSERT
     const channel = supabase.channel('realtime_orders')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
-        console.log('Nuevo pedido recibido.'); // No logueamos el payload para evitar exponer PII
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
+        console.log('🔔 Nuevo pedido recibido — disparando alarma.');
         fetchOrders();
+        // ✅ FIX PRINCIPAL: Disparar la alarma inmediatamente en cada nuevo pedido
+        if ((window as any).isAudioUnlocked) {
+          setIsAlarmRinging(true);
+          startAlarm();
+        }
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
         fetchOrders();
       })
       .subscribe();
@@ -46,7 +49,6 @@ export default function AdminOrders() {
       const now = new Date();
       const day = now.getDay();
       
-      // Mapeo simple de horas de apertura basado en tu timeUtils
       const hoursMap: Record<number, string | null> = {
         0: '20:00', 1: null, 2: null, 3: '20:30', 4: '20:00', 5: '20:00', 6: '20:00'
       };
@@ -56,18 +58,43 @@ export default function AdminOrders() {
         const [openHour, openMin] = openTime.split(':').map(Number);
         if (now.getHours() === openHour && now.getMinutes() === openMin) {
           setIsOpeningAlarm(true);
+          if ((window as any).isAudioUnlocked) {
+            setIsAlarmRinging(true);
+            startAlarm();
+          }
         }
       }
-    }, 60000); // Revisa cada minuto
+    }, 60000);
 
     return () => {
       supabase.removeChannel(channel);
       clearInterval(interval);
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+      stopAlarm();
     };
   }, []);
+
+  // ✅ FIX SECUNDARIO: Efecto reactivo que vigila pedidos pendientes
+  // Recalculamos localmente para evitar usar 'pending' antes de su declaración
+  useEffect(() => {
+    const pendingCount = orders.filter(o =>
+      o.status === 'pending' && o.delivery_method !== 'local'
+    ).length;
+
+    if (prevPendingCountRef.current === -1) {
+      // Primera carga — registrar baseline sin sonar
+      prevPendingCountRef.current = pendingCount;
+      return;
+    }
+    // Solo sonar si hay más pedidos pendientes de los que estaban silenciados
+    if (pendingCount > silencedCount && isAudioArmed) {
+      setIsAlarmRinging(true);
+      startAlarm();
+    } else if (pendingCount <= silencedCount) {
+      setIsAlarmRinging(false);
+      stopAlarm();
+    }
+    prevPendingCountRef.current = pendingCount;
+  }, [orders]);
 
   const fetchOrders = async () => {
     const { data, error } = await supabase
@@ -80,28 +107,32 @@ export default function AdminOrders() {
   };
 
   const stopAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    setIsAlarmRinging(false);
+    stopAlarm();
   };
 
-  const armAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.play().then(() => {
-        audioRef.current?.pause();
-        setIsAudioArmed(true);
-        (window as any).isAudioUnlocked = true;
-        localStorage.setItem('nestor_audio_armed', 'true');
-      }).catch(e => console.log('Armado bloqueado', e));
+  const armAudio = async () => {
+    try {
+      await armAlarm(); // Desbloquea el AudioContext con el gesto de usuario
+      setIsAudioArmed(true);
+      (window as any).isAudioUnlocked = true;
+      localStorage.setItem('nestor_audio_armed', 'true');
+      // Breve toque de confirmación para que el encargado sepa que está activo
+      startAlarm();
+      setTimeout(() => stopAlarm(), 1800);
+    } catch (e) {
+      console.warn('No se pudo armar la alarma:', e);
     }
   };
 
   const handleSilence = () => {
     stopAudio();
     setIsOpeningAlarm(false);
-    // Guardamos cuántos pendientes hay actualmente para no volver a sonar hasta que llegue uno nuevo
-    setSilencedCount(orders.filter(o => o.status === 'pending').length);
+    setIsAlarmRinging(false);
+    // Capturamos el número actual de pendientes — la alarma solo volverá a sonar cuando llegue uno NUEVO
+    const currentPending = orders.filter(o => o.status === 'pending').length;
+    setSilencedCount(currentPending);
+    prevPendingCountRef.current = currentPending;
   };
 
   const handlePrint = async (order: any) => {
