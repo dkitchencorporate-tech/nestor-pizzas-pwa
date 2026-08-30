@@ -454,7 +454,10 @@ export default function AdminOrders() {
                               <div className="flex-1 text-zinc-300">
                                 <span>{item.customization_details?.name ? tDynamic(item.customization_details.name) : (item.products?.name ? tDynamic(item.products.name) : t('unknown_product'))}</span>
                                 {order.delivery_method === 'local' && !item.customization_details?.is_sent_to_kitchen && (
-                                  <span className="ml-2 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">Pendiente</span>
+                                  <span className="ml-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse font-black shadow-[0_0_10px_rgba(220,38,38,0.6)]">🔥 NUEVO (Sin Marchar)</span>
+                                )}
+                                {order.delivery_method === 'local' && item.customization_details?.is_sent_to_kitchen && (
+                                  <span className="ml-2 bg-zinc-800 text-zinc-400 text-[10px] px-2 py-0.5 rounded-md uppercase tracking-wider font-semibold">✓ En Cocina</span>
                                 )}
                                 {isNewAddition && order.delivery_method !== 'local' && <span className="ml-2 bg-green-500 text-white text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider">Nuevo</span>}
                                 {item.customization_details?.notes && (
