@@ -2,7 +2,7 @@
   "id": "nestorpizzas-public-v2",
   "name": "Néstor Pizzas | Pedidos Oficial Caniles",
   "short_name": "Néstor App",
-  "description": "App Oficial de Pedidos, Carta Digital Interactiva, Club VIP y Sorteos de Néstor Pizzas en Caniles y Baza. Tu 1 pizza.",
+  "description": "App Oficial de Pedidos, Carta Digital Interactiva, Club VIP y Sorteos de Néstor Pizzas en Caniles. Tu 1 pizza.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0A0E",
