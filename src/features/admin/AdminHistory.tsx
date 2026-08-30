@@ -232,11 +232,21 @@ export default function AdminHistory() {
   };
 
   const triggerAuditPrint = () => {
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const dateFormatted = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}_${pad(now.getHours())}h${pad(now.getMinutes())}`;
+    const originalTitle = document.title;
+    
+    // Set dynamic download filename for "Guardar como PDF"
+    document.title = `NESTOR_PIZZAS_INFORME_CONTABLE_${dateFormatted}`;
+    
     document.body.classList.add('printing-audit-report');
     window.print();
+    
     setTimeout(() => {
       document.body.classList.remove('printing-audit-report');
-    }, 1000);
+      document.title = originalTitle;
+    }, 2000);
   };
 
   const handlePrintClick = () => {
@@ -255,14 +265,14 @@ export default function AdminHistory() {
       
       setShowDailyCloseModal(false);
       
-      // 2. Trigger printable A4 audit report
+      // 2. Trigger printable A4 audit report with dynamic title
       triggerAuditPrint();
       
       // 3. Perform secure admin logout and reload
       setTimeout(async () => {
         await logout();
         window.location.reload();
-      }, 1200);
+      }, 1500);
     } catch (err) {
       console.error('Error closing daily shift:', err);
       setIsClosingShift(false);
@@ -275,7 +285,7 @@ export default function AdminHistory() {
       case 'yesterday': return 'Jornada de Ayer';
       case '7days': return 'Últimos 7 Días';
       case '30days': return 'Último Mes (30 Días)';
-      case 'custom': return `Periodo Auditado: ${customStartDate} al ${customEndDate}`;
+      case 'custom': return `Periodo: ${customStartDate} al ${customEndDate}`;
     }
   };
 
@@ -437,7 +447,7 @@ export default function AdminHistory() {
       <div className="p-4 sm:px-6 bg-[#0E0E16] border-b border-zinc-800/80 print:hidden">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           
-          {/* Card 1: EFECTIVO EN REPARTO (CRITICAL FOR RIDERS) */}
+          {/* Card 1: EFECTIVO EN REPARTO */}
           <div className="bg-amber-500/10 border-2 border-amber-500/50 rounded-2xl p-3.5 flex flex-col justify-between shadow-lg relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider">🛵 Efectivo Reparto</span>
@@ -573,7 +583,7 @@ export default function AdminHistory() {
                   </div>
                 </div>
 
-                {/* Accordion Body (Expanded Details) */}
+                {/* Accordion Body */}
                 {isExpanded && (
                   <div className="border-t border-zinc-800 bg-[#0A0A0E] p-4 sm:p-6 animate-fade-in">
                     
@@ -608,7 +618,7 @@ export default function AdminHistory() {
                         </div>
                       </div>
 
-                      {/* Right: Client Details, Notes & Delivery Info */}
+                      {/* Right: Client Details & Notes */}
                       <div className="space-y-4">
                         <div className="bg-[#14141E] p-4 rounded-2xl border border-zinc-800">
                           <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
@@ -724,107 +734,104 @@ export default function AdminHistory() {
       {/* =========================================================================
           PRINTABLE A4 AUDIT & FISCAL ACCOUNTING REPORT (PARA GESTORÍA Y EMPRESA)
           ========================================================================= */}
-      <div className="audit-report-container hidden print:block p-6 sm:p-10 bg-white text-black min-h-screen w-full font-sans text-xs leading-normal">
+      <div className="audit-report-container hidden print:block p-6 sm:p-10 bg-white text-slate-800 min-h-screen w-full font-sans text-xs leading-normal">
         
-        {/* 1. CABECERA OFICIAL FISCAL & METADATOS */}
-        <div className="border-b border-gray-300 pb-4 mb-5 flex justify-between items-start">
+        {/* 1. CABECERA OFICIAL FISCAL & METADATOS (SIN BLOQUES NEGROS) */}
+        <div className="border-b-2 border-slate-300 pb-3 mb-4 flex justify-between items-start">
           <div>
-            <h1 className="text-xl font-bold uppercase tracking-tight text-gray-900">NÉSTOR PIZZAS GOURMET S.L.</h1>
-            <p className="text-[11px] text-gray-600 font-medium">Calle Alcalde Felip, 9 — Caniles (Granada) | CP: 18810</p>
-            <p className="text-[10px] text-gray-500">Sistema POS Enterprise & Registro Fiscal de Ventas</p>
+            <h1 className="text-xl font-black uppercase tracking-tight text-slate-900">NÉSTOR PIZZAS GOURMET S.L.</h1>
+            <p className="text-[10px] text-slate-600 font-medium">Calle Alcalde Felip, 9 — Caniles (Granada) | CP: 18810</p>
+            <p className="text-[9px] text-slate-500">CIF: B-18810992 &bull; Sistema POS Enterprise &bull; Registro Fiscal de Ventas</p>
           </div>
           
-          <div className="text-right">
-            <div className="inline-block border border-gray-400 px-3 py-1 rounded text-center bg-gray-50">
-              <span className="block text-[11px] font-bold text-gray-800 uppercase tracking-wide">Informe Contable y Cierre Fiscal</span>
-              <span className="block text-[9px] text-gray-500">Doc. Interno & Gestoría</span>
-            </div>
-            <p className="text-[10px] text-gray-700 font-bold mt-1.5">{getFilterLabel()}</p>
-            <p className="text-[9px] text-gray-500">Emisión: {new Date().toLocaleString('es-ES')}</p>
+          <div className="border border-slate-300 bg-slate-50 rounded-lg p-2.5 text-right min-w-[200px]">
+            <span className="block text-[11px] font-black text-slate-900 uppercase tracking-wide">Informe Contable & Cierre Fiscal</span>
+            <span className="block text-[10px] font-bold text-green-700">{getFilterLabel()}</span>
+            <span className="block text-[8.5px] text-slate-500 mt-0.5">Emisión: {new Date().toLocaleString('es-ES')}</span>
           </div>
         </div>
 
         {/* 2. CUADRO RESUMEN FINANCIERO Y ARQUEO (BALANCE POR MÉTODOS DE COBRO) */}
-        <div className="mb-5">
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-gray-800 mb-2 border-b border-gray-200 pb-1">
-            1. Resumen Consolidado de Ingresos y Métodos de Cobro
+        <div className="mb-4">
+          <h2 className="text-[10.5px] font-black uppercase tracking-wider text-slate-900 mb-2 border-b border-slate-200 pb-1 flex justify-between">
+            <span>1. Resumen Consolidado de Ingresos & Métodos de Pago</span>
           </h2>
           
-          <div className="grid grid-cols-4 gap-2.5">
-            <div className="p-2.5 border border-gray-300 rounded bg-gray-50 text-center">
-              <span className="block text-[9px] font-bold text-gray-600 uppercase">Efectivo Total</span>
-              <span className="block text-base font-bold text-gray-900 mt-0.5">{stats.totalCash.toFixed(2)} €</span>
-              <span className="block text-[8px] text-gray-500">Reparto: {stats.cashDeliveryTotal.toFixed(2)}€ | Local: {stats.cashLocalTotal.toFixed(2)}€</span>
+          <div className="grid grid-cols-4 gap-2">
+            <div className="p-2 border border-slate-300 rounded bg-slate-50 text-center">
+              <span className="block text-[8.5px] font-bold text-slate-600 uppercase">Efectivo Total</span>
+              <span className="block text-base font-black text-slate-900">{stats.totalCash.toFixed(2)} €</span>
+              <span className="block text-[7.5px] text-slate-500">Reparto: {stats.cashDeliveryTotal.toFixed(2)}€ | Local: {stats.cashLocalTotal.toFixed(2)}€</span>
             </div>
 
-            <div className="p-2.5 border border-gray-300 rounded bg-gray-50 text-center">
-              <span className="block text-[9px] font-bold text-gray-600 uppercase">Datáfono TPV Físico</span>
-              <span className="block text-base font-bold text-gray-900 mt-0.5">{stats.totalTpv.toFixed(2)} €</span>
-              <span className="block text-[8px] text-gray-500">Tarjetas de crédito/débito</span>
+            <div className="p-2 border border-slate-300 rounded bg-slate-50 text-center">
+              <span className="block text-[8.5px] font-bold text-slate-600 uppercase">Datáfono TPV Físico</span>
+              <span className="block text-base font-black text-slate-900">{stats.totalTpv.toFixed(2)} €</span>
+              <span className="block text-[7.5px] text-slate-500">Tarjetas de crédito/débito</span>
             </div>
 
-            <div className="p-2.5 border border-gray-300 rounded bg-gray-50 text-center">
-              <span className="block text-[9px] font-bold text-gray-600 uppercase">Pasarela App / Online</span>
-              <span className="block text-base font-bold text-gray-900 mt-0.5">{stats.totalOnline.toFixed(2)} €</span>
-              <span className="block text-[8px] text-gray-500">SumUp / Pagos Web</span>
+            <div className="p-2 border border-slate-300 rounded bg-slate-50 text-center">
+              <span className="block text-[8.5px] font-bold text-slate-600 uppercase">Pasarela App / Online</span>
+              <span className="block text-base font-black text-slate-900">{stats.totalOnline.toFixed(2)} €</span>
+              <span className="block text-[7.5px] text-slate-500">SumUp / Pagos Web</span>
             </div>
 
-            <div className="p-2.5 border border-gray-400 rounded bg-gray-100 text-center">
-              <span className="block text-[9px] font-bold text-gray-800 uppercase">Facturación Total Neta</span>
-              <span className="block text-lg font-bold text-gray-900 mt-0.5">{stats.totalRevenue.toFixed(2)} €</span>
-              <span className="block text-[8px] text-gray-600 font-medium">{stats.deliveredCount} Entregados | {stats.cancelledCount} Cancelados</span>
+            <div className="p-2 border-1.5 border-slate-900 rounded bg-slate-100 text-center">
+              <span className="block text-[8.5px] font-black text-slate-900 uppercase">Facturación Total Neta</span>
+              <span className="block text-lg font-black text-slate-900">{stats.totalRevenue.toFixed(2)} €</span>
+              <span className="block text-[7.5px] text-slate-600 font-bold">{stats.deliveredCount} Entregados | {stats.cancelledCount} Cancelados</span>
             </div>
           </div>
         </div>
 
         {/* 3. RECUADRO DE CONCILIACIÓN FÍSICA PARA REPARTIDORES */}
-        <div className="mb-5 p-2.5 border border-gray-300 rounded bg-gray-50/70 flex justify-between items-center">
+        <div className="mb-4 p-2.5 border border-amber-400 bg-amber-50/80 rounded-lg flex justify-between items-center">
           <div>
-            <span className="font-bold text-[10px] text-gray-800 uppercase">Liquidación Exclusiva de Repartidores (Efectivo en Mano):</span>
-            <p className="text-[9px] text-gray-500">Importe exacto en metálico que deben depositar físicamente los repartidores al cierre de turno.</p>
+            <span className="font-black text-[10px] text-amber-900 uppercase">🛵 Liquidación Exclusiva de Repartidores (Efectivo en Mano):</span>
+            <p className="text-[8.5px] text-amber-800">Dinero líquido exacto que deben depositar físicamente los repartidores al cierre de turno.</p>
           </div>
           <div className="text-right">
-            <span className="text-base font-bold text-gray-900 border-b border-gray-600 pb-0.5">{stats.cashDeliveryTotal.toFixed(2)} €</span>
-            <span className="block text-[8px] text-gray-500">{stats.cashDeliveryCount} pedidos liquidados</span>
+            <span className="text-base font-black text-amber-950 border-b-2 border-amber-600 pb-0.5">{stats.cashDeliveryTotal.toFixed(2)} €</span>
+            <span className="block text-[8px] text-amber-800 font-bold">{stats.cashDeliveryCount} entregas en efectivo</span>
           </div>
         </div>
 
         {/* 4. TABLAS AUDITABLES SEGREGADAS POR CANAL DE SERVICIO */}
         
         {/* BLOQUE A: PEDIDOS A DOMICILIO */}
-        <div className="mb-5">
-          <div className="flex justify-between items-center border-b border-gray-300 pb-1 mb-1.5 bg-gray-100 px-2 py-1 rounded-t">
-            <h3 className="font-bold text-[10px] uppercase text-gray-800">
+        <div className="mb-4">
+          <div className="flex justify-between items-center border-b border-slate-300 pb-1 mb-1 bg-slate-100 px-2 py-1 rounded-t">
+            <h3 className="font-bold text-[9.5px] uppercase text-slate-900">
               A. Reparto a Domicilio ({stats.deliveryOrders.length} pedidos)
             </h3>
-            <span className="font-bold text-[10px] text-gray-900">
+            <span className="font-bold text-[9.5px] text-slate-900">
               Subtotal Canal: {stats.deliveryTotalRevenue.toFixed(2)} €
             </span>
           </div>
 
           {stats.deliveryOrders.length === 0 ? (
-            <p className="text-[9px] text-gray-400 italic px-2">No se registraron entregas a domicilio en este periodo.</p>
+            <p className="text-[8.5px] text-slate-400 italic px-2 py-1">No se registraron entregas a domicilio en este periodo.</p>
           ) : (
-            <table className="w-full text-left text-[9px] border-collapse mb-2">
+            <table className="w-full text-left text-[8.5px] border-collapse mb-1">
               <thead>
-                <tr className="border-b border-gray-300 text-gray-600 font-semibold bg-gray-50">
-                  <th className="py-1 px-1">ID Ticket</th>
-                  <th className="py-1 px-1">Hora / Fecha</th>
-                  <th className="py-1 px-1">Cliente & Teléfono</th>
-                  <th className="py-1 px-1">Dirección de Entrega</th>
-                  <th className="py-1 px-1">Método Cobro</th>
-                  <th className="py-1 px-1 text-right">Importe</th>
+                <tr className="border-b border-slate-300 text-slate-600 font-bold bg-slate-50">
+                  <th className="py-1 px-1.5" style={{ width: '12%' }}>ID Ticket</th>
+                  <th className="py-1 px-1.5" style={{ width: '16%' }}>Fecha / Hora</th>
+                  <th className="py-1 px-1.5" style={{ width: '24%' }}>Cliente & Teléfono</th>
+                  <th className="py-1 px-1.5" style={{ width: '26%' }}>Dirección de Entrega</th>
+                  <th className="py-1 px-1.5" style={{ width: '11%' }}>Cobro</th>
+                  <th className="py-1 px-1.5 text-right" style={{ width: '11%' }}>Importe</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.deliveryOrders.map(order => (
-                  <tr key={order.id} className="border-b border-gray-150 hover:bg-gray-50">
-                    <td className="py-1 px-1 font-mono text-[8px]">{order.id.slice(0, 8)}</td>
-                    <td className="py-1 px-1 text-gray-600">{new Date(order.created_at).toLocaleDateString('es-ES')} {new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="py-1 px-1 font-bold text-gray-900">{order.client_name || 'Sin Nombre'} {order.client_phone ? `(${order.client_phone})` : ''}</td>
-                    <td className="py-1 px-1 text-gray-600 max-w-[180px] truncate">{order.delivery_address ? formatAddress(order.delivery_address as any) : '-'}</td>
-                    <td className="py-1 px-1 font-medium">{formatPayMethod(order.payment_method)}</td>
-                    <td className="py-1 px-1 text-right font-bold text-gray-900">{Number(order.total_amount || 0).toFixed(2)} €</td>
+                  <tr key={order.id} className="border-b border-slate-200 even:bg-slate-50/50">
+                    <td className="py-1 px-1.5 font-mono text-[8px]">#{order.id.slice(0, 8)}</td>
+                    <td className="py-1 px-1.5 text-slate-600">{new Date(order.created_at).toLocaleDateString('es-ES')} {new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="py-1 px-1.5 font-bold text-slate-900">{order.client_name || 'Sin Nombre'} {order.client_phone ? `(${order.client_phone})` : ''}</td>
+                    <td className="py-1 px-1.5 text-slate-600 max-w-[170px] truncate">{order.delivery_address ? formatAddress(order.delivery_address as any) : '-'}</td>
+                    <td className="py-1 px-1.5 font-medium">{formatPayMethod(order.payment_method)}</td>
+                    <td className="py-1 px-1.5 text-right font-black text-slate-900">{Number(order.total_amount || 0).toFixed(2)} €</td>
                   </tr>
                 ))}
               </tbody>
@@ -833,39 +840,39 @@ export default function AdminHistory() {
         </div>
 
         {/* BLOQUE B: PEDIDOS PARA RECOGER EN LOCAL */}
-        <div className="mb-5">
-          <div className="flex justify-between items-center border-b border-gray-300 pb-1 mb-1.5 bg-gray-100 px-2 py-1 rounded-t">
-            <h3 className="font-bold text-[10px] uppercase text-gray-800">
+        <div className="mb-4">
+          <div className="flex justify-between items-center border-b border-slate-300 pb-1 mb-1 bg-slate-100 px-2 py-1 rounded-t">
+            <h3 className="font-bold text-[9.5px] uppercase text-slate-900">
               B. Recogida en Local / Take-Away ({stats.pickupOrders.length} pedidos)
             </h3>
-            <span className="font-bold text-[10px] text-gray-900">
+            <span className="font-bold text-[9.5px] text-slate-900">
               Subtotal Canal: {stats.pickupTotalRevenue.toFixed(2)} €
             </span>
           </div>
 
           {stats.pickupOrders.length === 0 ? (
-            <p className="text-[9px] text-gray-400 italic px-2">No se registraron pedidos de recogida en este periodo.</p>
+            <p className="text-[8.5px] text-slate-400 italic px-2 py-1">No se registraron pedidos de recogida en este periodo.</p>
           ) : (
-            <table className="w-full text-left text-[9px] border-collapse mb-2">
+            <table className="w-full text-left text-[8.5px] border-collapse mb-1">
               <thead>
-                <tr className="border-b border-gray-300 text-gray-600 font-semibold bg-gray-50">
-                  <th className="py-1 px-1">ID Ticket</th>
-                  <th className="py-1 px-1">Hora / Fecha</th>
-                  <th className="py-1 px-1">Cliente & Teléfono</th>
-                  <th className="py-1 px-1">Notas / Referencia</th>
-                  <th className="py-1 px-1">Método Cobro</th>
-                  <th className="py-1 px-1 text-right">Importe</th>
+                <tr className="border-b border-slate-300 text-slate-600 font-bold bg-slate-50">
+                  <th className="py-1 px-1.5" style={{ width: '12%' }}>ID Ticket</th>
+                  <th className="py-1 px-1.5" style={{ width: '16%' }}>Fecha / Hora</th>
+                  <th className="py-1 px-1.5" style={{ width: '24%' }}>Cliente & Teléfono</th>
+                  <th className="py-1 px-1.5" style={{ width: '26%' }}>Notas / Referencia</th>
+                  <th className="py-1 px-1.5" style={{ width: '11%' }}>Cobro</th>
+                  <th className="py-1 px-1.5 text-right" style={{ width: '11%' }}>Importe</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.pickupOrders.map(order => (
-                  <tr key={order.id} className="border-b border-gray-150 hover:bg-gray-50">
-                    <td className="py-1 px-1 font-mono text-[8px]">{order.id.slice(0, 8)}</td>
-                    <td className="py-1 px-1 text-gray-600">{new Date(order.created_at).toLocaleDateString('es-ES')} {new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="py-1 px-1 font-bold text-gray-900">{order.client_name || 'Mostrador'} {order.client_phone ? `(${order.client_phone})` : ''}</td>
-                    <td className="py-1 px-1 text-gray-600 max-w-[180px] truncate">{order.notes || 'Recogida en mostrador'}</td>
-                    <td className="py-1 px-1 font-medium">{formatPayMethod(order.payment_method)}</td>
-                    <td className="py-1 px-1 text-right font-bold text-gray-900">{Number(order.total_amount || 0).toFixed(2)} €</td>
+                  <tr key={order.id} className="border-b border-slate-200 even:bg-slate-50/50">
+                    <td className="py-1 px-1.5 font-mono text-[8px]">#{order.id.slice(0, 8)}</td>
+                    <td className="py-1 px-1.5 text-slate-600">{new Date(order.created_at).toLocaleDateString('es-ES')} {new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="py-1 px-1.5 font-bold text-slate-900">{order.client_name || 'Mostrador'} {order.client_phone ? `(${order.client_phone})` : ''}</td>
+                    <td className="py-1 px-1.5 text-slate-600 max-w-[170px] truncate">{order.notes || 'Recogida en mostrador'}</td>
+                    <td className="py-1 px-1.5 font-medium">{formatPayMethod(order.payment_method)}</td>
+                    <td className="py-1 px-1.5 text-right font-black text-slate-900">{Number(order.total_amount || 0).toFixed(2)} €</td>
                   </tr>
                 ))}
               </tbody>
@@ -874,39 +881,39 @@ export default function AdminHistory() {
         </div>
 
         {/* BLOQUE C: CONSUMO EN MESA / LOCAL */}
-        <div className="mb-5">
-          <div className="flex justify-between items-center border-b border-gray-300 pb-1 mb-1.5 bg-gray-100 px-2 py-1 rounded-t">
-            <h3 className="font-bold text-[10px] uppercase text-gray-800">
+        <div className="mb-4">
+          <div className="flex justify-between items-center border-b border-slate-300 pb-1 mb-1 bg-slate-100 px-2 py-1 rounded-t">
+            <h3 className="font-bold text-[9.5px] uppercase text-slate-900">
               C. Servicio en Mesa / Sala Local ({stats.localDiningOrders.length} comandas)
             </h3>
-            <span className="font-bold text-[10px] text-gray-900">
+            <span className="font-bold text-[9.5px] text-slate-900">
               Subtotal Canal: {stats.localDiningTotalRevenue.toFixed(2)} €
             </span>
           </div>
 
           {stats.localDiningOrders.length === 0 ? (
-            <p className="text-[9px] text-gray-400 italic px-2">No se registraron comandas de mesa en este periodo.</p>
+            <p className="text-[8.5px] text-slate-400 italic px-2 py-1">No se registraron comandas de mesa en este periodo.</p>
           ) : (
-            <table className="w-full text-left text-[9px] border-collapse mb-2">
+            <table className="w-full text-left text-[8.5px] border-collapse mb-1">
               <thead>
-                <tr className="border-b border-gray-300 text-gray-600 font-semibold bg-gray-50">
-                  <th className="py-1 px-1">ID Ticket</th>
-                  <th className="py-1 px-1">Hora / Fecha</th>
-                  <th className="py-1 px-1">Mesa / Referencia</th>
-                  <th className="py-1 px-1">Notas Comanda</th>
-                  <th className="py-1 px-1">Método Cobro</th>
-                  <th className="py-1 px-1 text-right">Importe</th>
+                <tr className="border-b border-slate-300 text-slate-600 font-bold bg-slate-50">
+                  <th className="py-1 px-1.5" style={{ width: '12%' }}>ID Ticket</th>
+                  <th className="py-1 px-1.5" style={{ width: '16%' }}>Fecha / Hora</th>
+                  <th className="py-1 px-1.5" style={{ width: '24%' }}>Mesa / Referencia</th>
+                  <th className="py-1 px-1.5" style={{ width: '26%' }}>Notas Comanda</th>
+                  <th className="py-1 px-1.5" style={{ width: '11%' }}>Cobro</th>
+                  <th className="py-1 px-1.5 text-right" style={{ width: '11%' }}>Importe</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.localDiningOrders.map(order => (
-                  <tr key={order.id} className="border-b border-gray-150 hover:bg-gray-50">
-                    <td className="py-1 px-1 font-mono text-[8px]">{order.id.slice(0, 8)}</td>
-                    <td className="py-1 px-1 text-gray-600">{new Date(order.created_at).toLocaleDateString('es-ES')} {new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
-                    <td className="py-1 px-1 font-bold text-gray-900">{order.client_name || 'Mesa Local'}</td>
-                    <td className="py-1 px-1 text-gray-600 max-w-[180px] truncate">{order.notes || '-'}</td>
-                    <td className="py-1 px-1 font-medium">{formatPayMethod(order.payment_method)}</td>
-                    <td className="py-1 px-1 text-right font-bold text-gray-900">{Number(order.total_amount || 0).toFixed(2)} €</td>
+                  <tr key={order.id} className="border-b border-slate-200 even:bg-slate-50/50">
+                    <td className="py-1 px-1.5 font-mono text-[8px]">#{order.id.slice(0, 8)}</td>
+                    <td className="py-1 px-1.5 text-slate-600">{new Date(order.created_at).toLocaleDateString('es-ES')} {new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="py-1 px-1.5 font-bold text-slate-900">{order.client_name || 'Mesa Local'}</td>
+                    <td className="py-1 px-1.5 text-slate-600 max-w-[170px] truncate">{order.notes || '-'}</td>
+                    <td className="py-1 px-1.5 font-medium">{formatPayMethod(order.payment_method)}</td>
+                    <td className="py-1 px-1.5 text-right font-black text-slate-900">{Number(order.total_amount || 0).toFixed(2)} €</td>
                   </tr>
                 ))}
               </tbody>
@@ -916,34 +923,34 @@ export default function AdminHistory() {
 
         {/* BLOQUE D: INCIDENCIAS / CANCELADOS (SOLO SI EXISTEN) */}
         {stats.cancelledOrdersList.length > 0 && (
-          <div className="mb-5">
-            <div className="flex justify-between items-center border-b border-gray-300 pb-1 mb-1.5 bg-gray-100 px-2 py-1 rounded-t">
-              <h3 className="font-bold text-[10px] uppercase text-gray-700">
+          <div className="mb-4">
+            <div className="flex justify-between items-center border-b border-slate-300 pb-1 mb-1 bg-slate-100 px-2 py-1 rounded-t">
+              <h3 className="font-bold text-[9.5px] uppercase text-slate-700">
                 D. Pedidos Cancelados / Anulados ({stats.cancelledOrdersList.length} pedidos)
               </h3>
-              <span className="font-bold text-[9px] text-gray-500">
+              <span className="font-bold text-[8.5px] text-slate-500">
                 Importe No Cobrado: {stats.cancelledOrdersList.reduce((sum, o) => sum + Number(o.total_amount || 0), 0).toFixed(2)} €
               </span>
             </div>
 
-            <table className="w-full text-left text-[9px] border-collapse mb-2">
+            <table className="w-full text-left text-[8.5px] border-collapse mb-1">
               <thead>
-                <tr className="border-b border-gray-300 text-gray-500 font-semibold bg-gray-50">
-                  <th className="py-1 px-1">ID Ticket</th>
-                  <th className="py-1 px-1">Fecha</th>
-                  <th className="py-1 px-1">Cliente</th>
-                  <th className="py-1 px-1">Motivo / Notas</th>
-                  <th className="py-1 px-1 text-right">Importe Anulado</th>
+                <tr className="border-b border-slate-300 text-slate-500 font-bold bg-slate-50">
+                  <th className="py-1 px-1.5" style={{ width: '12%' }}>ID Ticket</th>
+                  <th className="py-1 px-1.5" style={{ width: '16%' }}>Fecha</th>
+                  <th className="py-1 px-1.5" style={{ width: '24%' }}>Cliente</th>
+                  <th className="py-1 px-1.5" style={{ width: '37%' }}>Motivo / Notas</th>
+                  <th className="py-1 px-1.5 text-right" style={{ width: '11%' }}>Anulado</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.cancelledOrdersList.map(order => (
-                  <tr key={order.id} className="border-b border-gray-150 text-gray-500">
-                    <td className="py-1 px-1 font-mono text-[8px]">{order.id.slice(0, 8)}</td>
-                    <td className="py-1 px-1">{new Date(order.created_at).toLocaleDateString('es-ES')}</td>
-                    <td className="py-1 px-1">{order.client_name || 'Sin Nombre'}</td>
-                    <td className="py-1 px-1 text-[8px] italic">{order.notes || 'Cancelado por administración'}</td>
-                    <td className="py-1 px-1 text-right line-through">{Number(order.total_amount || 0).toFixed(2)} €</td>
+                  <tr key={order.id} className="border-b border-slate-200 text-slate-500">
+                    <td className="py-1 px-1.5 font-mono text-[8px]">#{order.id.slice(0, 8)}</td>
+                    <td className="py-1 px-1.5">{new Date(order.created_at).toLocaleDateString('es-ES')}</td>
+                    <td className="py-1 px-1.5">{order.client_name || 'Sin Nombre'}</td>
+                    <td className="py-1 px-1.5 text-[8px] italic">{order.notes || 'Cancelado por administración'}</td>
+                    <td className="py-1 px-1.5 text-right line-through">{Number(order.total_amount || 0).toFixed(2)} €</td>
                   </tr>
                 ))}
               </tbody>
@@ -952,21 +959,21 @@ export default function AdminHistory() {
         )}
 
         {/* 5. CERTIFICACIÓN LEGAL Y BLOQUE DE FIRMAS */}
-        <div className="mt-8 pt-4 border-t border-gray-300 grid grid-cols-2 gap-10 text-center text-[10px]">
+        <div className="mt-6 pt-3 border-t-2 border-slate-300 grid grid-cols-2 gap-10 text-center text-[9.5px]">
           <div>
-            <div className="border-b border-gray-400 h-12 mb-1.5"></div>
-            <p className="font-bold text-gray-800">Firma del Responsable de Turno / Caja</p>
-            <p className="text-[8px] text-gray-500">Certifica la exactitud del dinero en metálico y TPV recibido</p>
+            <div className="border-b border-slate-400 h-10 mb-1.5"></div>
+            <p className="font-black text-slate-900">Firma del Responsable de Turno / Caja</p>
+            <p className="text-[8px] text-slate-500">Certifico la veracidad del arqueo físico y cobros efectuados</p>
           </div>
           
           <div>
-            <div className="border-b border-gray-400 h-12 mb-1.5"></div>
-            <p className="font-bold text-gray-800">Sello de Gerencia / Asesoría Fiscal y Contable</p>
-            <p className="text-[8px] text-gray-500">Recepción y registro para la liquidación contable del ejercicio</p>
+            <div className="border-b border-slate-400 h-10 mb-1.5"></div>
+            <p className="font-black text-slate-900">Sello de Gerencia / Asesoría Fiscal y Contable</p>
+            <p className="text-[8px] text-slate-500">Recepción contable oficial para balance y liquidación tributaria</p>
           </div>
         </div>
 
-        <div className="mt-5 text-center text-[8px] text-gray-400">
+        <div className="mt-4 text-center text-[7.5px] text-slate-400">
           <p>Documento oficial emitido por Néstor Pizzas PWA v2.4.0 — Certificación de auditoría interna y conciliación fiscal conforme a la RGPD.</p>
         </div>
 
