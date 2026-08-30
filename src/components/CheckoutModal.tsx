@@ -86,17 +86,48 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
   const validateGeofence = async (): Promise<boolean> => {
-    // 1. Recogida en local no requiere restricción geográfica
-    if (deliveryMethod === 'pickup') return true;
-
-    // 2. Domicilio exclusivamente en Caniles (CP 18810)
-    const cleanCP = addressCP.trim();
-    if (cleanCP === '18810') {
-      return true;
+    // 1. Domicilio estrictamente en Caniles (CP 18810)
+    if (deliveryMethod === 'delivery') {
+      const cleanCP = addressCP.trim();
+      if (cleanCP !== '18810') {
+        setGeofenceError('El reparto a domicilio opera exclusivamente en Caniles (CP 18810).');
+        return false;
+      }
     }
 
-    setGeofenceError('El reparto a domicilio está disponible exclusivamente en Caniles (CP 18810). Para otras localidades, selecciona la opción "Para Recoger".');
-    return false;
+    // 2. Si el dispositivo tiene geolocalización activa, verificar radio de Caniles
+    return new Promise<boolean>((resolve) => {
+      if (!navigator.geolocation) {
+        resolve(true);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat1 = position.coords.latitude;
+          const lon1 = position.coords.longitude;
+          const lat2 = 37.4346; // Caniles Center
+          const lon2 = -2.7350;
+          
+          const R = 6371; // Earth radius km
+          const dLat = (lat2 - lat1) * (Math.PI / 180);
+          const dLon = (lon2 - lon1) * (Math.PI / 180);
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+          
+          if (distance > 12) {
+            setGeofenceError(`Te encuentras a ${distance.toFixed(1)} km de Caniles. Néstor Pizzas opera de forma exclusiva y presencial para Caniles (Granada).`);
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        },
+        () => {
+          resolve(true);
+        },
+        { enableHighAccuracy: false, timeout: 4000, maximumAge: 60000 }
+      );
+    });
   };
 
   const handleCheckoutClick = async () => {
@@ -128,7 +159,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
     
     const finalDeliveryAddress = deliveryMethod === 'delivery' 
       ? `${addressStreet}, Nº ${addressNumber}, CP ${addressCP} Caniles${addressNotes ? '. Notas: ' + addressNotes : ''}`
-      : addressNotes ? `Notas/Mesa: ${addressNotes}` : 'Recogida en local';
+      : addressNotes ? `Recogida Caniles (C. Alcalde Felip, 9). Notas: ${addressNotes}` : 'Recogida en local Caniles (C. Alcalde Felip, 9 — 18810)';
 
     try {
       const orderItems = items.map(item => ({
@@ -388,8 +419,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                 <div className="flex items-center gap-3">
                   <input type="radio" checked={deliveryMethod === 'pickup'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
                   <div>
-                    <span className="font-bold text-white block text-sm sm:text-sm">{t('pickup_store')}</span>
-                    <span className="text-[10px] sm:text-[11px] text-zinc-400">Calle Alcalde Felip, 9</span>
+                    <span className="font-bold text-white block text-sm sm:text-sm">Para Recoger en Caniles</span>
+                    <span className="text-[10px] sm:text-[11px] text-zinc-400">C. Alcalde Felip, 9 (18810 Caniles)</span>
                   </div>
                 </div>
               </label>
