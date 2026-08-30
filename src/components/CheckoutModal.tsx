@@ -43,6 +43,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [addressNumber, setAddressNumber] = useState(initNumber);
   const [addressCP, setAddressCP] = useState(initCP);
   const [addressNotes, setAddressNotes] = useState(initNotes);
+  const [orderNotes, setOrderNotes] = useState('');
   const [pointsRedeemed, setPointsRedeemed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [geofenceError, setGeofenceError] = useState<string | null>(null);
@@ -174,6 +175,12 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         }
       }));
 
+      const finalOrderNotes = [
+        scheduledTime !== 'asap' ? `⏰ Programado: ${scheduledTime}` : '',
+        addressNotes ? `Dir/Mesa: ${addressNotes}` : '',
+        orderNotes.trim() ? `📝 ${orderNotes.trim()}` : ''
+      ].filter(Boolean).join(' | ');
+
       const { data: orderId, error: checkoutError } = await supabase.rpc('process_checkout', {
         p_user_id: user?.id || null,
         p_client_name: clientName,
@@ -183,7 +190,9 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         p_items: orderItems,
         p_points_redeemed: pointsRedeemed,
         p_small_order_fee_accepted: acceptSmallOrderFee,
-        p_ip_address: 'client', p_notes: addressNotes, p_payment_method: paymentMethod
+        p_ip_address: 'client',
+        p_notes: finalOrderNotes || null,
+        p_payment_method: paymentMethod
       });
 
       if (checkoutError) throw checkoutError;
