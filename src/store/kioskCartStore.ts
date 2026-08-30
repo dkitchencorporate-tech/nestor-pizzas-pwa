@@ -1,3 +1,4 @@
+import { generateSafeUUID } from '../utils/uuid';
 import { create } from 'zustand';
 import { CartItem } from './cartStore';
 
@@ -50,7 +51,7 @@ export const useKioskCartStore = create<KioskCartState>()((set, get) => ({
     }
 
     return { 
-      items: [...state.items, { ...item, id: crypto.randomUUID() }],
+      items: [...state.items, { ...item, id: generateSafeUUID() }],
       lastUpdated: Date.now()
     };
   }),
