@@ -1,6 +1,6 @@
 import PWAInstallModal from './components/PWAInstallModal';
 import { usePWAInstall } from './hooks/usePWAInstall';
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import CartDrawer from './components/CartDrawer';
 import CartBar from './components/CartBar';
 import UpsellModal from './components/UpsellModal';
