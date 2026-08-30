@@ -72,28 +72,26 @@ export default function AdminOrders() {
     };
   }, []);
 
-  // ✅ FIX SECUNDARIO: Efecto reactivo que vigila pedidos pendientes
-  // Recalculamos localmente para evitar usar 'pending' antes de su declaración
+  // Efecto reactivo que vigila pedidos pendientes (Recogida / Domicilio) y Mesas con productos nuevos
   useEffect(() => {
-    const pendingCount = orders.filter(o =>
-      o.status === 'pending' && o.delivery_method !== 'local'
+    const alertingCount = orders.filter(o =>
+      o.status === 'pending' || (o.delivery_method === 'local' && o.order_items?.some((i: any) => !i.customization_details?.is_sent_to_kitchen))
     ).length;
 
     if (prevPendingCountRef.current === -1) {
       // Primera carga — registrar baseline sin sonar
-      prevPendingCountRef.current = pendingCount;
+      prevPendingCountRef.current = alertingCount;
       return;
     }
-    // Solo sonar si hay más pedidos pendientes de los que estaban silenciados
-    if (pendingCount > silencedCount && isAudioArmed) {
+    // Solo sonar si hay más pedidos o mesas activas con productos sin enviar a cocina
+    if (alertingCount > silencedCount && isAudioArmed) {
       setIsAlarmRinging(true);
-      // Uso void para llamar a la función async dentro de useEffect
       void startAlarm();
-    } else if (pendingCount <= silencedCount) {
+    } else if (alertingCount <= silencedCount) {
       setIsAlarmRinging(false);
       stopAlarm();
     }
-    prevPendingCountRef.current = pendingCount;
+    prevPendingCountRef.current = alertingCount;
   }, [orders]);
 
   const fetchOrders = async () => {
@@ -128,7 +126,9 @@ export default function AdminOrders() {
     setIsOpeningAlarm(false);
     setIsAlarmRinging(false);
     // Capturamos el número actual de pendientes — la alarma solo volverá a sonar cuando llegue uno NUEVO
-    const currentPending = orders.filter(o => o.status === 'pending').length;
+    const currentPending = orders.filter(o => 
+      o.status === 'pending' || (o.delivery_method === 'local' && o.order_items?.some((i: any) => !i.customization_details?.is_sent_to_kitchen))
+    ).length;
     setSilencedCount(currentPending);
     prevPendingCountRef.current = currentPending;
   };
