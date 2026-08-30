@@ -1,3 +1,4 @@
+import { generateSafeUUID } from '../utils/uuid';
 import { useState } from 'react';
 import { useCartStore } from '../store/cartStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
@@ -44,7 +45,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
           const subProd = product.subProducts!.find(p => String(p.id) === String(id));
           if (subProd) {
             addItem({
-              id: crypto.randomUUID(),
+              id: generateSafeUUID(),
               productId: subProd.id,
               name: subProd.name,
               price: subProd.price,
@@ -60,7 +61,7 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
     }
 
     addItem({
-      id: crypto.randomUUID(),
+      id: generateSafeUUID(),
       productId: typeof product.id === 'number' ? product.id : 0,
       name: product.name,
       price: product.price,
@@ -168,17 +169,18 @@ export default function AddToCartModal({ product, onClose }: AddToCartModalProps
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-zinc-800 bg-[#0A0A0E] flex items-center justify-between gap-4 shrink-0">
-          <div>
-            <div className="text-gray-400 text-[10px] mb-1 uppercase tracking-wider font-bold">{t('total')}</div>
-            <div className="text-white font-display font-black text-xl">
-              {finalPrice.toFixed(2).replace('.', ',')} €
+        <div className="p-4 sm:p-5 border-t border-zinc-800 bg-[#0A0A0E] flex items-center justify-between gap-3 sm:gap-4 shrink-0">
+          <div className="min-w-0 shrink-0">
+            <div className="text-gray-400 text-[10px] mb-0.5 uppercase tracking-wider font-bold">{t('total')}</div>
+            <div className="text-white font-display font-black text-xl sm:text-2xl whitespace-nowrap flex items-baseline gap-1">
+              <span>{finalPrice.toFixed(2).replace('.', ',')}</span>
+              <span className="text-sm sm:text-base font-bold text-green-400">€</span>
             </div>
           </div>
           <button
             onClick={handleAddToCart}
             disabled={product.isGroup ? finalPrice === 0 : false}
-            className="px-6 py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             {t('add_to_order')}
           </button>
