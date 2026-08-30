@@ -1,58 +1,78 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useI18nStore } from '../../store/i18nStore';
 import { formatAddress } from '../../utils/addressUtils';
+import { useAuthStore } from '../../store/authStore';
 
-type DateFilter = 'today' | 'yesterday' | '7days' | '30days';
+type DateFilter = 'today' | 'yesterday' | '7days' | '30days' | 'custom';
+type ServiceFilter = 'all' | 'delivery' | 'pickup' | 'local';
+type PaymentFilter = 'all' | 'cash' | 'tpv' | 'online';
+type StatusFilter = 'all' | 'delivered' | 'cancelled';
 
 export default function AdminHistory() {
   const { t } = useI18nStore();
+  const { logout } = useAuthStore();
+  
+  // States for Data & Loading
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filter States
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
+  const [customDate, setCustomDate] = useState<string>(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all');
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('delivered');
+  
+  // UI & Modals States
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showDailyCloseModal, setShowDailyCloseModal] = useState(false);
 
   useEffect(() => {
     fetchHistory();
-  }, [dateFilter]);
+  }, [dateFilter, customDate]);
 
-  const getWorkingDayRange = (filter: DateFilter) => {
+  const getWorkingDayRange = (filter: DateFilter, customDateStr?: string) => {
     const now = new Date();
-    
-    // Si estamos antes de las 5 AM, el "hoy" de negocio empezó ayer a las 5 AM
     const isLateNight = now.getHours() < 5;
     
-    const start = new Date(now);
-    const end = new Date(now);
+    let start = new Date(now);
+    let end = new Date(now);
 
     switch (filter) {
       case 'today':
         if (isLateNight) start.setDate(start.getDate() - 1);
         start.setHours(5, 0, 0, 0);
-        
-        end.setTime(start.getTime() + 24 * 60 * 60 * 1000); // 5 AM of next day
+        end.setTime(start.getTime() + 24 * 60 * 60 * 1000);
         break;
       case 'yesterday':
         if (isLateNight) start.setDate(start.getDate() - 2);
         else start.setDate(start.getDate() - 1);
         start.setHours(5, 0, 0, 0);
-        
         end.setTime(start.getTime() + 24 * 60 * 60 * 1000);
         break;
       case '7days':
         if (isLateNight) end.setDate(end.getDate() - 1);
         end.setHours(5, 0, 0, 0);
-        end.setTime(end.getTime() + 24 * 60 * 60 * 1000); // end of today's shift
-        
+        end.setTime(end.getTime() + 24 * 60 * 60 * 1000);
         start.setTime(end.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
       case '30days':
         if (isLateNight) end.setDate(end.getDate() - 1);
         end.setHours(5, 0, 0, 0);
-        end.setTime(end.getTime() + 24 * 60 * 60 * 1000); // end of today's shift
-        
+        end.setTime(end.getTime() + 24 * 60 * 60 * 1000);
         start.setTime(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case 'custom':
+        if (customDateStr) {
+          const [year, month, day] = customDateStr.split('-').map(Number);
+          start = new Date(year, month - 1, day, 5, 0, 0, 0);
+          end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+        }
         break;
     }
 
@@ -63,7 +83,7 @@ export default function AdminHistory() {
     setLoading(true);
     setExpandedOrderId(null);
     
-    const { start, end } = getWorkingDayRange(dateFilter);
+    const { start, end } = getWorkingDayRange(dateFilter, customDate);
 
     const { data, error } = await supabase
       .from('orders')
@@ -73,38 +93,137 @@ export default function AdminHistory() {
       .lt('created_at', end)
       .order('created_at', { ascending: false });
       
-    if (data) setOrders(data);
+    if (data) {
+      setOrders(data);
+    }
     setLoading(false);
   };
 
+  // Filtered Orders in Memory (Multi-criteria real-time)
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      // Service filter
+      if (serviceFilter !== 'all') {
+        if (serviceFilter === 'delivery' && order.delivery_method !== 'delivery') return false;
+        if (serviceFilter === 'pickup' && order.delivery_method !== 'pickup') return false;
+        if (serviceFilter === 'local' && order.delivery_method !== 'local') return false;
+      }
+
+      // Payment filter
+      if (paymentFilter !== 'all') {
+        const pMethod = order.payment_method || 'cash';
+        if (paymentFilter === 'cash' && pMethod !== 'cash') return false;
+        if (paymentFilter === 'tpv' && pMethod !== 'tpv' && pMethod !== 'physical' && pMethod !== 'card_delivery') return false;
+        if (paymentFilter === 'online' && pMethod !== 'online' && pMethod !== 'sumup_online') return false;
+      }
+
+      // Status filter
+      if (statusFilter !== 'all') {
+        if (order.status !== statusFilter) return false;
+      }
+
+      return true;
+    });
+  }, [orders, serviceFilter, paymentFilter, statusFilter]);
+
+  // Real-time Financial Calculations (Atomic Math)
+  const stats = useMemo(() => {
+    const deliveredOrders = filteredOrders.filter(o => o.status === 'delivered');
+    const cancelledOrders = filteredOrders.filter(o => o.status === 'cancelled');
+
+    const totalRevenue = deliveredOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+
+    // Cash delivered orders (Rider Cash to be liquidated!)
+    const cashDeliveryOrders = deliveredOrders.filter(o => 
+      o.delivery_method === 'delivery' && (o.payment_method === 'cash' || !o.payment_method)
+    );
+    const cashDeliveryTotal = cashDeliveryOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+
+    // Cash in Local / Counter / Tables
+    const cashLocalOrders = deliveredOrders.filter(o => 
+      o.delivery_method !== 'delivery' && (o.payment_method === 'cash' || !o.payment_method)
+    );
+    const cashLocalTotal = cashLocalOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+
+    // Total Cash
+    const totalCash = cashDeliveryTotal + cashLocalTotal;
+
+    // Total TPV / Card
+    const tpvOrders = deliveredOrders.filter(o => 
+      o.payment_method === 'tpv' || o.payment_method === 'physical' || o.payment_method === 'card_delivery'
+    );
+    const totalTpv = tpvOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+
+    // Total Online / App / SumUp
+    const onlineOrders = deliveredOrders.filter(o => 
+      o.payment_method === 'online' || o.payment_method === 'sumup_online'
+    );
+    const totalOnline = onlineOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+
+    return {
+      totalRevenue,
+      cashDeliveryTotal,
+      cashDeliveryCount: cashDeliveryOrders.length,
+      cashLocalTotal,
+      totalCash,
+      totalTpv,
+      totalOnline,
+      deliveredCount: deliveredOrders.length,
+      cancelledCount: cancelledOrders.length,
+      totalCount: filteredOrders.length
+    };
+  }, [filteredOrders]);
+
   const toggleAccordion = (id: string) => {
-    if (expandedOrderId === id) {
-      setExpandedOrderId(null);
+    setExpandedOrderId(prev => prev === id ? null : id);
+  };
+
+  const handleExportClick = () => {
+    setShowExportMenu(false);
+    if (dateFilter === 'today') {
+      setShowDailyCloseModal(true);
     } else {
-      setExpandedOrderId(id);
+      window.print();
     }
   };
 
+  const handlePerformDailyClose = async () => {
+    setShowDailyCloseModal(false);
+    window.print();
+    // Allow print dialog to trigger, then perform secure admin sign-out
+    setTimeout(async () => {
+      await logout();
+      window.location.reload();
+    }, 1000);
+  };
+
   const downloadCSV = () => {
-    if (orders.length === 0) {
-      alert(t('no_orders_to_export'));
+    if (filteredOrders.length === 0) {
+      alert('No hay pedidos para exportar en este filtro.');
       return;
     }
 
-    const headers = [t('order_id'), t('date'), t('time'), t('type'), t('status'), t('total_euros')];
+    const headers = ['ID Ticket', 'Fecha', 'Hora', 'Tipo Servicio', 'Metodo Pago', 'Estado', 'Cliente', 'Telefono', 'Total (€)'];
     
-    const rows = orders.map(order => {
+    const rows = filteredOrders.map(order => {
       const date = new Date(order.created_at);
       const dateStr = date.toLocaleDateString('es-ES');
-      const timeStr = date.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
-      const typeStr = order.delivery_method === 'delivery' ? 'Domicilio' : 'Local';
-      const statusStr = order.status === 'delivered' ? 'Completado' : 'Cancelado';
-      const total = order.total_amount;
+      const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
       
-      return `"${order.id.slice(0,8)}","${dateStr}","${timeStr}","${typeStr}","${statusStr}","${total}"`;
+      const typeStr = order.delivery_method === 'delivery' ? 'Domicilio' : (order.delivery_method === 'pickup' ? 'Para Recoger' : 'Mesa Local');
+      
+      let payStr = 'Efectivo';
+      if (order.payment_method === 'tpv' || order.payment_method === 'physical' || order.payment_method === 'card_delivery') payStr = 'Datáfono TPV';
+      if (order.payment_method === 'online' || order.payment_method === 'sumup_online') payStr = 'App / Online';
+
+      const statusStr = order.status === 'delivered' ? 'Completado' : 'Cancelado';
+      const clientName = (order.client_name || '').replace(/"/g, '""');
+      const clientPhone = order.client_phone || '';
+      const total = Number(order.total_amount || 0).toFixed(2);
+      
+      return `"${order.id.slice(0, 8)}","${dateStr}","${timeStr}","${typeStr}","${payStr}","${statusStr}","${clientName}","${clientPhone}","${total}"`;
     });
 
-    // Add BOM for Excel UTF-8 recognition
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
     const csvContent = headers.join(',') + "\n" + rows.join('\n');
     
@@ -113,101 +232,251 @@ export default function AdminHistory() {
     
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `informe_nestor_pizzas_${dateFilter}.csv`);
+    link.setAttribute("download", `informe_contable_nestor_pizzas_${dateFilter}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const getFilterLabel = () => {
+    switch (dateFilter) {
+      case 'today': return 'Jornada de Hoy';
+      case 'yesterday': return 'Jornada de Ayer';
+      case '7days': return 'Últimos 7 Días';
+      case '30days': return 'Último Mes (30 Días)';
+      case 'custom': return `Fecha Específica: ${customDate}`;
+    }
   };
 
   return (
     <div className="h-full flex flex-col bg-[#0A0A0E] text-white overflow-hidden print:bg-white print:text-black">
       
       {/* Header and Controls */}
-      <div className="p-4 sm:p-6 border-b border-zinc-800 bg-[#14141E] z-10 shadow-md flex items-center justify-between print:hidden">
-        <h2 className="text-xl sm:text-2xl font-display font-black uppercase text-white tracking-wide flex items-center gap-2">
-          Historial de <span className="text-zinc-500">Pedidos</span>
-        </h2>
-        <div className="flex gap-2">
+      <div className="p-4 sm:p-5 border-b border-zinc-800 bg-[#14141E] z-10 shadow-md flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-display font-black uppercase text-white tracking-wide flex items-center gap-2">
+            Historial de <span className="text-green-500">Pedidos & Arqueo</span>
+          </h2>
+          <p className="text-xs text-zinc-400 font-medium">Auditoría contable, conciliación de repartidores y cierre de caja</p>
+        </div>
+        
+        <div className="flex items-center gap-2">
           <div className="relative">
             <button 
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg text-sm font-bold uppercase hover:bg-blue-600/30 transition-colors flex items-center gap-2"
+              className="px-4 py-2.5 bg-green-600/20 text-green-400 border border-green-500/40 rounded-xl text-xs font-black uppercase hover:bg-green-600/30 transition-all flex items-center gap-2 shadow-lg"
             >
-              📊 Exportar
+              📄 Exportar / Informe
             </button>
             {showExportMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)}></div>
-                <div className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-50">
-                  <button onClick={() => { downloadCSV(); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-sm font-medium text-white border-b border-zinc-800">
+                <div className="absolute right-0 mt-2 w-64 bg-[#14141E] border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+                  <button 
+                    onClick={() => { downloadCSV(); setShowExportMenu(false); }} 
+                    className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-xs font-bold text-white border-b border-zinc-800 flex items-center gap-2"
+                  >
                     📥 Descargar Excel (CSV)
                   </button>
-                  <button onClick={() => { window.print(); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-sm font-medium text-white">
-                    🖨️ Imprimir Informe (PDF)
+                  <button 
+                    onClick={handleExportClick} 
+                    className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-xs font-bold text-emerald-400 flex items-center gap-2"
+                  >
+                    🖨️ Imprimir Informe Contable (PDF)
                   </button>
                 </div>
               </>
             )}
           </div>
+          
           <button 
             onClick={fetchHistory}
-            className="px-4 py-2 bg-zinc-800 text-white rounded-lg text-sm font-bold uppercase hover:bg-zinc-700 transition-colors"
+            className="px-4 py-2.5 bg-zinc-800 text-zinc-300 rounded-xl text-xs font-bold uppercase hover:bg-zinc-700 hover:text-white transition-colors"
           >
-            Refrescar
+            🔄 Refrescar
           </button>
         </div>
       </div>
 
-      {/* Date Filters */}
-      <div className="flex overflow-x-auto no-scrollbar border-b border-zinc-800 bg-[#14141E] px-4 pt-2 print:hidden">
+      {/* Date Range Navigation Tabs */}
+      <div className="flex items-center overflow-x-auto no-scrollbar border-b border-zinc-800 bg-[#101018] px-4 pt-2 gap-1 print:hidden">
         <button 
           onClick={() => setDateFilter('today')}
-          className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${dateFilter === 'today' ? 'border-green-500 text-green-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-4 py-2.5 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === 'today' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
-          Hoy
+          📅 Hoy
         </button>
         <button 
           onClick={() => setDateFilter('yesterday')}
-          className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${dateFilter === 'yesterday' ? 'border-green-500 text-green-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-4 py-2.5 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === 'yesterday' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
-          Ayer
+          ⏪ Ayer
         </button>
         <button 
           onClick={() => setDateFilter('7days')}
-          className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${dateFilter === '7days' ? 'border-green-500 text-green-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-4 py-2.5 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === '7days' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
-          Últimos 7 Días
+          📊 Últimos 7 Días
         </button>
         <button 
           onClick={() => setDateFilter('30days')}
-          className={`px-5 py-3 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all border-b-2 whitespace-nowrap ${dateFilter === '30days' ? 'border-green-500 text-green-500' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-4 py-2.5 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === '30days' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
-          Último Mes
+          📈 Último Mes
         </button>
+        
+        {/* Custom Calendar Date Picker */}
+        <div className={`flex items-center gap-2 px-3 py-1.5 border-b-2 rounded-t-lg transition-all ${dateFilter === 'custom' ? 'border-green-500 bg-green-500/10 text-green-400' : 'border-transparent text-zinc-500'}`}>
+          <button 
+            onClick={() => setDateFilter('custom')} 
+            className="text-xs font-bold uppercase whitespace-nowrap"
+          >
+            🗓️ Fecha Concreta:
+          </button>
+          <input 
+            type="date" 
+            value={customDate}
+            onChange={(e) => {
+              setCustomDate(e.target.value);
+              setDateFilter('custom');
+            }}
+            className="bg-zinc-900 border border-zinc-700 text-white text-xs px-2 py-1 rounded-lg focus:outline-none focus:border-green-500"
+          />
+        </div>
+      </div>
+
+      {/* Multi-Criteria Interactive Filter Toolbar */}
+      <div className="p-3 sm:px-6 bg-[#14141E] border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 print:hidden">
+        
+        {/* Service Type Filter */}
+        <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase px-2">Tipo:</span>
+          {(['all', 'delivery', 'pickup', 'local'] as ServiceFilter[]).map((st) => (
+            <button
+              key={st}
+              onClick={() => setServiceFilter(st)}
+              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all capitalize ${serviceFilter === st ? 'bg-green-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+            >
+              {st === 'all' ? 'Todos' : (st === 'delivery' ? '🛵 Domicilio' : (st === 'pickup' ? '🛍️ Recogida' : '🍽️ Mesas'))}
+            </button>
+          ))}
+        </div>
+
+        {/* Payment Method Filter */}
+        <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase px-2">Pago:</span>
+          {(['all', 'cash', 'tpv', 'online'] as PaymentFilter[]).map((pm) => (
+            <button
+              key={pm}
+              onClick={() => setPaymentFilter(pm)}
+              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all capitalize ${paymentFilter === pm ? 'bg-blue-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+            >
+              {pm === 'all' ? 'Todos' : (pm === 'cash' ? '💵 Efectivo' : (pm === 'tpv' ? '💳 TPV Físico' : '📱 App / Online'))}
+            </button>
+          ))}
+        </div>
+
+        {/* Status Filter */}
+        <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase px-2">Estado:</span>
+          {(['delivered', 'cancelled', 'all'] as StatusFilter[]).map((sf) => (
+            <button
+              key={sf}
+              onClick={() => setStatusFilter(sf)}
+              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all capitalize ${statusFilter === sf ? (sf === 'cancelled' ? 'bg-red-600 text-white' : 'bg-zinc-700 text-white') : 'text-zinc-400 hover:text-zinc-200'}`}
+            >
+              {sf === 'delivered' ? '🟢 Completados' : (sf === 'cancelled' ? '❌ Cancelados' : 'Todos')}
+            </button>
+          ))}
+        </div>
+
+      </div>
+
+      {/* Real-Time Financial Summary Panel (Arqueo de Caja & Liquidación) */}
+      <div className="p-4 sm:px-6 bg-[#0E0E16] border-b border-zinc-800/80 print:hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          
+          {/* Card 1: EFECTIVO EN REPARTO (CRITICAL FOR RIDERS) */}
+          <div className="bg-amber-500/10 border-2 border-amber-500/50 rounded-2xl p-3.5 flex flex-col justify-between shadow-lg relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider">🛵 Efectivo Reparto</span>
+              <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.5 rounded">{stats.cashDeliveryCount} ped.</span>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-black text-amber-300 leading-none">{stats.cashDeliveryTotal.toFixed(2)}€</span>
+              <p className="text-[9px] text-amber-400/80 font-medium mt-1">A entregar por repartidores</p>
+            </div>
+          </div>
+
+          {/* Card 2: EFECTIVO EN LOCAL */}
+          <div className="bg-zinc-900/80 border border-zinc-700 rounded-2xl p-3.5 flex flex-col justify-between">
+            <span className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">💵 Efectivo Local/Barra</span>
+            <div className="mt-1">
+              <span className="text-xl font-black text-zinc-200 leading-none">{stats.cashLocalTotal.toFixed(2)}€</span>
+              <p className="text-[9px] text-zinc-500 font-medium mt-1">Cobrado en mostrador/mesas</p>
+            </div>
+          </div>
+
+          {/* Card 3: TOTAL DATAFONO TPV */}
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-3.5 flex flex-col justify-between">
+            <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider">💳 Datáfono TPV Físico</span>
+            <div className="mt-1">
+              <span className="text-xl font-black text-blue-300 leading-none">{stats.totalTpv.toFixed(2)}€</span>
+              <p className="text-[9px] text-blue-400/70 font-medium mt-1">Tarjetas en TPV</p>
+            </div>
+          </div>
+
+          {/* Card 4: TOTAL ONLINE / APP */}
+          <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-3.5 flex flex-col justify-between">
+            <span className="text-[10px] font-black uppercase text-purple-400 tracking-wider">📱 App / SumUp Online</span>
+            <div className="mt-1">
+              <span className="text-xl font-black text-purple-300 leading-none">{stats.totalOnline.toFixed(2)}€</span>
+              <p className="text-[9px] text-purple-400/70 font-medium mt-1">Pasarela web</p>
+            </div>
+          </div>
+
+          {/* Card 5: FACTURACIÓN TOTAL */}
+          <div className="bg-emerald-500/10 border-2 border-emerald-500/50 rounded-2xl p-3.5 flex flex-col justify-between col-span-2 sm:col-span-1 shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">💰 Facturación Total</span>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded">{stats.deliveredCount} ped.</span>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-black text-emerald-400 leading-none">{stats.totalRevenue.toFixed(2)}€</span>
+              <p className="text-[9px] text-emerald-400/80 font-medium mt-1">Efectivo Total: {stats.totalCash.toFixed(2)}€</p>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* Orders List Container */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar space-y-4 print:hidden">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar space-y-3.5 print:hidden">
         
         {loading ? (
           <div className="text-center py-20 bg-[#14141E] rounded-3xl border border-zinc-800">
             <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm">Cargando Historial...</p>
+            <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm">Cargando Registros de Historial...</p>
           </div>
-        ) : orders.length === 0 ? (
+        ) : filteredOrders.length === 0 ? (
           <div className="text-center py-20 bg-[#14141E] rounded-3xl border border-zinc-800">
             <span className="text-4xl block mb-4">🗄️</span>
-            <p className="text-zinc-500 font-bold uppercase tracking-widest text-sm">No hay pedidos en este rango</p>
+            <p className="text-zinc-400 font-bold uppercase tracking-widest text-sm">No hay pedidos coincidentes con los filtros actuales</p>
+            <p className="text-zinc-600 text-xs mt-1">Prueba a seleccionar otro rango de fechas o cambiar el método de pago</p>
           </div>
         ) : (
-          orders.map(order => {
+          filteredOrders.map(order => {
             const isExpanded = expandedOrderId === order.id;
             const isDelivery = order.delivery_method === 'delivery';
+            const isPickup = order.delivery_method === 'pickup';
+            const isCash = order.payment_method === 'cash' || !order.payment_method;
+            const isTpv = order.payment_method === 'tpv' || order.payment_method === 'physical' || order.payment_method === 'card_delivery';
+            const isOnline = order.payment_method === 'online' || order.payment_method === 'sumup_online';
 
             return (
               <div 
                 key={order.id} 
-                className={`bg-[#14141E] border rounded-2xl overflow-hidden transition-all duration-300 ${isExpanded ? 'border-zinc-500 shadow-xl' : 'border-zinc-800 hover:border-zinc-700'}`}
+                className={`bg-[#14141E] border rounded-2xl overflow-hidden transition-all duration-300 ${isExpanded ? 'border-green-500/80 shadow-2xl' : 'border-zinc-800 hover:border-zinc-700'}`}
               >
                 {/* Accordion Header */}
                 <div 
@@ -215,34 +484,51 @@ export default function AdminHistory() {
                   className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer gap-4 bg-gradient-to-r from-transparent hover:to-zinc-800/30"
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center text-xl font-bold ${
-                      order.status === 'cancelled' ? 'bg-zinc-800/80 text-zinc-500 border border-zinc-700' :
-                      'bg-green-500/20 text-green-500 border border-green-500/50'
+                    <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-xl font-bold shadow-md ${
+                      order.status === 'cancelled' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
+                      'bg-green-500/20 text-green-400 border border-green-500/50'
                     }`}>
                       {order.status === 'delivered' && '✅'}
                       {order.status === 'cancelled' && '❌'}
                     </div>
                     
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-display font-black text-lg text-white uppercase">{order.client_name || t('no_name')}</span>
-                        <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-mono uppercase tracking-widest">#{order.id.slice(0,5)}</span>
+                        <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-mono uppercase tracking-widest">#{order.id.slice(0, 8)}</span>
+                        
+                        {/* Service Badge */}
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded uppercase border ${
+                          isDelivery ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
+                          (isPickup ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30')
+                        }`}>
+                          {isDelivery ? '🛵 Domicilio' : (isPickup ? '🛍️ Recogida' : '🍽️ Mesa Local')}
+                        </span>
+
+                        {/* Payment Method Badge */}
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded uppercase border ${
+                          isCash ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                          (isTpv ? 'bg-blue-500/20 text-blue-300 border-blue-500/40' : 'bg-purple-500/20 text-purple-300 border-purple-500/40')
+                        }`}>
+                          {isCash ? '💵 Efectivo' : (isTpv ? '💳 TPV Físico' : '📱 App / Online')}
+                        </span>
                       </div>
-                      <div className="flex gap-3 text-xs font-medium mt-1">
-                        <span className={isDelivery ? 'text-blue-400' : 'text-purple-400'}>{isDelivery ? 'A Domicilio' : 'Recogida Local'}</span>
-                        <span className="text-zinc-500">•</span>
-                        <span className="text-zinc-400">{new Date(order.created_at).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
-                        {order.status === 'cancelled' && <span className="text-red-500 font-bold ml-2">CANCELADO</span>}
+
+                      <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1 font-medium">
+                        <span>🕒 {new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>•</span>
+                        <span>📅 {new Date(order.created_at).toLocaleDateString('es-ES')}</span>
+                        {order.status === 'cancelled' && <span className="text-red-400 font-bold ml-2">CANCELADO</span>}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full">
                     <div className="text-right">
-                      <span className="block text-2xl font-black text-green-400 leading-none">{order.total_amount}€</span>
-                      <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Total Pagado</span>
+                      <span className="block text-2xl font-black text-green-400 leading-none">{Number(order.total_amount || 0).toFixed(2)}€</span>
+                      <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Importe Cobrado</span>
                     </div>
-                    <svg className={`w-6 h-6 text-zinc-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <svg className={`w-5 h-5 text-zinc-500 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-green-400' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </div>
                 </div>
 
@@ -251,35 +537,59 @@ export default function AdminHistory() {
                   <div className="border-t border-zinc-800 bg-[#0A0A0E] p-4 sm:p-6 animate-fade-in">
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Left: Items */}
+                      {/* Left: Ordered Items Breakdown */}
                       <div>
-                        <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Resumen de Productos</h4>
+                        <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                          <span>🍕</span> Desglose de Productos
+                        </h4>
                         <div className="space-y-2">
                           {order.order_items?.map((item: any) => (
-                            <div key={item.id} className="flex gap-3 text-sm border-b border-zinc-800/50 pb-2">
-                              <span className="font-black text-white w-6 shrink-0">{item.quantity}x</span>
+                            <div key={item.id} className="flex gap-3 text-sm border-b border-zinc-800/60 pb-2">
+                              <span className="font-black text-green-400 w-6 shrink-0">{item.quantity}x</span>
                               <div className="flex-1 text-zinc-300">
-                                <span>{item.customization_details?.name || item.products?.name || 'Producto Desconocido'}</span>
+                                <div className="font-bold text-white flex justify-between">
+                                  <span>{item.customization_details?.name || item.products?.name || 'Producto'}</span>
+                                  <span className="text-zinc-400 font-normal">{Number(item.unit_price || 0).toFixed(2)}€</span>
+                                </div>
+                                {item.customization_details?.extras && item.customization_details.extras.length > 0 && (
+                                  <p className="text-xs text-zinc-500 mt-0.5">
+                                    Extras: {item.customization_details.extras.map((e: any) => typeof e === 'string' ? e : e.name).join(', ')}
+                                  </p>
+                                )}
+                                {item.customization_details?.notes && (
+                                  <p className="text-xs text-amber-400/80 italic mt-0.5">
+                                    Nota: "{item.customization_details.notes}"
+                                  </p>
+                                )}
                               </div>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      {/* Right: Client Details & Actions */}
+                      {/* Right: Client Details, Notes & Delivery Info */}
                       <div className="space-y-4">
-                        <div className="bg-[#14141E] p-4 rounded-xl border border-zinc-800">
-                          <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Datos del Cliente</h4>
+                        <div className="bg-[#14141E] p-4 rounded-2xl border border-zinc-800">
+                          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <span>📍</span> Información de Entrega & Cliente
+                          </h4>
                           <p className="text-sm text-white font-bold mb-1">📞 {order.client_phone || 'Sin teléfono'}</p>
                           {order.delivery_address && (
-                            <p className="text-sm text-zinc-400 mt-1">
-                              📍 {formatAddress(order.delivery_address as any)}
+                            <p className="text-xs text-zinc-300 mt-1 leading-relaxed">
+                              Dirección: {formatAddress(order.delivery_address as any)}
                             </p>
+                          )}
+                          {order.notes && (
+                            <div className="mt-3 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 font-medium">
+                              📝 <span className="font-bold">Instrucciones:</span> {order.notes}
+                            </div>
                           )}
                         </div>
 
-                        <div className="pt-2">
-                          <p className="text-center text-zinc-500 font-bold text-sm uppercase">Este pedido ya está cerrado y no se puede modificar.</p>
+                        {/* Order Footer summary */}
+                        <div className="p-3 bg-zinc-900/50 rounded-xl border border-zinc-800 text-right flex justify-between items-center text-xs">
+                          <span className="text-zinc-500 font-bold uppercase">Método: {isCash ? 'Efectivo en Mano' : (isTpv ? 'Datáfono TPV' : 'Pasarela Online')}</span>
+                          <span className="text-sm font-black text-white">Total: {Number(order.total_amount || 0).toFixed(2)}€</span>
                         </div>
                       </div>
                     </div>
@@ -293,118 +603,182 @@ export default function AdminHistory() {
         
       </div>
 
-      {/* Printable Report Section (Only visible when printing) */}
-      <div className="hidden print:block p-8 bg-white text-black min-h-screen w-full">
-        <div className="text-center mb-8 border-b-2 border-black pb-4">
-          <h1 className="text-4xl font-black uppercase mb-1">Néstor Pizzas</h1>
-          <h2 className="text-2xl text-gray-600 font-bold uppercase tracking-widest">Informe Contable y Cierre de Caja</h2>
-          <p className="text-sm mt-2 text-gray-500 font-mono">
-            RANGO: {dateFilter.toUpperCase()} | GENERADO: {new Date().toLocaleString('es-ES')}
-          </p>
-        </div>
+      {/* DAILY CLOSE & CASH RECONCILIATION MODAL */}
+      {showDailyCloseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#14141E] border-2 border-green-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6">
+            
+            <div className="text-center">
+              <span className="text-4xl block mb-2">🔒</span>
+              <h3 className="text-xl sm:text-2xl font-display font-black uppercase text-white tracking-wide">
+                Cierre de Caja & Jornada
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1 font-medium">
+                Resumen contable oficial para la jornada activa de <span className="text-green-400 font-bold">HOY</span>
+              </p>
+            </div>
 
-        {(() => {
-          // Filtrar solo entregados
-          const validOrders = orders.filter(o => o.status === 'delivered');
-          
-          // Agrupaciones
-          const deliveryOrders = validOrders.filter(o => o.delivery_method === 'delivery');
-          const pickupOrders = validOrders.filter(o => o.delivery_method === 'pickup');
-          const mesaOrders = validOrders.filter(o => o.delivery_method === 'local');
-
-          // Función de cálculo
-          const calc = (list: any[]) => {
-            const total = list.reduce((sum, o) => sum + Number(o.total_amount), 0);
-            const cash = list.filter(o => o.payment_method === 'cash').reduce((sum, o) => sum + Number(o.total_amount), 0);
-            const tpv = list.filter(o => o.payment_method === 'tpv').reduce((sum, o) => sum + Number(o.total_amount), 0);
-            const online = list.filter(o => o.payment_method === 'online' || !o.payment_method).reduce((sum, o) => sum + Number(o.total_amount), 0);
-            return { total, cash, tpv, online };
-          };
-
-          const deliveryMath = calc(deliveryOrders);
-          const pickupMath = calc(pickupOrders);
-          const mesaMath = calc(mesaOrders);
-          const totalMath = calc(validOrders);
-
-          return (
-            <div className="space-y-8">
-              {/* Resumen General */}
-              <div className="grid grid-cols-4 gap-4">
-                <div className="p-4 border-2 border-black rounded-xl text-center bg-gray-50">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Pedidos</p>
-                  <p className="text-3xl font-black">{validOrders.length}</p>
-                </div>
-                <div className="p-4 border-2 border-black rounded-xl text-center bg-gray-50">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Facturación Total</p>
-                  <p className="text-3xl font-black">{totalMath.total.toFixed(2)}€</p>
-                </div>
-                <div className="p-4 border-2 border-black rounded-xl text-center bg-green-100 border-green-800">
-                  <p className="text-xs font-bold text-green-800 uppercase tracking-widest">Total Efectivo (Caja)</p>
-                  <p className="text-3xl font-black text-green-700">{totalMath.cash.toFixed(2)}€</p>
-                </div>
-                <div className="p-4 border-2 border-black rounded-xl text-center bg-blue-100 border-blue-800">
-                  <p className="text-xs font-bold text-blue-800 uppercase tracking-widest">Total TPV + Online</p>
-                  <p className="text-3xl font-black text-blue-700">{(totalMath.tpv + totalMath.online).toFixed(2)}€</p>
-                </div>
+            {/* Reconciliation breakdown */}
+            <div className="bg-[#0A0A0E] border border-zinc-800 rounded-2xl p-4 space-y-3">
+              <div className="flex justify-between items-center text-sm border-b border-zinc-800/80 pb-2">
+                <span className="text-amber-400 font-bold flex items-center gap-1.5">🛵 Efectivo Repartidores:</span>
+                <span className="font-black text-amber-300 text-base">{stats.cashDeliveryTotal.toFixed(2)}€</span>
               </div>
-
-              {/* Desglose por Tipo */}
-              <div className="grid grid-cols-3 gap-6">
-                
-                {/* DOMICILIO */}
-                <div className="border border-gray-300 rounded-xl p-5 shadow-sm">
-                  <h3 className="text-lg font-black uppercase border-b border-gray-300 pb-2 mb-3">🛵 A Domicilio</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="font-bold">Pedidos:</span> <span>{deliveryOrders.length}</span></div>
-                    <div className="flex justify-between"><span className="font-bold">App/Online:</span> <span>{deliveryMath.online.toFixed(2)}€</span></div>
-                    <div className="flex justify-between"><span className="font-bold">TPV (Tarjeta):</span> <span>{deliveryMath.tpv.toFixed(2)}€</span></div>
-                    <div className="flex justify-between pt-2 border-t border-gray-200 mt-2 text-green-700"><span className="font-bold uppercase">Debe traer el repartidor:</span> <span className="font-black text-base">{deliveryMath.cash.toFixed(2)}€</span></div>
-                  </div>
-                  <div className="mt-4 bg-gray-100 p-2 rounded text-center">
-                    <span className="text-xs font-bold uppercase text-gray-500">Facturación Domicilio</span>
-                    <p className="text-xl font-black">{deliveryMath.total.toFixed(2)}€</p>
-                  </div>
-                </div>
-
-                {/* RECOGIDA */}
-                <div className="border border-gray-300 rounded-xl p-5 shadow-sm">
-                  <h3 className="text-lg font-black uppercase border-b border-gray-300 pb-2 mb-3">🛍️ Recogida</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="font-bold">Pedidos:</span> <span>{pickupOrders.length}</span></div>
-                    <div className="flex justify-between"><span className="font-bold">App/Online:</span> <span>{pickupMath.online.toFixed(2)}€</span></div>
-                    <div className="flex justify-between"><span className="font-bold">TPV (Tarjeta):</span> <span>{pickupMath.tpv.toFixed(2)}€</span></div>
-                    <div className="flex justify-between pt-2 border-t border-gray-200 mt-2 text-green-700"><span className="font-bold uppercase">Efectivo Recibido:</span> <span className="font-black text-base">{pickupMath.cash.toFixed(2)}€</span></div>
-                  </div>
-                  <div className="mt-4 bg-gray-100 p-2 rounded text-center">
-                    <span className="text-xs font-bold uppercase text-gray-500">Facturación Recogida</span>
-                    <p className="text-xl font-black">{pickupMath.total.toFixed(2)}€</p>
-                  </div>
-                </div>
-
-                {/* MESAS */}
-                <div className="border border-gray-300 rounded-xl p-5 shadow-sm">
-                  <h3 className="text-lg font-black uppercase border-b border-gray-300 pb-2 mb-3">🍴 Mesas (Local)</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="font-bold">Pedidos:</span> <span>{mesaOrders.length}</span></div>
-                    <div className="flex justify-between text-gray-400"><span className="font-bold">App/Online:</span> <span>N/A</span></div>
-                    <div className="flex justify-between"><span className="font-bold">TPV (Tarjeta):</span> <span>{mesaMath.tpv.toFixed(2)}€</span></div>
-                    <div className="flex justify-between pt-2 border-t border-gray-200 mt-2 text-green-700"><span className="font-bold uppercase">Efectivo Recibido:</span> <span className="font-black text-base">{mesaMath.cash.toFixed(2)}€</span></div>
-                  </div>
-                  <div className="mt-4 bg-gray-100 p-2 rounded text-center">
-                    <span className="text-xs font-bold uppercase text-gray-500">Facturación Local</span>
-                    <p className="text-xl font-black">{mesaMath.total.toFixed(2)}€</p>
-                  </div>
-                </div>
-
+              <div className="flex justify-between items-center text-sm border-b border-zinc-800/80 pb-2">
+                <span className="text-zinc-400 font-bold">💵 Efectivo Mostrador/Local:</span>
+                <span className="font-black text-zinc-200">{stats.cashLocalTotal.toFixed(2)}€</span>
+              </div>
+              <div className="flex justify-between items-center text-sm border-b border-zinc-800/80 pb-2">
+                <span className="text-blue-400 font-bold">💳 Datáfono TPV:</span>
+                <span className="font-black text-blue-300">{stats.totalTpv.toFixed(2)}€</span>
+              </div>
+              <div className="flex justify-between items-center text-sm border-b border-zinc-800/80 pb-2">
+                <span className="text-purple-400 font-bold">📱 Pagos App Online:</span>
+                <span className="font-black text-purple-300">{stats.totalOnline.toFixed(2)}€</span>
+              </div>
+              <div className="flex justify-between items-center text-base pt-1">
+                <span className="text-green-400 font-black uppercase">💰 Facturación Total:</span>
+                <span className="font-black text-green-400 text-xl">{stats.totalRevenue.toFixed(2)}€</span>
               </div>
             </div>
-          );
-        })()}
-        
-        <div className="mt-12 pt-4 border-t-2 border-black text-center text-xs text-gray-500 font-bold uppercase tracking-widest">
-          <p>Documento oficial generado automáticamente por el TPV de Néstor Pizzas Enterprise.</p>
-          <p>Los datos de carácter personal de los clientes han sido excluidos conforme a la RGPD.</p>
+
+            <p className="text-xs text-zinc-400 text-center leading-relaxed">
+              Elige cómo deseas proceder con el informe contable del día:
+            </p>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowDailyCloseModal(false);
+                  window.print();
+                }}
+                className="w-full py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl text-xs font-black uppercase transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                🖨️ Solo Imprimir / Descargar (Mantener App Abierta)
+              </button>
+
+              <button
+                onClick={handlePerformDailyClose}
+                className="w-full py-3.5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white rounded-2xl text-xs font-black uppercase transition-all shadow-xl flex items-center justify-center gap-2 border border-red-400/40"
+              >
+                🔒 Descargar Informe y CERRAR JORNADA OPERATIVA
+              </button>
+
+              <button
+                onClick={() => setShowDailyCloseModal(false)}
+                className="w-full py-2 text-zinc-500 hover:text-zinc-300 text-xs font-bold uppercase transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+
+          </div>
         </div>
+      )}
+
+      {/* PRINTABLE A4 AUDIT & ACCOUNTING REPORT (Only visible on print / PDF generation) */}
+      <div className="hidden print:block p-8 bg-white text-black min-h-screen w-full font-sans">
+        
+        {/* Official Letterhead Header */}
+        <div className="border-b-2 border-black pb-4 mb-6 flex justify-between items-end">
+          <div>
+            <h1 className="text-2xl font-black uppercase tracking-tight">NÉSTOR PIZZAS GOURMET</h1>
+            <p className="text-xs font-bold text-gray-700">Calle Alcalde Felip, 9 — Caniles (Granada) | CP: 18810</p>
+            <p className="text-xs text-gray-500">Masa Fresca Artesana & Sistema de Gestión Integral</p>
+          </div>
+          <div className="text-right">
+            <span className="inline-block bg-black text-white text-xs font-black px-2.5 py-1 uppercase rounded">Informe Oficial de Arqueo</span>
+            <p className="text-xs text-gray-600 font-bold mt-1">Rango: {getFilterLabel()}</p>
+            <p className="text-[10px] text-gray-500">Emisión: {new Date().toLocaleString('es-ES')}</p>
+          </div>
+        </div>
+
+        {/* Financial Summary Table for Accounting */}
+        <div className="grid grid-cols-4 gap-3 mb-6">
+          <div className="p-3 border border-black rounded-lg text-center bg-gray-50">
+            <p className="text-[10px] font-black uppercase text-gray-600">🛵 Efectivo Reparto</p>
+            <p className="text-lg font-black text-black">{stats.cashDeliveryTotal.toFixed(2)} €</p>
+            <p className="text-[9px] text-gray-500">{stats.cashDeliveryCount} pedidos</p>
+          </div>
+          <div className="p-3 border border-black rounded-lg text-center bg-gray-50">
+            <p className="text-[10px] font-black uppercase text-gray-600">💵 Efectivo Local</p>
+            <p className="text-lg font-black text-black">{stats.cashLocalTotal.toFixed(2)} €</p>
+            <p className="text-[9px] text-gray-500">Mostrador / Mesas</p>
+          </div>
+          <div className="p-3 border border-black rounded-lg text-center bg-gray-50">
+            <p className="text-[10px] font-black uppercase text-gray-600">💳 TPV / Tarjetas</p>
+            <p className="text-lg font-black text-black">{stats.totalTpv.toFixed(2)} €</p>
+            <p className="text-[9px] text-gray-500">Datáfono físico</p>
+          </div>
+          <div className="p-3 border-2 border-black rounded-lg text-center bg-gray-100">
+            <p className="text-[10px] font-black uppercase text-gray-800">💰 FACTURACIÓN TOTAL</p>
+            <p className="text-xl font-black text-black">{stats.totalRevenue.toFixed(2)} €</p>
+            <p className="text-[9px] text-gray-700">{stats.deliveredCount} entregados</p>
+          </div>
+        </div>
+
+        {/* Liquidations Callout Box */}
+        <div className="mb-6 p-3 border border-gray-400 rounded-lg bg-gray-50 flex justify-between items-center text-xs">
+          <div>
+            <span className="font-black uppercase">Liquidación Exclusiva de Repartidores en Efectivo:</span>
+            <p className="text-gray-600 text-[11px]">Dinero líquido exacto que deben depositar los repartidores por entregas a domicilio.</p>
+          </div>
+          <div className="text-right">
+            <span className="text-base font-black border-b-2 border-black pb-0.5">{stats.cashDeliveryTotal.toFixed(2)} €</span>
+          </div>
+        </div>
+
+        {/* Detailed Orders Audit Table */}
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr className="border-b-2 border-black bg-gray-100">
+              <th className="py-2 px-1">ID</th>
+              <th className="py-2 px-1">Hora</th>
+              <th className="py-2 px-1">Cliente</th>
+              <th className="py-2 px-1">Servicio</th>
+              <th className="py-2 px-1">Pago</th>
+              <th className="py-2 px-1">Dirección / Notas</th>
+              <th className="py-2 px-1 text-right">Importe</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredOrders.map(order => (
+              <tr key={order.id} className="border-b border-gray-200">
+                <td className="py-1.5 px-1 font-mono text-[10px]">{order.id.slice(0, 8)}</td>
+                <td className="py-1.5 px-1">{new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
+                <td className="py-1.5 px-1 font-bold">{order.client_name || 'Sin Nombre'}</td>
+                <td className="py-1.5 px-1">
+                  {order.delivery_method === 'delivery' ? 'Domicilio' : (order.delivery_method === 'pickup' ? 'Recogida' : 'Mesa')}
+                </td>
+                <td className="py-1.5 px-1 font-bold">
+                  {order.payment_method === 'cash' || !order.payment_method ? 'Efectivo' : (order.payment_method === 'tpv' || order.payment_method === 'physical' || order.payment_method === 'card_delivery' ? 'Datáfono' : 'Online')}
+                </td>
+                <td className="py-1.5 px-1 text-[10px] text-gray-600 max-w-[200px] truncate">
+                  {order.delivery_address ? formatAddress(order.delivery_address as any) : (order.notes || '-')}
+                </td>
+                <td className="py-1.5 px-1 text-right font-black">{Number(order.total_amount || 0).toFixed(2)} €</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Footer & Signature Blocks */}
+        <div className="mt-12 pt-6 border-t-2 border-gray-300 grid grid-cols-2 gap-8 text-center text-xs">
+          <div>
+            <div className="border-b border-gray-400 h-16 mb-2"></div>
+            <p className="font-bold text-gray-700">Firma del Encargado de Turno / Caja</p>
+          </div>
+          <div>
+            <div className="border-b border-gray-400 h-16 mb-2"></div>
+            <p className="font-bold text-gray-700">Firma de Recepción Contable / Gerencia</p>
+          </div>
+        </div>
+
+        <div className="mt-6 text-center text-[10px] text-gray-400">
+          <p>Documento oficial emitido por el sistema Néstor Pizzas PWA v2.4.0 — Certificación de auditoría interna.</p>
+        </div>
+
       </div>
 
     </div>

@@ -509,7 +509,7 @@ export default function AdminOrders() {
                             <span className="text-xl">🖨️</span> Imprimir
                           </button>
                           
-                          {(order.status === 'pending' || order.status === 'cooking') && (
+                          {order.delivery_method === 'local' && (order.status === 'pending' || order.status === 'cooking') && (
                             <button 
                               onClick={() => startEditingOrder(order)}
                               className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.3)]"
