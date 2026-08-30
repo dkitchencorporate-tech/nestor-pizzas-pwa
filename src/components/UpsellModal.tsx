@@ -1,3 +1,4 @@
+import { generateSafeUUID } from '../utils/uuid';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useHardwareBack } from '../utils/useHardwareBack';
@@ -65,7 +66,7 @@ export default function UpsellModal({ onClose, onProceedToCheckout }: UpsellModa
       return;
     }
     addItem({
-      id: crypto.randomUUID(),
+      id: generateSafeUUID(),
       productId: prod.id, 
       name: prod.name,
       price: prod.price,
