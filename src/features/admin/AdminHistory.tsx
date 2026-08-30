@@ -9,34 +9,74 @@ type ServiceFilter = 'all' | 'delivery' | 'pickup' | 'local';
 type PaymentFilter = 'all' | 'cash' | 'tpv' | 'online';
 type StatusFilter = 'all' | 'delivered' | 'cancelled';
 
+const MAX_CUSTOM_DAYS = 90; // Límite máximo de 3 meses para preservar integridad contable
+
 export default function AdminHistory() {
   const { t } = useI18nStore();
   const { logout } = useAuthStore();
   
-  // States for Data & Loading
+  // Data & Loading States
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Filter States
+  // Date Filters
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
-  const [customDate, setCustomDate] = useState<string>(() => {
+  
+  // Custom Date Range (Desde - Hasta)
+  const [customStartDate, setCustomStartDate] = useState<string>(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
   });
+  const [customEndDate, setCustomEndDate] = useState<string>(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [rangeWarning, setRangeWarning] = useState<string | null>(null);
+
+  // Multi-criteria in-memory filters
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all');
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('delivered');
   
   // UI & Modals States
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-  const [showExportMenu, setShowExportMenu] = useState(false);
   const [showDailyCloseModal, setShowDailyCloseModal] = useState(false);
+  const [isClosingShift, setIsClosingShift] = useState(false);
 
   useEffect(() => {
     fetchHistory();
-  }, [dateFilter, customDate]);
+  }, [dateFilter, customStartDate, customEndDate]);
 
-  const getWorkingDayRange = (filter: DateFilter, customDateStr?: string) => {
+  const validateAndCalculateCustomRange = (startStr: string, endStr: string) => {
+    const [sY, sM, sD] = startStr.split('-').map(Number);
+    const [eY, eM, eD] = endStr.split('-').map(Number);
+    
+    let start = new Date(sY, sM - 1, sD, 5, 0, 0, 0);
+    let end = new Date(eY, eM - 1, eD, 5, 0, 0, 0);
+    
+    // Ensure start is before end
+    if (start > end) {
+      end = new Date(start);
+    }
+    
+    // Check 90 days (3 months) limit
+    const diffMs = end.getTime() - start.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > MAX_CUSTOM_DAYS) {
+      end = new Date(start.getTime() + MAX_CUSTOM_DAYS * 24 * 60 * 60 * 1000);
+      setRangeWarning(`El rango supera los 3 meses. Se ha ajustado automáticamente al límite de ${MAX_CUSTOM_DAYS} días.`);
+    } else {
+      setRangeWarning(null);
+    }
+    
+    // Add 24h to end so it covers the entire closing day until 5:00 AM of next day
+    const endCover = new Date(end.getTime() + 24 * 60 * 60 * 1000);
+    
+    return { start: start.toISOString(), end: endCover.toISOString() };
+  };
+
+  const getWorkingDayRange = (filter: DateFilter) => {
     const now = new Date();
     const isLateNight = now.getHours() < 5;
     
@@ -68,12 +108,7 @@ export default function AdminHistory() {
         start.setTime(end.getTime() - 30 * 24 * 60 * 60 * 1000);
         break;
       case 'custom':
-        if (customDateStr) {
-          const [year, month, day] = customDateStr.split('-').map(Number);
-          start = new Date(year, month - 1, day, 5, 0, 0, 0);
-          end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
-        }
-        break;
+        return validateAndCalculateCustomRange(customStartDate, customEndDate);
     }
 
     return { start: start.toISOString(), end: end.toISOString() };
@@ -83,7 +118,7 @@ export default function AdminHistory() {
     setLoading(true);
     setExpandedOrderId(null);
     
-    const { start, end } = getWorkingDayRange(dateFilter, customDate);
+    const { start, end } = getWorkingDayRange(dateFilter);
 
     const { data, error } = await supabase
       .from('orders')
@@ -178,8 +213,7 @@ export default function AdminHistory() {
     setExpandedOrderId(prev => prev === id ? null : id);
   };
 
-  const handleExportClick = () => {
-    setShowExportMenu(false);
+  const handlePrintClick = () => {
     if (dateFilter === 'today') {
       setShowDailyCloseModal(true);
     } else {
@@ -188,54 +222,25 @@ export default function AdminHistory() {
   };
 
   const handlePerformDailyClose = async () => {
-    setShowDailyCloseModal(false);
-    window.print();
-    // Allow print dialog to trigger, then perform secure admin sign-out
-    setTimeout(async () => {
-      await logout();
-      window.location.reload();
-    }, 1000);
-  };
-
-  const downloadCSV = () => {
-    if (filteredOrders.length === 0) {
-      alert('No hay pedidos para exportar en este filtro.');
-      return;
+    setIsClosingShift(true);
+    try {
+      // 1. Mark store as closed for the night until next opening schedule
+      await supabase.from('app_settings').upsert({ key: 'store_closed', value: 'true' });
+      
+      setShowDailyCloseModal(false);
+      
+      // 2. Trigger printable A4 audit report
+      window.print();
+      
+      // 3. Perform secure admin logout and reload
+      setTimeout(async () => {
+        await logout();
+        window.location.reload();
+      }, 1200);
+    } catch (err) {
+      console.error('Error closing daily shift:', err);
+      setIsClosingShift(false);
     }
-
-    const headers = ['ID Ticket', 'Fecha', 'Hora', 'Tipo Servicio', 'Metodo Pago', 'Estado', 'Cliente', 'Telefono', 'Total (€)'];
-    
-    const rows = filteredOrders.map(order => {
-      const date = new Date(order.created_at);
-      const dateStr = date.toLocaleDateString('es-ES');
-      const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-      
-      const typeStr = order.delivery_method === 'delivery' ? 'Domicilio' : (order.delivery_method === 'pickup' ? 'Para Recoger' : 'Mesa Local');
-      
-      let payStr = 'Efectivo';
-      if (order.payment_method === 'tpv' || order.payment_method === 'physical' || order.payment_method === 'card_delivery') payStr = 'Datáfono TPV';
-      if (order.payment_method === 'online' || order.payment_method === 'sumup_online') payStr = 'App / Online';
-
-      const statusStr = order.status === 'delivered' ? 'Completado' : 'Cancelado';
-      const clientName = (order.client_name || '').replace(/"/g, '""');
-      const clientPhone = order.client_phone || '';
-      const total = Number(order.total_amount || 0).toFixed(2);
-      
-      return `"${order.id.slice(0, 8)}","${dateStr}","${timeStr}","${typeStr}","${payStr}","${statusStr}","${clientName}","${clientPhone}","${total}"`;
-    });
-
-    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const csvContent = headers.join(',') + "\n" + rows.join('\n');
-    
-    const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `informe_contable_nestor_pizzas_${dateFilter}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const getFilterLabel = () => {
@@ -244,7 +249,7 @@ export default function AdminHistory() {
       case 'yesterday': return 'Jornada de Ayer';
       case '7days': return 'Últimos 7 Días';
       case '30days': return 'Último Mes (30 Días)';
-      case 'custom': return `Fecha Específica: ${customDate}`;
+      case 'custom': return `Periodo Contable: ${customStartDate} al ${customEndDate}`;
     }
   };
 
@@ -261,37 +266,17 @@ export default function AdminHistory() {
         </div>
         
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <button 
-              onClick={() => setShowExportMenu(!showExportMenu)}
-              className="px-4 py-2.5 bg-green-600/20 text-green-400 border border-green-500/40 rounded-xl text-xs font-black uppercase hover:bg-green-600/30 transition-all flex items-center gap-2 shadow-lg"
-            >
-              📄 Exportar / Informe
-            </button>
-            {showExportMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)}></div>
-                <div className="absolute right-0 mt-2 w-64 bg-[#14141E] border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
-                  <button 
-                    onClick={() => { downloadCSV(); setShowExportMenu(false); }} 
-                    className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-xs font-bold text-white border-b border-zinc-800 flex items-center gap-2"
-                  >
-                    📥 Descargar Excel (CSV)
-                  </button>
-                  <button 
-                    onClick={handleExportClick} 
-                    className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-xs font-bold text-emerald-400 flex items-center gap-2"
-                  >
-                    🖨️ Imprimir Informe Contable (PDF)
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <button 
+            onClick={handlePrintClick}
+            className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-105"
+          >
+            <span>🖨️</span>
+            <span>{dateFilter === 'today' ? 'Informe PDF / Cierre de Caja' : 'Descargar Informe PDF'}</span>
+          </button>
           
           <button 
             onClick={fetchHistory}
-            className="px-4 py-2.5 bg-zinc-800 text-zinc-300 rounded-xl text-xs font-bold uppercase hover:bg-zinc-700 hover:text-white transition-colors"
+            className="px-3.5 py-2.5 bg-zinc-800 text-zinc-300 rounded-xl text-xs font-bold uppercase hover:bg-zinc-700 hover:text-white transition-colors"
           >
             🔄 Refrescar
           </button>
@@ -325,25 +310,48 @@ export default function AdminHistory() {
           📈 Último Mes
         </button>
         
-        {/* Custom Calendar Date Picker */}
+        {/* Custom Calendar Date Range Picker (Max 90 days) */}
         <div className={`flex items-center gap-2 px-3 py-1.5 border-b-2 rounded-t-lg transition-all ${dateFilter === 'custom' ? 'border-green-500 bg-green-500/10 text-green-400' : 'border-transparent text-zinc-500'}`}>
           <button 
             onClick={() => setDateFilter('custom')} 
             className="text-xs font-bold uppercase whitespace-nowrap"
           >
-            🗓️ Fecha Concreta:
+            🗓️ Rango Personalizado (Máx 3 Meses):
           </button>
-          <input 
-            type="date" 
-            value={customDate}
-            onChange={(e) => {
-              setCustomDate(e.target.value);
-              setDateFilter('custom');
-            }}
-            className="bg-zinc-900 border border-zinc-700 text-white text-xs px-2 py-1 rounded-lg focus:outline-none focus:border-green-500"
-          />
+          
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-zinc-400 font-bold uppercase">Desde:</span>
+            <input 
+              type="date" 
+              value={customStartDate}
+              onChange={(e) => {
+                setCustomStartDate(e.target.value);
+                setDateFilter('custom');
+              }}
+              className="bg-zinc-900 border border-zinc-700 text-white text-xs px-2 py-1 rounded-lg focus:outline-none focus:border-green-500"
+            />
+            
+            <span className="text-[10px] text-zinc-400 font-bold uppercase">Hasta:</span>
+            <input 
+              type="date" 
+              value={customEndDate}
+              onChange={(e) => {
+                setCustomEndDate(e.target.value);
+                setDateFilter('custom');
+              }}
+              className="bg-zinc-900 border border-zinc-700 text-white text-xs px-2 py-1 rounded-lg focus:outline-none focus:border-green-500"
+            />
+          </div>
         </div>
       </div>
+
+      {/* Range Warning Alert if > 90 days */}
+      {rangeWarning && dateFilter === 'custom' && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 py-2 text-xs text-amber-300 font-medium flex items-center gap-2 print:hidden">
+          <span>⚠️</span>
+          <span>{rangeWarning}</span>
+        </div>
+      )}
 
       {/* Multi-Criteria Interactive Filter Toolbar */}
       <div className="p-3 sm:px-6 bg-[#14141E] border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 print:hidden">
@@ -603,7 +611,7 @@ export default function AdminHistory() {
         
       </div>
 
-      {/* DAILY CLOSE & CASH RECONCILIATION MODAL */}
+      {/* DAILY CLOSE & CASH RECONCILIATION MODAL (For Active Day HOY) */}
       {showDailyCloseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-[#14141E] border-2 border-green-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6">
@@ -643,7 +651,7 @@ export default function AdminHistory() {
             </div>
 
             <p className="text-xs text-zinc-400 text-center leading-relaxed">
-              Elige cómo deseas proceder con el informe contable del día:
+              Elige cómo deseas proceder con el cierre contable del día:
             </p>
 
             {/* Action Buttons */}
@@ -653,20 +661,23 @@ export default function AdminHistory() {
                   setShowDailyCloseModal(false);
                   window.print();
                 }}
+                disabled={isClosingShift}
                 className="w-full py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl text-xs font-black uppercase transition-all shadow-md flex items-center justify-center gap-2"
               >
-                🖨️ Solo Imprimir / Descargar (Mantener App Abierta)
+                🖨️ Solo Imprimir / Guardar PDF (Mantener App Abierta)
               </button>
 
               <button
                 onClick={handlePerformDailyClose}
-                className="w-full py-3.5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white rounded-2xl text-xs font-black uppercase transition-all shadow-xl flex items-center justify-center gap-2 border border-red-400/40"
+                disabled={isClosingShift}
+                className="w-full py-3.5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white rounded-2xl text-xs font-black uppercase transition-all shadow-xl flex items-center justify-center gap-2 border border-red-400/40 disabled:opacity-50"
               >
-                🔒 Descargar Informe y CERRAR JORNADA OPERATIVA
+                {isClosingShift ? '🔒 Cerrando Jornada...' : '🔒 Imprimir PDF y CERRAR JORNADA OPERATIVA'}
               </button>
 
               <button
                 onClick={() => setShowDailyCloseModal(false)}
+                disabled={isClosingShift}
                 className="w-full py-2 text-zinc-500 hover:text-zinc-300 text-xs font-bold uppercase transition-colors"
               >
                 Cancelar
@@ -685,11 +696,11 @@ export default function AdminHistory() {
           <div>
             <h1 className="text-2xl font-black uppercase tracking-tight">NÉSTOR PIZZAS GOURMET</h1>
             <p className="text-xs font-bold text-gray-700">Calle Alcalde Felip, 9 — Caniles (Granada) | CP: 18810</p>
-            <p className="text-xs text-gray-500">Masa Fresca Artesana & Sistema de Gestión Integral</p>
+            <p className="text-xs text-gray-500">Masa Fresca Artesana & Sistema de Gestión Integral POS Enterprise</p>
           </div>
           <div className="text-right">
             <span className="inline-block bg-black text-white text-xs font-black px-2.5 py-1 uppercase rounded">Informe Oficial de Arqueo</span>
-            <p className="text-xs text-gray-600 font-bold mt-1">Rango: {getFilterLabel()}</p>
+            <p className="text-xs text-gray-600 font-bold mt-1">{getFilterLabel()}</p>
             <p className="text-[10px] text-gray-500">Emisión: {new Date().toLocaleString('es-ES')}</p>
           </div>
         </div>
@@ -722,7 +733,7 @@ export default function AdminHistory() {
         <div className="mb-6 p-3 border border-gray-400 rounded-lg bg-gray-50 flex justify-between items-center text-xs">
           <div>
             <span className="font-black uppercase">Liquidación Exclusiva de Repartidores en Efectivo:</span>
-            <p className="text-gray-600 text-[11px]">Dinero líquido exacto que deben depositar los repartidores por entregas a domicilio.</p>
+            <p className="text-gray-600 text-[11px]">Dinero líquido exacto que deben depositar físicamente los repartidores por entregas a domicilio.</p>
           </div>
           <div className="text-right">
             <span className="text-base font-black border-b-2 border-black pb-0.5">{stats.cashDeliveryTotal.toFixed(2)} €</span>
@@ -734,7 +745,7 @@ export default function AdminHistory() {
           <thead>
             <tr className="border-b-2 border-black bg-gray-100">
               <th className="py-2 px-1">ID</th>
-              <th className="py-2 px-1">Hora</th>
+              <th className="py-2 px-1">Fecha/Hora</th>
               <th className="py-2 px-1">Cliente</th>
               <th className="py-2 px-1">Servicio</th>
               <th className="py-2 px-1">Pago</th>
@@ -746,7 +757,7 @@ export default function AdminHistory() {
             {filteredOrders.map(order => (
               <tr key={order.id} className="border-b border-gray-200">
                 <td className="py-1.5 px-1 font-mono text-[10px]">{order.id.slice(0, 8)}</td>
-                <td className="py-1.5 px-1">{new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
+                <td className="py-1.5 px-1">{new Date(order.created_at).toLocaleDateString('es-ES')} {new Date(order.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
                 <td className="py-1.5 px-1 font-bold">{order.client_name || 'Sin Nombre'}</td>
                 <td className="py-1.5 px-1">
                   {order.delivery_method === 'delivery' ? 'Domicilio' : (order.delivery_method === 'pickup' ? 'Recogida' : 'Mesa')}
@@ -776,7 +787,7 @@ export default function AdminHistory() {
         </div>
 
         <div className="mt-6 text-center text-[10px] text-gray-400">
-          <p>Documento oficial emitido por el sistema Néstor Pizzas PWA v2.4.0 — Certificación de auditoría interna.</p>
+          <p>Documento oficial emitido por el sistema Néstor Pizzas PWA v2.4.0 — Certificación de auditoría interna y cierre contable.</p>
         </div>
 
       </div>

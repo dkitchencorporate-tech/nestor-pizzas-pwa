@@ -214,16 +214,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#0A0A0E] text-white flex flex-col md:flex-row font-sans relative print:bg-white print:text-black">
-      
-      {/* Mobile Toggle Button overlay if sidebar is closed */}
-      {!isSidebarOpen && (
-        <button 
-          onClick={() => setIsSidebarOpen(true)}
-          className="absolute bottom-4 left-4 z-50 p-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white shadow-2xl hover:bg-zinc-800 transition-colors print:hidden"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-        </button>
-      )}
+
 
       {/* Sidebar Menú */}
       <aside className={`${isSidebarOpen ? 'w-full md:w-64' : 'hidden'} bg-[#14141E] border-r border-zinc-800 flex flex-col transition-all duration-300 relative z-40 print:hidden`}>
