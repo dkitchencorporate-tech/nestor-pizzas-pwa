@@ -112,16 +112,15 @@ body {
   }
 }
 
+@page {
+  size: A4 portrait;
+  margin: 10mm 15mm;
+}
+
 @media print {
   /* =====================================================
      MODO 1: COMANDAS TÉRMICAS DE COCINA / MOSTRADOR (80MM)
      ===================================================== */
-  body.printing-ticket {
-    @page {
-      size: 80mm auto;
-      margin: 0;
-    }
-  }
   body.printing-ticket * {
     visibility: hidden;
   }
@@ -148,12 +147,6 @@ body {
   /* =====================================================
      MODO 2: INFORMES DE AUDITORÍA, ARQUEO Y CIERRE (A4)
      ===================================================== */
-  body.printing-audit-report {
-    @page {
-      size: A4 portrait;
-      margin: 10mm 15mm;
-    }
-  }
   body.printing-audit-report .ticket-printer-container {
     display: none !important;
   }
@@ -170,12 +163,7 @@ body {
     margin: 0 !important;
   }
 
-  /* REGLAS BASE COMUNES */
-  @page {
-    size: A4 portrait;
-    margin: 10mm 15mm;
-  }
-
+  /* REGLAS BASE COMUNES DE IMPRESIÓN */
   html, body, #root {
     background-color: #FFFFFF !important;
     color: #000000 !important;

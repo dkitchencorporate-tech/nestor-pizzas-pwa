@@ -4,7 +4,7 @@
   "description": "App Oficial de Pedidos, Carta Digital Interactiva y PWA de N\u00e9stor Pizzas (Caniles) por Architect.Sys",
   "scripts": {
     "dev": "vite",
-    "build": "rm -rf node_modules/.vite && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "test": "node test_urls.js"
   },
