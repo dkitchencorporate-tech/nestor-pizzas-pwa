@@ -83,6 +83,14 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
         </table>
       </div>
 
+      {/* Global Order Notes */}
+      {order.notes && typeof order.notes === 'string' && order.notes.trim() && (
+        <div className="my-3 p-3 border-2 border-black font-bold text-sm bg-gray-100">
+          <p className="uppercase text-xs font-black mb-1">📝 NOTAS / INSTRUCCIONES:</p>
+          <p className="text-base leading-snug font-black text-black">{order.notes}</p>
+        </div>
+      )}
+
       <div className="ticket-total text-right mb-4">
         {order.discount_applied > 0 && (
           <p className="text-xl font-bold uppercase border-t-2 border-black pt-2 mb-1">
@@ -97,6 +105,11 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
         <p className={`text-3xl font-black uppercase ${order.discount_applied > 0 ? 'border-t-2 border-black border-dotted pt-2' : 'border-t-2 border-black pt-2'}`}>
           {t('ticket_total')} {order.total_amount?.toFixed(2)}€
         </p>
+        {order.payment_method && (
+          <p className="text-sm font-bold uppercase mt-1 text-right">
+            PAGO: {order.payment_method === 'cash' ? '💵 EFECTIVO' : order.payment_method === 'card' ? '💳 TARJETA' : '🌐 ONLINE'}
+          </p>
+        )}
       </div>
 
       <div className="ticket-footer text-center mt-8">
