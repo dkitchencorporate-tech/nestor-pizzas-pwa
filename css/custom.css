@@ -10,7 +10,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Ocultación absoluta de barras de desplazamiento (scrollbars) para estética nativa PWA */
+/* Ocultación absoluta de barras de desplazamiento para estética nativa PWA */
 *, *::before, *::after {
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
@@ -100,7 +100,7 @@ body {
 }
 
 /* =========================================================================
-   PRINT ENGINE (DISTINGUISHES 80MM THERMAL TICKETS VS A4 AUDIT REPORTS)
+   DUAL PRINT ENGINE (SEPARACIÓN TOTAL: COMANDAS 80MM vs INFORMES A4)
    ========================================================================= */
 
 @media screen {
@@ -113,6 +113,64 @@ body {
 }
 
 @media print {
+  /* =====================================================
+     MODO 1: COMANDAS TÉRMICAS DE COCINA / MOSTRADOR (80MM)
+     ===================================================== */
+  body.printing-ticket {
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
+  }
+  body.printing-ticket * {
+    visibility: hidden;
+  }
+  body.printing-ticket .ticket-printer-container,
+  body.printing-ticket .ticket-printer-container * {
+    visibility: visible !important;
+    display: block !important;
+  }
+  body.printing-ticket .ticket-printer-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    font-family: monospace !important;
+  }
+  body.printing-ticket .audit-report-container {
+    display: none !important;
+  }
+
+  /* =====================================================
+     MODO 2: INFORMES DE AUDITORÍA, ARQUEO Y CIERRE (A4)
+     ===================================================== */
+  body.printing-audit-report {
+    @page {
+      size: A4 portrait;
+      margin: 10mm 15mm;
+    }
+  }
+  body.printing-audit-report .ticket-printer-container {
+    display: none !important;
+  }
+  body.printing-audit-report .audit-report-container,
+  body.printing-audit-report .audit-report-container * {
+    visibility: visible !important;
+    color: #000000 !important;
+  }
+  body.printing-audit-report .audit-report-container {
+    display: block !important;
+    width: 100% !important;
+    background-color: #FFFFFF !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* REGLAS BASE COMUNES */
   @page {
     size: A4 portrait;
     margin: 10mm 15mm;
@@ -126,50 +184,11 @@ body {
     overflow: visible !important;
   }
 
-  /* Ocultar elementos interactivos de pantalla */
   .print\:hidden,
   aside,
   nav,
   header {
     display: none !important;
     visibility: hidden !important;
-  }
-
-  .print\:block {
-    display: block !important;
-    visibility: visible !important;
-  }
-
-  /* Contenedor del Informe de Auditoría A4 */
-  .audit-report-container,
-  .audit-report-container * {
-    visibility: visible !important;
-    color: #000000 !important;
-  }
-  
-  .audit-report-container {
-    display: block !important;
-    width: 100% !important;
-    background-color: #FFFFFF !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* Si se imprime comanda térmica de 80mm */
-  .ticket-printer-container {
-    display: block !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 80mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background-color: #FFFFFF !important;
-    color: #000000 !important;
-    visibility: visible !important;
-  }
-  .ticket-printer-container * {
-    visibility: visible !important;
-    color: #000000 !important;
   }
 }

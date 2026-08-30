@@ -213,11 +213,19 @@ export default function AdminHistory() {
     setExpandedOrderId(prev => prev === id ? null : id);
   };
 
+  const triggerAuditPrint = () => {
+    document.body.classList.add('printing-audit-report');
+    triggerAuditPrint();
+    setTimeout(() => {
+      document.body.classList.remove('printing-audit-report');
+    }, 1000);
+  };
+
   const handlePrintClick = () => {
     if (dateFilter === 'today') {
       setShowDailyCloseModal(true);
     } else {
-      window.print();
+      triggerAuditPrint();
     }
   };
 
@@ -230,7 +238,7 @@ export default function AdminHistory() {
       setShowDailyCloseModal(false);
       
       // 2. Trigger printable A4 audit report
-      window.print();
+      triggerAuditPrint();
       
       // 3. Perform secure admin logout and reload
       setTimeout(async () => {
@@ -659,7 +667,7 @@ export default function AdminHistory() {
               <button
                 onClick={() => {
                   setShowDailyCloseModal(false);
-                  window.print();
+                  triggerAuditPrint();
                 }}
                 disabled={isClosingShift}
                 className="w-full py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl text-xs font-black uppercase transition-all shadow-md flex items-center justify-center gap-2"

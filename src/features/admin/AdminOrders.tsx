@@ -138,9 +138,14 @@ export default function AdminOrders() {
     const success2 = await sendToNetworkPrinter(order);
     
     if (!success1 && !success2) {
+      document.body.classList.add('printing-ticket');
       setPrintingOrder(order);
       setTimeout(() => {
         window.print();
+        setTimeout(() => {
+          document.body.classList.remove('printing-ticket');
+          setPrintingOrder(null);
+        }, 1000);
       }, 300);
     }
   };
