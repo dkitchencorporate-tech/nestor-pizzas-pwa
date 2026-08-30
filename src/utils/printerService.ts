@@ -15,33 +15,52 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     const timeStr = orderDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
     // Generar formato de texto tipo ESC/POS de alta legibilidad
-    let text = `================================\n`;
-    text += `       NESTOR PIZZAS\n`;
-    text += `   Masa Fresca & Gourmet\n`;
-    text += `================================\n`;
-    text += `FECHA: ${dateStr} - ${timeStr}\n`;
-    text += `TICKET: #${order.id ? order.id.slice(0, 8).toUpperCase() : '00000000'}\n`;
+    let text = `================================
+`;
+    text += `       NESTOR PIZZAS
+`;
+    text += `   Masa Fresca & Gourmet
+`;
+    text += `================================
+`;
+    text += `FECHA: ${dateStr} - ${timeStr}
+`;
+    text += `TICKET: #NP-${order.id ? order.id.slice(0, 8).toUpperCase() : '00000000'}
+`;
+    text += `--------------------------------
+`;
     
     const isMesa = order.delivery_method === 'local';
     const isDelivery = order.delivery_method === 'delivery';
+    const isPickup = order.delivery_method === 'pickup';
     
     if (isMesa) {
-      text += `TIPO:   *** MESA / SALA ***\n`;
+      text += `TIPO:   *** SALA / MESA ***
+`;
+      text += `MESA:   ${(order.client_name || 'MESA LOCAL').toUpperCase()}
+`;
     } else if (isDelivery) {
-      text += `TIPO:   *** A DOMICILIO ***\n`;
+      text += `TIPO:   *** A DOMICILIO ***
+`;
     } else {
-      text += `TIPO:   *** PARA RECOGER ***\n`;
+      text += `TIPO:   *** PARA RECOGER ***
+`;
     }
     
     if (order.estimated_ready_at) {
       const readyDate = new Date(order.estimated_ready_at);
       const readyTime = readyDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-      text += `HORA ESTIMADA: ${readyTime}\n`;
+      text += `HORA ESTIMADA: ${readyTime} H
+`;
     }
 
-    text += `CLIENTE:  ${(order.client_name || 'Mostrador').toUpperCase()}\n`;
-    if (order.client_phone) {
-      text += `TELEFONO: ${order.client_phone}\n`;
+    if (!isMesa) {
+      text += `CLIENTE:  ${(order.client_name || 'Mostrador').toUpperCase()}
+`;
+      if (order.client_phone) {
+        text += `TELEFONO: ${order.client_phone}
+`;
+      }
     }
     
     if (isDelivery && order.delivery_address) {
@@ -54,18 +73,24 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
           if (addr.door) fullAddress += `, ${addr.door}`;
           if (addr.cp) fullAddress += `, CP ${addr.cp}`;
           if (addr.notes) fullAddress += ` (Notas: ${addr.notes})`;
-          text += `DIRECCION: ${fullAddress}\n`;
+          text += `DIRECCION: ${fullAddress}
+`;
         } else {
-          text += `DIRECCION: ${addr}\n`;
+          text += `DIRECCION: ${addr}
+`;
         }
       } catch(e) {
-        text += `DIRECCION: ${addr}\n`;
+        text += `DIRECCION: ${addr}
+`;
       }
     }
     
-    text += `--------------------------------\n`;
-    text += `CANT   ARTICULO            TOTAL\n`;
-    text += `--------------------------------\n`;
+    text += `--------------------------------
+`;
+    text += `CANT   ARTICULO            TOTAL
+`;
+    text += `--------------------------------
+`;
     
     if (order.order_items && Array.isArray(order.order_items)) {
       order.order_items.forEach((item: any) => {
@@ -80,40 +105,63 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
           itemName += ' (YA PEDIDO)';
         }
         
-        text += `${qty}x    ${itemName.padEnd(16).slice(0, 16)} ${lineTotal.padStart(6)}E\n`;
+        text += `${qty}x    ${itemName.padEnd(16).slice(0, 16)} ${lineTotal.padStart(6)}E
+`;
         
         if (item.customization_details?.extras && Array.isArray(item.customization_details.extras)) {
           item.customization_details.extras.forEach((extra: any) => {
             const extraName = typeof extra === 'string' ? extra : extra.name;
-            text += `  * + ${extraName}\n`;
+            text += `  * + ${extraName}
+`;
           });
         }
         if (item.customization_details?.notes) {
-          text += `  * NOTA: ${item.customization_details.notes}\n`;
+          text += `  * NOTA: ${item.customization_details.notes}
+`;
         }
       });
     }
     
     // Notas Especiales de Cocina / Reparto
     if (order.notes && typeof order.notes === 'string' && order.notes.trim()) {
-      text += `--------------------------------\n`;
-      text += `NOTAS / INSTRUCCIONES:\n`;
-      text += `${order.notes.trim()}\n`;
+      text += `--------------------------------
+`;
+      text += `NOTAS / INSTRUCCIONES:
+`;
+      text += `${order.notes.trim()}
+`;
     }
 
-    text += `--------------------------------\n`;
+    text += `--------------------------------
+`;
     if (order.discount_applied > 0) {
-      text += `DESCUENTO VIP:        -${order.discount_applied.toFixed(2)} EUR\n`;
+      text += `DESCUENTO VIP:        -${order.discount_applied.toFixed(2)} EUR
+`;
     }
     const totalFinal = typeof order.total_amount === 'number' ? order.total_amount.toFixed(2) : '0.00';
-    text += `TOTAL A PAGAR:         ${totalFinal} EUR\n`;
-    if (order.payment_method) {
-      const payLabel = order.payment_method === 'cash' ? 'EFECTIVO (Cobrar)' : (order.payment_method === 'card' ? 'TARJETA (TPV)' : 'PAGO ONLINE');
-      text += `METODO DE PAGO:        ${payLabel}\n`;
+    text += `TOTAL:                 ${totalFinal} EUR
+`;
+    
+    // Instrucción de pago explícita
+    const pMethod = order.payment_method || 'cash';
+    let payBanner = 'EFECTIVO (Cobrar)';
+    if (pMethod === 'tpv' || pMethod === 'physical' || pMethod === 'card_delivery') {
+      payBanner = 'DATAFONO TPV (Cobrar)';
+    } else if (pMethod === 'online' || pMethod === 'sumup_online') {
+      payBanner = 'PAGADO ONLINE (SumUp)';
     }
-    text += `================================\n`;
-    text += `   GRACIAS POR SU CONFIANZA\n`;
-    text += `\n\n\n\n`; // Espacio para el corte térmico
+    text += `COBRO:                 ${payBanner}
+`;
+    
+    text += `================================
+`;
+    text += `   GRACIAS POR SU CONFIANZA
+`;
+    text += `
+
+
+
+`; // Espacio para el corte térmico
 
     const payload = {
       printer_ip: config.ip || '192.168.1.200',

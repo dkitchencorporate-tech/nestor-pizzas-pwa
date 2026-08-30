@@ -11,115 +11,174 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
   if (!order) return null;
 
   const isDelivery = order.delivery_method === 'delivery';
+  const isPickup = order.delivery_method === 'pickup';
+  const isLocal = order.delivery_method === 'local';
 
-  // Format date
-  const orderDate = new Date(order.created_at);
+  // Format date & time
+  const orderDate = order.created_at ? new Date(order.created_at) : new Date();
   const formattedDate = orderDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const formattedTime = orderDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
+  // Payment method classification
+  const isCash = order.payment_method === 'cash' || !order.payment_method;
+  const isTpv = order.payment_method === 'tpv' || order.payment_method === 'physical' || order.payment_method === 'card_delivery';
+  const isOnline = order.payment_method === 'online' || order.payment_method === 'sumup_online';
+
   return (
-    <div id="ticket-printer-content" className="ticket-printer-container bg-white text-black font-mono">
-      <div className="ticket-header text-center">
-        <h1 className="text-3xl font-black uppercase mb-1 tracking-tighter">NESTOR PIZZAS</h1>
-        <p className="text-sm font-bold border-y-2 border-black py-1 my-2">
-          {formattedDate} - {formattedTime}
+    <div id="ticket-printer-content" className="ticket-printer-container bg-white text-black font-mono p-2 text-xs leading-snug">
+      
+      {/* 1. CABECERA CORPORATIVA Y NÚMERO DE TICKET */}
+      <div className="ticket-header text-center border-b-2 border-black pb-2 mb-2">
+        <h1 className="text-2xl font-black uppercase tracking-tight">NÉSTOR PIZZAS</h1>
+        <p className="text-[10px] font-bold text-gray-700">Masa Fresca Artesana &bull; Caniles (Granada)</p>
+        <div className="border-y border-black py-0.5 my-1 font-bold text-sm">
+          {formattedDate} &bull; {formattedTime}
+        </div>
+        <p className="text-base font-black uppercase tracking-wider">
+          TICKET: #NP-{order.id ? order.id.slice(0, 8).toUpperCase() : '00000000'}
         </p>
-        
-        <h2 className="text-2xl font-black border-b-2 border-black pb-2 mb-2 uppercase">
-          {order.delivery_method === 'local' ? 'MESA / LOCAL' : (isDelivery ? t('ticket_delivery') : t('ticket_pickup'))}
-        </h2>
-        {order.estimated_ready_at && (
-          <p className="text-xl font-black bg-black text-white py-1 uppercase mb-2">
-            LISTO: {new Date(order.estimated_ready_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-          </p>
-        )}
       </div>
 
-      <div className="ticket-client text-left mb-4">
-        <p className="text-sm font-bold uppercase mb-1">{t('ticket_client')}</p>
-        <p className="text-2xl font-black uppercase leading-none mb-1">{order.client_name || t('no_name')}</p>
-        <p className="text-xl font-bold">{t('ticket_phone')} {order.client_phone}</p>
-        {isDelivery && order.delivery_address && (
-          <div className="mt-2 p-2 border-2 border-black font-bold text-xl leading-snug">
-            {formatAddress(order.delivery_address as string)}
+      {/* 2. CANAL DE SERVICIO DESTACADO */}
+      <div className="mb-2 text-center">
+        <div className="border-2 border-black p-1.5 font-black uppercase">
+          {isLocal && (
+            <div>
+              <span className="text-xs block text-gray-700">SERVICIO EN SALA</span>
+              <span className="text-xl block">{order.client_name || 'MESA LOCAL'}</span>
+            </div>
+          )}
+          {isDelivery && (
+            <div>
+              <span className="text-lg block">🛵 REPARTO A DOMICILIO</span>
+            </div>
+          )}
+          {isPickup && (
+            <div>
+              <span className="text-lg block">🛍️ PARA RECOGER EN LOCAL</span>
+            </div>
+          )}
+        </div>
+
+        {order.estimated_ready_at && (
+          <div className="bg-black text-white py-1 px-2 font-black text-sm uppercase mt-1">
+            HORA ESTIMADA: {new Date(order.estimated_ready_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} H
           </div>
         )}
       </div>
 
-      <div className="ticket-items mb-4 border-t-2 border-black pt-2">
-        <table className="w-full text-left font-bold text-sm">
+      {/* 3. DATOS DEL CLIENTE Y DIRECCIÓN */}
+      <div className="ticket-client mb-3 border-b border-black pb-2 text-left">
+        {!isLocal && (
+          <>
+            <p className="text-[10px] font-bold text-gray-600 uppercase">CLIENTE:</p>
+            <p className="text-base font-black uppercase leading-tight">{order.client_name || 'Mostrador'}</p>
+            {order.client_phone && (
+              <p className="text-sm font-bold mt-0.5">📞 Teléfono: {order.client_phone}</p>
+            )}
+          </>
+        )}
+
+        {isDelivery && order.delivery_address && (
+          <div className="mt-1.5 p-1.5 border-2 border-black font-bold text-sm bg-gray-50 leading-snug">
+            <span className="text-[10px] block font-black text-gray-700 uppercase">DIRECCIÓN DE ENTREGA:</span>
+            <span>{formatAddress(order.delivery_address as string)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* 4. TABLA DETALLADA DE PRODUCTOS */}
+      <div className="ticket-items mb-3 border-b-2 border-black pb-2">
+        <table className="w-full text-left font-bold text-xs">
           <thead>
-            <tr className="border-b-2 border-black">
-              <th className="w-1/6 pb-1">{t('ticket_qty')}</th>
-              <th className="w-4/6 pb-1">{t('ticket_item')}</th>
-              <th className="w-1/6 pb-1 text-right">{t('ticket_euros')}</th>
+            <tr className="border-b border-black text-[10px] uppercase">
+              <th className="w-2/12 pb-0.5">Cant.</th>
+              <th className="w-7/12 pb-0.5">Artículo / Extras</th>
+              <th className="w-3/12 pb-0.5 text-right">Total</th>
             </tr>
           </thead>
           <tbody>
             {order.order_items?.map((item: any, index: number) => (
               <tr key={index} className="border-b border-dotted border-gray-400">
-                <td className="py-3 text-xl">{item.quantity}x</td>
-                <td className="py-3 text-lg leading-tight">
-                  <span className="uppercase block font-black text-[15px]">
+                <td className="py-2 text-base font-black align-top">{item.quantity}x</td>
+                <td className="py-2 align-top">
+                  <span className="uppercase block font-black text-sm">
                     {item.customization_details?.name || item.products?.name}
-                    {item.is_new && <span className="ml-2 bg-black text-white px-1 text-xs uppercase inline-block">NUEVO</span>}
-                    {item.is_old && <span className="ml-2 text-gray-500 italic text-xs uppercase inline-block">(Ya Pedido)</span>}
+                    {item.is_new && <span className="ml-1 bg-black text-white px-1 text-[9px] uppercase inline-block">NUEVO</span>}
+                    {item.is_old && <span className="ml-1 text-gray-500 italic text-[9px] uppercase inline-block">(Ya Pedido)</span>}
                   </span>
+                  
+                  {/* Extras / Toppings */}
                   {item.customization_details?.extras && Array.isArray(item.customization_details.extras) && item.customization_details.extras.length > 0 && (
-                    <span className="text-sm font-normal text-gray-800 block italic mt-1">
-                      {item.customization_details.extras.map((e: any) => `+ ${typeof e === 'string' ? e : e.name}`).join(', ')}
-                    </span>
+                    <div className="text-[10px] font-normal text-gray-800 mt-0.5 space-y-0.5">
+                      {item.customization_details.extras.map((e: any, eIdx: number) => (
+                        <p key={eIdx}>+ {typeof e === 'string' ? e : e.name}</p>
+                      ))}
+                    </div>
                   )}
+
+                  {/* Item Specific Cooking Note */}
                   {item.customization_details?.notes && (
-                    <span className="text-sm font-bold text-gray-800 block mt-1">
-                      NOTA: {item.customization_details.notes}
-                    </span>
+                    <p className="text-[10px] font-bold text-black mt-0.5 italic">
+                      &bull; NOTA: {item.customization_details.notes}
+                    </p>
                   )}
                 </td>
-                <td className="py-3 text-right text-lg">{(item.unit_price * item.quantity).toFixed(2)}</td>
+                <td className="py-2 text-right text-sm font-black align-top">
+                  {(item.unit_price * item.quantity).toFixed(2)}€
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Global Order Notes */}
+      {/* 5. NOTAS GLOBALES DE COCINA O REPARTO */}
       {order.notes && typeof order.notes === 'string' && order.notes.trim() && (
-        <div className="my-3 p-3 border-2 border-black font-bold text-sm bg-gray-100">
-          <p className="uppercase text-xs font-black mb-1">📝 NOTAS / INSTRUCCIONES:</p>
-          <p className="text-base leading-snug font-black text-black">{order.notes}</p>
+        <div className="my-2 p-1.5 border-2 border-black font-bold text-xs bg-gray-100">
+          <p className="uppercase text-[9px] font-black mb-0.5">📝 NOTAS / INSTRUCCIONES:</p>
+          <p className="text-sm leading-snug font-black">{order.notes}</p>
         </div>
       )}
 
-      <div className="ticket-total text-right mb-4">
+      {/* 6. TOTALES Y FORMA DE COBRO */}
+      <div className="ticket-total text-right mb-3">
         {order.discount_applied > 0 && (
-          <p className="text-xl font-bold uppercase border-t-2 border-black pt-2 mb-1">
-            {t('ticket_subtotal')} {(order.total_amount + order.discount_applied).toFixed(2)}€
-          </p>
+          <>
+            <p className="text-xs font-bold uppercase">
+              Subtotal: {(order.total_amount + order.discount_applied).toFixed(2)}€
+            </p>
+            <p className="text-xs font-bold uppercase text-gray-700">
+              Descuento Club VIP: -{order.discount_applied.toFixed(2)}€
+            </p>
+          </>
         )}
-        {order.discount_applied > 0 && (
-          <p className="text-lg font-bold uppercase mb-2">
-            {t('ticket_vip_discount')} -{order.discount_applied.toFixed(2)}€
+
+        <div className="border-t-2 border-black pt-1 mt-1">
+          <p className="text-2xl font-black uppercase">
+            TOTAL: {order.total_amount?.toFixed(2)}€
           </p>
-        )}
-        <p className={`text-3xl font-black uppercase ${order.discount_applied > 0 ? 'border-t-2 border-black border-dotted pt-2' : 'border-t-2 border-black pt-2'}`}>
-          {t('ticket_total')} {order.total_amount?.toFixed(2)}€
-        </p>
-        {order.payment_method && (
-          <p className="text-sm font-bold uppercase mt-1 text-right">
-            PAGO: {order.payment_method === 'cash' ? '💵 EFECTIVO' : order.payment_method === 'card' ? '💳 TARJETA' : '🌐 ONLINE'}
-          </p>
-        )}
+        </div>
+
+        {/* INSTRUCCIÓN DE COBRO EN CUADRO DESTACADO */}
+        <div className="mt-2 p-1.5 border-2 border-black text-center font-black uppercase text-xs">
+          {isCash && <span>💵 COBRAR EN EFECTIVO (LLEVAR CAMBIO)</span>}
+          {isTpv && <span>💳 COBRAR CON DATÁFONO TPV</span>}
+          {isOnline && <span>✅ PAGADO ONLINE POR APP (SUMUP)</span>}
+        </div>
       </div>
 
-      <div className="ticket-footer text-center mt-8">
-        <p className="font-bold text-xs uppercase mb-1 text-gray-600">{t('ticket_order_id')}{order.id.slice(0, 8)}</p>
-        <p className="text-lg font-black italic border-t-2 border-black pt-2">{t('ticket_thanks')}</p>
+      {/* 7. PIE DE TICKET Y CORTE */}
+      <div className="ticket-footer text-center mt-4 pt-2 border-t border-black">
+        <p className="text-[10px] font-bold uppercase text-gray-600">
+          Sistema POS Enterprise &bull; Néstor Pizzas
+        </p>
+        <p className="text-sm font-black italic mt-0.5">¡Gracias por su confianza!</p>
       </div>
       
-      {/* Spacer for paper cut mechanism to trigger properly */}
-      <div className="h-16"></div>
-      <div className="text-center text-[10px] text-gray-400">{t('ticket_end')}</div>
+      {/* Margen para guillotina de corte térmico */}
+      <div className="h-12"></div>
+      <div className="text-center text-[9px] text-gray-400">--- CORTE DE TICKET ---</div>
     </div>
   );
 }
