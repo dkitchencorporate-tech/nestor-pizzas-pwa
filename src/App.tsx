@@ -44,9 +44,18 @@ function App() {
   const fetchSettings = useSettingsStore(state => state.fetchSettings);
   const fetchOrders = useAuthStore(state => state.fetchOrders);
   
-  const hasActiveOrder = user 
-    ? (orders || []).some(o => ['pending', 'cooking', 'delivering', 'ready'].includes(o.status))
-    : (guestOrder && ['pending', 'cooking', 'delivering', 'ready'].includes(guestOrder.status));
+  const guestOrders = useGuestOrderStore(state => state.guestOrders);
+  
+  const activeOrdersCount = useMemo(() => {
+    if (user) {
+      return (orders || []).filter(o => ['pending', 'cooking', 'delivering', 'ready'].includes(o.status)).length;
+    } else {
+      const list = guestOrders && guestOrders.length > 0 ? guestOrders : (guestOrder ? [guestOrder] : []);
+      return list.filter(o => ['pending', 'cooking', 'delivering', 'ready'].includes(o.status)).length;
+    }
+  }, [orders, guestOrders, guestOrder, user]);
+
+  const hasActiveOrder = activeOrdersCount > 0;
 
   // Check if URL is /admin on load
   if (currentView === 'splash' && window.location.pathname.startsWith('/admin')) {
@@ -237,10 +246,19 @@ function App() {
           className="fixed bottom-24 right-4 sm:right-6 z-[900] w-14 h-14 sm:w-16 sm:h-16 bg-green-500 text-white rounded-full shadow-[0_0_20px_rgba(34,197,94,0.5)] flex items-center justify-center animate-bounce transition-transform hover:scale-110"
         >
           <span className="text-2xl sm:text-3xl">🛵</span>
-          <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-white"></span>
-          </span>
+          {activeOrdersCount > 1 ? (
+            <span className="absolute -top-1 -right-1 flex h-6 w-6">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-6 w-6 bg-red-600 text-white text-xs font-black items-center justify-center border-2 border-[#0A0A0E]">
+                {activeOrdersCount}
+              </span>
+            </span>
+          ) : (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-white"></span>
+            </span>
+          )}
         </button>
       )}
 
