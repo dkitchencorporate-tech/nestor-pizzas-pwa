@@ -247,49 +247,55 @@ export default function AdminDashboard() {
 
         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
           <nav className="p-4 space-y-2 flex-1">
+            {/* 1. Pedidos */}
             <button 
-            onClick={() => setActiveTab('orders')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'orders' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
-          >
-            📋 {t('orders')}
-          </button>
-          <button 
-            onClick={() => setActiveTab('history')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'history' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
-          >
-            🗄️ {t('history')}
-          </button>
-          <button 
-            onClick={() => setActiveTab('kiosk')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'kiosk' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
-          >
-            🍕 {t('kiosk')}
-          </button>
-          <button 
-            onClick={() => setActiveTab('catalog')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'catalog' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
-          >
-            ⚙️ {t('catalog')}
-          </button>
-          <button 
-            onClick={() => setActiveTab('analytics')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'analytics' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
-          >
-            📊 {t('analytics')}
-          </button>
-          <button
-            onClick={() => { setActiveTab('printers'); setIsSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'printers' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
-          >
-            🖨️ <span className="uppercase tracking-wider">Impresoras</span>
-          </button>
-
-          <button
-            onClick={() => { setActiveTab('pwa'); setIsSidebarOpen(false); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'pwa' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
-          >
-            📱 <span className="uppercase tracking-wider">PWA Analytics</span>
-          </button>
+              onClick={() => setActiveTab('orders')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'orders' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              📋 {t('orders')}
+            </button>
+            {/* 2. TPV Kiosco */}
+            <button 
+              onClick={() => setActiveTab('kiosk')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'kiosk' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              🍕 {t('kiosk')}
+            </button>
+            {/* 3. Catálogo */}
+            <button 
+              onClick={() => setActiveTab('catalog')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'catalog' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              ⚙️ {t('catalog')}
+            </button>
+            {/* 4. Historial */}
+            <button 
+              onClick={() => setActiveTab('history')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'history' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              🗄️ {t('history')}
+            </button>
+            {/* 5. Analítica */}
+            <button 
+              onClick={() => setActiveTab('analytics')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'analytics' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              📊 {t('analytics')}
+            </button>
+            {/* 6. Impresoras */}
+            <button
+              onClick={() => { setActiveTab('printers'); setIsSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'printers' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              🖨️ <span className="uppercase tracking-wider">Impresoras</span>
+            </button>
+            {/* 7. PWA Analytics */}
+            <button
+              onClick={() => { setActiveTab('pwa'); setIsSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'pwa' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              📱 <span className="uppercase tracking-wider">PWA Analytics</span>
+            </button>
 
           <div className="pt-4 mt-4 border-t border-zinc-800">
             <button 
@@ -335,17 +341,62 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 h-full overflow-hidden relative print:h-auto print:overflow-visible print:block">
-        <div className={activeTab === 'orders' ? 'block h-full' : 'hidden'}><AdminOrders /></div>
-        <div className={activeTab === 'history' ? 'block h-full' : 'hidden'}><AdminHistory /></div>
-        <div className={activeTab === 'kiosk' ? 'block h-full' : 'hidden'}><AdminKiosk /></div>
-        <div className={activeTab === 'catalog' ? 'block h-full' : 'hidden'}><AdminCatalog /></div>
-        <div className={activeTab === 'analytics' ? 'block h-full' : 'hidden'}><AdminAnalytics /></div>
-        <div className={activeTab === 'pwa' ? 'block h-full overflow-y-auto pt-16 sm:pt-4' : 'hidden'}><AdminPwaAnalytics /></div>
-        <div className={activeTab === 'printers' ? 'block h-full overflow-y-auto pt-16 sm:pt-4' : 'hidden'}>
-          <div className="p-4 sm:p-8">
-            <AdminPrinterSettings />
+      <main className="flex-1 h-full overflow-hidden relative flex flex-col print:h-auto print:overflow-visible print:block">
+        
+        {/* Floating Quick Action Bridge (Persistent between Pedidos and TPV Kiosco) */}
+        <div className="bg-[#0e0e16]/95 backdrop-blur-md border-b border-zinc-800/80 px-4 py-2.5 flex items-center justify-between z-30 shrink-0 print:hidden">
+          <div className="flex items-center gap-2">
+            {!isSidebarOpen && (
+              <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 rounded-xl text-zinc-300 hover:text-white transition-all mr-2 flex items-center gap-1.5 text-xs font-bold"
+                title="Abrir Menú Lateral"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                <span className="hidden sm:inline">Menú</span>
+              </button>
+            )}
+            <div className="flex items-center bg-black/60 p-1 rounded-xl border border-zinc-800">
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                  activeTab === 'orders'
+                    ? 'bg-green-600 text-white shadow-[0_0_15px_rgba(34,197,94,0.4)]'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <span>📋</span> <span>Pedidos</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('kiosk')}
+                className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                  activeTab === 'kiosk'
+                    ? 'bg-orange-600 text-white shadow-[0_0_15px_rgba(234,88,12,0.4)]'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <span>🍕</span> <span>TPV Kiosco</span>
+              </button>
+            </div>
           </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest hidden md:inline">NÉSTOR PIZZAS POS v2.0</span>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-hidden relative">
+          <div className={activeTab === 'orders' ? 'block h-full' : 'hidden'}><AdminOrders /></div>
+          <div className={activeTab === 'kiosk' ? 'block h-full' : 'hidden'}><AdminKiosk /></div>
+          <div className={activeTab === 'catalog' ? 'block h-full' : 'hidden'}><AdminCatalog /></div>
+          <div className={activeTab === 'history' ? 'block h-full' : 'hidden'}><AdminHistory /></div>
+          <div className={activeTab === 'analytics' ? 'block h-full' : 'hidden'}><AdminAnalytics /></div>
+          <div className={activeTab === 'printers' ? 'block h-full overflow-y-auto pt-4' : 'hidden'}>
+            <div className="p-4 sm:p-8">
+              <AdminPrinterSettings />
+            </div>
+          </div>
+          <div className={activeTab === 'pwa' ? 'block h-full overflow-y-auto pt-4' : 'hidden'}><AdminPwaAnalytics /></div>
         </div>
       </main>
       
