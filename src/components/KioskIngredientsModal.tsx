@@ -1,3 +1,4 @@
+import { generateSafeUUID } from '../utils/uuid';
 import { useState } from 'react';
 import { NESTOR_INGREDIENTS_OFICIAL } from '../data/products';
 import { Product } from '../data/products';
