@@ -254,6 +254,7 @@ export default function AdminKiosk() {
           name: item.name, 
           notes: item.notes, 
           extras: item.extras,
+          is_sent_to_kitchen: false,
           ...(index === 0 ? { is_tpv_order: true } : {})
         }
       }));
@@ -534,7 +535,7 @@ export default function AdminKiosk() {
                         {cat.name}
                         <div className="flex-1 h-px bg-zinc-800"></div>
                       </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
                         {catProducts.map(product => (
                           <button
                             key={product.id}
@@ -554,7 +555,7 @@ export default function AdminKiosk() {
           </div>
 
           {/* PANEL DERECHO: TICKET Y CLIENTE */}
-          <div className="w-[400px] flex flex-col gap-4">
+          <div className="w-[320px] lg:w-[360px] xl:w-[400px] flex flex-col gap-4 shrink-0">
             
             {editingOrder && (
               <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-2xl p-4 flex flex-col items-center justify-center gap-2">
