@@ -1,3 +1,5 @@
+import PWAInstallModal from './components/PWAInstallModal';
+import { usePWAInstall } from './hooks/usePWAInstall';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import CartDrawer from './components/CartDrawer';
 import CartBar from './components/CartBar';
@@ -21,6 +23,7 @@ import { supabase } from './lib/supabase';
 
 function App() {
   const { t } = useI18nStore();
+  const { isInstallModalOpen, setIsInstallModalOpen, isIOS, isStandalone, triggerDirectPrompt, installPrompt } = usePWAInstall();
   const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking'>('splash');
   const [isPreloaderFading, setIsPreloaderFading] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
@@ -260,6 +263,14 @@ function App() {
           useCartStore.getState().clearCart();
           setCurrentView('tracking');
         }}
+      />
+      <PWAInstallModal 
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+        isIOS={isIOS}
+        isStandalone={isStandalone}
+        onInstallDirect={triggerDirectPrompt}
+        canInstallDirect={!!installPrompt}
       />
     </div>
   );
