@@ -269,7 +269,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               </a>
             </div>
             <button
-              onClick={() => { setIsPickupSuccess(false); onClose(); }}
+              onClick={() => { setIsPickupSuccess(false); onSuccess({ id: pickupOrderId, total_amount: finalTotal, clientName: clientName }, !user); }}
               className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl uppercase tracking-wider text-sm transition-all shadow-[0_0_25px_rgba(34,197,94,0.3)] hover:scale-105"
             >
               Perfecto, ¡gracias!
