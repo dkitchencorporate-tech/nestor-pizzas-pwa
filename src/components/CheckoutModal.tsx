@@ -457,16 +457,30 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   <input type="text" value={addressCP} onChange={e => setAddressCP(e.target.value)} placeholder="18810" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
                 </div>
                 <div className="sm:col-span-3">
-                  <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">{t('notes_optional')}</label>
-                  <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder={t('notes_placeholder_checkout')} className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+                  <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Piso / Puerta</label>
+                  <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder="Ej. 2ºA, Timbre azul" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
                 </div>
               </div>
             ) : (
               <div className="font-medium">
-                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">{t('notes_or_table')}</label>
-                <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder={t('notes_table_placeholder')} className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
+                <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Notas para Recogida (Opcional)</label>
+                <input type="text" value={addressNotes} onChange={e => setAddressNotes(e.target.value)} placeholder="Ej. Recoge mi hermano Carlos" className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm sm:text-sm focus:outline-none focus:border-green-500 font-medium" />
               </div>
             )}
+
+            {/* Notas Globales para Cocina / Elaboración */}
+            <div className="pt-1">
+              <label className="block text-[10px] sm:text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">
+                📝 Instrucciones Especiales para Cocina / Reparto (Opcional)
+              </label>
+              <input 
+                type="text" 
+                value={orderNotes} 
+                onChange={e => setOrderNotes(e.target.value)} 
+                placeholder="Ej: Masa fina, cortar en 8 porciones, llamar al móvil al llegar..." 
+                className="w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-3.5 py-2.5 sm:py-3 text-white text-sm focus:outline-none focus:border-green-500 font-medium" 
+              />
+            </div>
           </div>
 
           {/* Cuándo lo quieres */}
