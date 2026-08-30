@@ -1,3 +1,4 @@
+import { generateSafeUUID } from '../utils/uuid';
 import { useState, useEffect } from 'react';
 import { useI18nStore } from '../store/i18nStore';
 import { useCartStore } from '../store/cartStore';
@@ -44,7 +45,7 @@ export default function SubcategoryModal({ productGroup, onClose }: SubcategoryM
   const handleAddToCart = (subProd: any) => {
     const qty = quantities[subProd.id] || 1;
     addItem({
-      id: crypto.randomUUID(),
+      id: generateSafeUUID(),
       productId: subProd.id,
       name: subProd.name,
       price: subProd.price,
