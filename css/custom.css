@@ -80,7 +80,6 @@ body {
     transform: translateY(-4px);
 }
 
-
 /* Ticker Marquee Animation */
 @keyframes marquee {
     0% { transform: translateX(0); }
@@ -99,35 +98,78 @@ body {
   10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
   20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
+
+/* =========================================================================
+   PRINT ENGINE (DISTINGUISHES 80MM THERMAL TICKETS VS A4 AUDIT REPORTS)
+   ========================================================================= */
+
 @media screen {
   .ticket-printer-container {
+    display: none !important;
+  }
+  .audit-report-container {
     display: none !important;
   }
 }
 
 @media print {
   @page {
-    margin: 0;
-    size: 80mm auto;
+    size: A4 portrait;
+    margin: 10mm 15mm;
   }
-  body * {
-    visibility: hidden;
+
+  html, body, #root {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
   }
-  #root, body, html {
-    background-color: white !important;
+
+  /* Ocultar elementos interactivos de pantalla */
+  .print\:hidden,
+  aside,
+  nav,
+  header {
+    display: none !important;
+    visibility: hidden !important;
   }
-  .ticket-printer-container, .ticket-printer-container * {
-    visibility: visible;
-  }
-  .ticket-printer-container {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 80mm;
-    margin: 0;
-    padding: 0;
-    background-color: white !important;
-    color: black !important;
+
+  .print\:block {
     display: block !important;
+    visibility: visible !important;
+  }
+
+  /* Contenedor del Informe de Auditoría A4 */
+  .audit-report-container,
+  .audit-report-container * {
+    visibility: visible !important;
+    color: #000000 !important;
+  }
+  
+  .audit-report-container {
+    display: block !important;
+    width: 100% !important;
+    background-color: #FFFFFF !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Si se imprime comanda térmica de 80mm */
+  .ticket-printer-container {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    visibility: visible !important;
+  }
+  .ticket-printer-container * {
+    visibility: visible !important;
+    color: #000000 !important;
   }
 }

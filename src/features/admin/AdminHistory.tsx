@@ -689,7 +689,7 @@ export default function AdminHistory() {
       )}
 
       {/* PRINTABLE A4 AUDIT & ACCOUNTING REPORT (Only visible on print / PDF generation) */}
-      <div className="hidden print:block p-8 bg-white text-black min-h-screen w-full font-sans">
+      <div className="audit-report-container hidden print:block p-4 sm:p-8 bg-white text-black min-h-screen w-full font-sans">
         
         {/* Official Letterhead Header */}
         <div className="border-b-2 border-black pb-4 mb-6 flex justify-between items-end">
