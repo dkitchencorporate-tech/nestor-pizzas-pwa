@@ -1,3 +1,4 @@
+import { generateSafeUUID } from '../utils/uuid';
 import { useState } from 'react';
 import { NESTOR_PRODUCTS, Product } from '../data/products';
 import { useCartStore } from '../store/cartStore';
@@ -44,7 +45,7 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
     sortedSelected.forEach((p, index) => {
       const isPromo = index < pairs * 2;
       addItem({
-        id: crypto.randomUUID(),
+        id: generateSafeUUID(),
         productId: p.id,
         name: `${p.name} ${isPromo ? `(${t('promo_title_2')})` : ''}`,
         price: isPromo ? 5.50 : p.price,
