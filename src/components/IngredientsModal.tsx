@@ -1,3 +1,4 @@
+import { generateSafeUUID } from '../utils/uuid';
 import { Product } from '../data/products';
 import { useState, useMemo } from 'react';
 import { NESTOR_INGREDIENTS_OFICIAL } from '../data/products';
@@ -64,7 +65,7 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
     
     const baseText = (!isMaxxiPizza && pizzaBase !== 'Normal') ? ` (Base ${pizzaBase})` : '';
     addItem({
-      id: crypto.randomUUID(),
+      id: generateSafeUUID(),
       productId: product.id,
       name: `${product.name}${baseText}${ingText}`,
       price: finalPrice,
@@ -280,18 +281,20 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-zinc-800 bg-[#0A0A0E] flex items-center justify-between gap-4 shrink-0">
-          <div>
-            <div className="text-gray-400 text-xs mb-1 uppercase tracking-wider font-bold">{t('total_pizza')}</div>
-            <div className="text-white font-display font-black text-2xl">
-              {finalPrice.toFixed(2).replace('.', ',')} €
+        <div className="p-4 sm:p-6 border-t border-zinc-800 bg-[#0A0A0E] flex items-center justify-between gap-3 sm:gap-4 shrink-0">
+          <div className="min-w-0 shrink-0">
+            <div className="text-gray-400 text-[10px] sm:text-xs mb-0.5 uppercase tracking-wider font-bold truncate">{t('total_pizza')}</div>
+            <div className="text-white font-display font-black text-2xl sm:text-3xl whitespace-nowrap flex items-baseline gap-1">
+              <span>{finalPrice.toFixed(2).replace('.', ',')}</span>
+              <span className="text-base sm:text-xl font-bold text-green-400">€</span>
             </div>
           </div>
           <button
             onClick={handleAddToCart}
-            className="px-8 py-4 rounded-2xl font-display font-black text-sm uppercase tracking-wider transition-all flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white shadow-[0_0_25px_rgba(34,197,94,0.4)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)]"
+            className="px-5 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white shadow-[0_0_25px_rgba(34,197,94,0.4)] hover:shadow-[0_0_35px_rgba(34,197,94,0.6)] shrink-0"
           >
-            {t('add_to_order')} <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>{t('add_to_order')}</span>
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
           </button>
         </div>
       </div>
