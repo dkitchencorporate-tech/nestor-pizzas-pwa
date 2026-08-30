@@ -492,6 +492,12 @@ export default function AdminOrders() {
                               📍 {formatAddress(order.delivery_address as string)}
                             </p>
                           )}
+                          {order.notes && (
+                            <div className="mt-3 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                              <p className="text-[10px] font-black text-amber-400 uppercase tracking-wider">📝 NOTAS DEL PEDIDO:</p>
+                              <p className="text-xs font-bold text-amber-200 mt-0.5">{order.notes}</p>
+                            </div>
+                          )}
                         </div>
 
 {/* Print Button */}
