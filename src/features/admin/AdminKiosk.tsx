@@ -24,7 +24,7 @@ interface Product {
 }
 
 export default function AdminKiosk() {
-  const { editingOrder, finishEditingOrder } = useAdminUiStore();
+  const { editingOrder, finishEditingOrder, setActiveTab } = useAdminUiStore();
   const { 
     items, 
     clientInfo, 
@@ -277,6 +277,7 @@ export default function AdminKiosk() {
          finishEditingOrder(); // Volver a órdenes
       } else {
          setView('catalog');
+         setActiveTab('orders'); // Redirigir automáticamente al gestor de pedidos/cocina
       }
 
     } catch (error: any) {
