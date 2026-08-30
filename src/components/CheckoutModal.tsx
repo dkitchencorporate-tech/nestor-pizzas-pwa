@@ -86,48 +86,17 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const pointsEarned = Math.floor(finalTotal / 10) * 4;
 
   const validateGeofence = async (): Promise<boolean> => {
-    // ✅ FIX 1: Recogida en local nunca necesita validación geográfica
+    // 1. Recogida en local no requiere restricción geográfica
     if (deliveryMethod === 'pickup') return true;
-    // Domicilio en Caniles (CP 18810) → bypass directo
-    if (deliveryMethod === 'delivery' && addressCP.trim() === '18810') {
+
+    // 2. Domicilio exclusivamente en Caniles (CP 18810)
+    const cleanCP = addressCP.trim();
+    if (cleanCP === '18810') {
       return true;
     }
 
-    return new Promise<boolean>((resolve) => {
-      if (!navigator.geolocation) {
-        setGeofenceError(t('geofence_no_support'));
-        resolve(false);
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat1 = position.coords.latitude;
-          const lon1 = position.coords.longitude;
-          const lat2 = 37.4346; // Caniles Center
-          const lon2 = -2.7350;
-          
-          const R = 6371; // Earth radius km
-          const dLat = (lat2 - lat1) * (Math.PI / 180);
-          const dLon = (lon2 - lon1) * (Math.PI / 180);
-          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-          const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-          
-          if (distance > 10) {
-            setGeofenceError(`${t('distance_away')} ${distance.toFixed(1)} ${t('km_from_caniles')} ${t('geofence_too_far')}`);
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        },
-        (error) => {
-          console.error(error);
-          setGeofenceError(t('geofence_denied'));
-          resolve(false);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-      );
-    });
+    setGeofenceError('El reparto a domicilio está disponible exclusivamente en Caniles (CP 18810). Para otras localidades, selecciona la opción "Para Recoger".');
+    return false;
   };
 
   const handleCheckoutClick = async () => {
