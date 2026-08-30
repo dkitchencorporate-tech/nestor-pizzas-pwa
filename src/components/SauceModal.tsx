@@ -1,3 +1,4 @@
+import { generateSafeUUID } from '../utils/uuid';
 import { useState } from 'react';
 import { Product } from '../data/products';
 import { useCartStore } from '../store/cartStore';
@@ -37,7 +38,7 @@ export default function SauceModal({ product, onClose }: SauceModalProps) {
     const itemNotes = notes.trim() ? `${t('notes_label')}: ${notes.trim()}` : undefined;
 
     addItem({
-      id: crypto.randomUUID(),
+      id: generateSafeUUID(),
       productId: product.id,
       name: itemNotes ? `${itemName} - ${itemNotes}` : itemName,
       price: finalPrice,
