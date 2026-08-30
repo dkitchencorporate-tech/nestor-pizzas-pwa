@@ -152,6 +152,25 @@ export default function AdminKiosk() {
     }
   };
 
+  const handleOpenCreateModal = () => {
+    const query = searchQuery.trim();
+    const isPhone = /^[+]?[0-9\s-]+$/.test(query) && query.replace(/[^0-9]/g, '').length >= 6;
+    
+    if (isPhone) {
+      setNewClientPhone(query.replace(/[^0-9]/g, ''));
+      setNewClientName('');
+    } else {
+      setNewClientName(query);
+      setNewClientPhone('');
+    }
+    
+    setAddressStreet('');
+    setAddressNumber('');
+    setAddressCP('18810');
+    setAddressNotes('');
+    setIsCreateModalOpen(true);
+  };
+
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClientPhone || !newClientName || !addressStreet || !addressNumber || !addressCP) {
@@ -243,9 +262,9 @@ export default function AdminKiosk() {
       let rpcName = 'process_checkout';
       let rpcParams: any = {
         p_user_id: clientInfo?.id || null,
-        p_client_name: clientInfo?.full_name || 'Mesa / Local',
-        p_client_phone: clientInfo?.phone || '000000000',
-        p_delivery_address: clientInfo?.address || 'Local',
+        p_client_name: deliveryMethod === 'local' ? (tableName.trim() || clientInfo?.full_name || 'Mesa / Local') : (clientInfo?.full_name || 'Sin Nombre'),
+        p_client_phone: deliveryMethod === 'local' ? '000000000' : (clientInfo?.phone || '000000000'),
+        p_delivery_address: deliveryMethod === 'local' ? (tableName.trim() ? `Mesa: ${tableName.trim()}` : 'Local') : (clientInfo?.address || 'Local'),
         p_delivery_method: deliveryMethod,
         p_items: formattedItems,
         p_points_redeemed: false,
@@ -401,15 +420,7 @@ export default function AdminKiosk() {
                 {searchQuery && searchResults.length === 0 && !isSearching && (
                   <div className="mt-4 text-center p-6 bg-zinc-800/50 rounded-xl border border-dashed border-zinc-600">
                     <p className="text-zinc-400 mb-4">No se encontró a nadie con "{searchQuery}"</p>
-                    <button onClick={() => { 
-                        setNewClientPhone(searchQuery); 
-                        setNewClientName('');
-                        setAddressStreet('');
-                        setAddressNumber('');
-                        setAddressCP('');
-                        setAddressNotes('');
-                        setIsCreateModalOpen(true); 
-                    }} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                    <button onClick={handleOpenCreateModal} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30 hover:scale-105">
                       ➕ Crear Cliente Nuevo
                     </button>
                   </div>
