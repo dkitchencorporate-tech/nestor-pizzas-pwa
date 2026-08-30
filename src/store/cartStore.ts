@@ -1,3 +1,4 @@
+import { generateSafeUUID } from '../utils/uuid';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -33,7 +34,7 @@ export const useCartStore = create<CartState>()(
       setKioskClientInfo: (info) => set({ kioskClientInfo: info, lastUpdated: Date.now() }),
       addItem: (item) => set((state) => {
         // Simple logic for kiosks: we just add as a new line item to preserve specific notes/extras
-        return { items: [...state.items, { ...item, id: crypto.randomUUID() }], lastUpdated: Date.now() };
+        return { items: [...state.items, { ...item, id: generateSafeUUID() }], lastUpdated: Date.now() };
       }),
       removeItem: (id) => set((state) => ({
         items: state.items.filter((item) => item.id !== id),
