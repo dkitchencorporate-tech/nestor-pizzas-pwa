@@ -94,12 +94,23 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
       });
     }
     
+    // Notas Especiales de Cocina / Reparto
+    if (order.notes && typeof order.notes === 'string' && order.notes.trim()) {
+      text += `--------------------------------\n`;
+      text += `NOTAS / INSTRUCCIONES:\n`;
+      text += `${order.notes.trim()}\n`;
+    }
+
     text += `--------------------------------\n`;
     if (order.discount_applied > 0) {
       text += `DESCUENTO VIP:        -${order.discount_applied.toFixed(2)} EUR\n`;
     }
     const totalFinal = typeof order.total_amount === 'number' ? order.total_amount.toFixed(2) : '0.00';
     text += `TOTAL A PAGAR:         ${totalFinal} EUR\n`;
+    if (order.payment_method) {
+      const payLabel = order.payment_method === 'cash' ? 'EFECTIVO (Cobrar)' : (order.payment_method === 'card' ? 'TARJETA (TPV)' : 'PAGO ONLINE');
+      text += `METODO DE PAGO:        ${payLabel}\n`;
+    }
     text += `================================\n`;
     text += `   GRACIAS POR SU CONFIANZA\n`;
     text += `\n\n\n\n`; // Espacio para el corte térmico
