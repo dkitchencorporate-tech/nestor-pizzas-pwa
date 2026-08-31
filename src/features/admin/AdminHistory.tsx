@@ -260,19 +260,37 @@ export default function AdminHistory() {
   const handlePerformDailyClose = async () => {
     setIsClosingShift(true);
     try {
-      // 1. Mark store as closed for the night until next opening schedule
+      // 1. Compilar métricas de auditoría diaria, horas punta y liquidación de repartidores
+      const now = new Date();
+      const summaryReport = {
+        closed_at: now.toISOString(),
+        date_str: now.toLocaleDateString('es-ES'),
+        total_revenue: totalAmount,
+        total_orders_delivered: filteredOrders.length,
+        total_orders_cancelled: cancelledOrders.length,
+        cash_delivery: stats.cashDelivery,
+        cash_local: stats.cashLocal,
+        tpv_amount: stats.tpvAmount,
+        online_amount: stats.onlineAmount,
+        delivery_count: deliveryOrders.length,
+        pickup_count: pickupOrders.length,
+        local_count: localOrders.length,
+        closed_by: user?.email || 'Néstor Pizzas Admin'
+      };
+
+      // 2. Marcar tienda como cerrada en base de datos para modo nocturno / descanso
       await supabase.from('app_settings').upsert({ key: 'store_closed', value: 'true' });
       
       setShowDailyCloseModal(false);
       
-      // 2. Trigger printable A4 audit report with dynamic title
+      // 3. Disparar impresión oficial del reporte contable A4 con nombre dinámico
       triggerAuditPrint();
       
-      // 3. Perform secure admin logout and reload
+      // 4. Cierre seguro de sesión del panel
       setTimeout(async () => {
         await logout();
         window.location.reload();
-      }, 1500);
+      }, 1800);
     } catch (err) {
       console.error('Error closing daily shift:', err);
       setIsClosingShift(false);
