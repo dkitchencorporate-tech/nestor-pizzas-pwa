@@ -14,7 +14,7 @@ import { useAdminUiStore } from '../store/adminUiStore';
 
 export default function AdminDashboard() {
   const { t } = useI18nStore();
-  const { user, profile, signIn } = useAuthStore();
+  const { user, profile, signIn, logout } = useAuthStore();
   const { activeTab, setActiveTab } = useAdminUiStore();
   const [isSaturated, setIsSaturated] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
@@ -56,6 +56,16 @@ export default function AdminDashboard() {
     const newStatus = !isStoreClosed;
     setIsStoreClosed(newStatus);
     await supabase.from('app_settings').upsert({ key: 'store_closed', value: newStatus ? 'true' : 'false' });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      window.location.reload();
+    } catch (err) {
+      console.error('Error logging out:', err);
+      window.location.reload();
+    }
   };
   
   const handleAdminLogin = async (e: React.FormEvent) => {
@@ -319,12 +329,19 @@ export default function AdminDashboard() {
               {isSaturated ? '🚨 Restaurar Flujo' : 'Activar (+1h Espera)'}
             </button>
           </div>
-          <div className="p-4 border-t border-zinc-800">
+          <div className="p-4 border-t border-zinc-800 space-y-2">
             <button 
               onClick={() => window.location.href = '/'}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-gray-400 font-bold hover:text-white hover:bg-zinc-800 transition-colors text-xs uppercase"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-gray-400 font-bold hover:text-white hover:bg-zinc-800 transition-colors text-xs uppercase"
             >
               Volver a la Tienda
+            </button>
+            
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 rounded-xl text-xs font-black uppercase transition-all shadow-md"
+            >
+              🚪 Cerrar Sesión
             </button>
           </div>
         </div>
@@ -371,8 +388,22 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest hidden md:inline">NÉSTOR PIZZAS POS v2.0</span>
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:flex items-center gap-2 bg-zinc-900/80 px-3 py-1.5 rounded-xl border border-zinc-800">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              <span className="text-[11px] font-bold text-zinc-300 truncate max-w-[170px]" title={user?.email || 'Admin'}>
+                {user?.email || profile?.full_name || 'Admin'}
+              </span>
+            </div>
+
+            <button 
+              onClick={handleLogout}
+              className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-1.5 shadow-sm"
+              title="Cerrar sesión de administrador"
+            >
+              <span>🚪</span>
+              <span className="hidden sm:inline">Cerrar Sesión</span>
+            </button>
           </div>
         </div>
 
