@@ -165,6 +165,23 @@ export default function AdminAnalytics() {
     document.body.removeChild(a);
   };
 
+  const downloadJSON = () => {
+    if (users.length === 0) {
+      alert("No hay usuarios para exportar.");
+      return;
+    }
+    const jsonStr = JSON.stringify(users, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0];
+    a.setAttribute('href', url);
+    a.setAttribute('download', `Nestor_Pizzas_BD_${dateStr}.json`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   return (
     <div className="h-full flex flex-col bg-[#0A0A0E] overflow-y-auto print:h-auto print:overflow-visible print:bg-white print:text-black">
       <div className="p-6 print:hidden">
@@ -192,7 +209,7 @@ export default function AdminAnalytics() {
               onClick={() => setShowMarketingModal(true)}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition-colors shadow-lg"
             >
-              📧 Enviar Publicidad (Resend)
+              📧 Enviar Campaña Email (tupizza@)
             </button>
             <button 
               onClick={() => setShowExportMenu(!showExportMenu)} 
@@ -204,11 +221,14 @@ export default function AdminAnalytics() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)}></div>
                 <div className="absolute right-0 top-full mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-50">
-                  <button onClick={() => { downloadCSV(); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-sm font-medium text-white border-b border-zinc-800">
-                    📥 Descargar Excel (CSV)
+                  <button onClick={() => { downloadCSV(); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-sm font-medium text-white border-b border-zinc-800 flex items-center gap-2">
+                    <span>📊</span> <span>Descargar Excel / CSV</span>
                   </button>
-                  <button onClick={() => { window.print(); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-sm font-medium text-white">
-                    🖨️ Imprimir Informe (PDF)
+                  <button onClick={() => { downloadJSON(); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-sm font-medium text-white border-b border-zinc-800 flex items-center gap-2">
+                    <span>💾</span> <span>Descargar Backup JSON</span>
+                  </button>
+                  <button onClick={() => { window.print(); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-zinc-800 text-sm font-medium text-white flex items-center gap-2">
+                    <span>🖨️</span> <span>Imprimir Informe (PDF)</span>
                   </button>
                 </div>
               </>
