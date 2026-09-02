@@ -2,3 +2,6 @@
 .DS_Store
 *.log
 client_secret_*.json
+.env
+.env.*
+dist/

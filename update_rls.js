@@ -1,6 +1,12 @@
 const { Client } = require('pg');
 
-const connectionString = 'postgresql://postgres:[REDACTED-ROTATE-BEFORE-GOING-LIVE]@aws-0-eu-north-1.pooler.supabase.com:6543/postgres';
+// Nunca hardcodear la cadena de conexión aquí. Exporta NESTOR_DB_URL en tu shell
+// local antes de ejecutar este script (ver credenciales locales en el Escritorio).
+const connectionString = process.env.NESTOR_DB_URL;
+if (!connectionString) {
+  console.error('Falta NESTOR_DB_URL en el entorno. Exporta la variable antes de ejecutar este script.');
+  process.exit(1);
+}
 
 async function updateRLS() {
   const client = new Client({
