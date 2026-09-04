@@ -11,6 +11,7 @@ interface PromoJuevesModalProps {
 
 export default function KioskPromoJuevesModal({ onClose, onAdd }: PromoJuevesModalProps) {
   const [selectedPizzas, setSelectedPizzas] = useState<Product[]>([]);
+  const [notes, setNotes] = useState('');
   const { t, tDynamic, lang } = useI18nStore() as any;
   
   useHardwareBack(true, onClose);
@@ -47,7 +48,8 @@ export default function KioskPromoJuevesModal({ onClose, onAdd }: PromoJuevesMod
         productId: p.id,
         name: `${p.name} ${isPromo ? `(${t('promo_title_2')})` : ''}`,
         price: isPromo ? 5.50 : p.price,
-        quantity: 1
+        quantity: 1,
+        notes: notes.trim() || undefined
       });
     });
 
@@ -147,6 +149,19 @@ export default function KioskPromoJuevesModal({ onClose, onAdd }: PromoJuevesMod
                   })}
                 </div>
               )}
+
+              {selectedPizzas.length > 0 && (
+                <div className="mt-4">
+                  <label className="text-white font-bold mb-2 uppercase tracking-wider text-xs flex items-center gap-2">📝 {t('special_notes')}</label>
+                  <input
+                    type="text"
+                    placeholder={t('pizza_notes_placeholder')}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-white text-sm focus:border-green-500 outline-none"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="p-4 sm:p-6 bg-zinc-900 border-t border-zinc-800">
@@ -193,6 +208,16 @@ export default function KioskPromoJuevesModal({ onClose, onAdd }: PromoJuevesMod
                 );
               })}
             </div>
+          )}
+
+          {selectedPizzas.length > 0 && (
+            <input
+              type="text"
+              placeholder={t('pizza_notes_placeholder')}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full mb-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-green-500 outline-none"
+            />
           )}
 
           <div className="flex items-center justify-between gap-3 pt-1">

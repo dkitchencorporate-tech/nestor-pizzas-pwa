@@ -10,6 +10,7 @@ import NotificationManager from './components/NotificationManager';
 import { useCartStore } from './store/cartStore';
 import { useAuthStore } from './store/authStore';
 import { useSettingsStore } from './store/settingsStore';
+import { useStoreHoursStore } from './store/storeHoursStore';
 import { useGuestOrderStore } from './store/guestOrderStore';
 import ReviewModal from './components/ReviewModal';
 import GuestRegistrationModal from './components/GuestRegistrationModal';
@@ -42,6 +43,7 @@ function App() {
   const guestOrder = useGuestOrderStore(state => state.guestOrder);
   const fetchProfile = useAuthStore(state => state.fetchProfile);
   const fetchSettings = useSettingsStore(state => state.fetchSettings);
+  const fetchStoreHours = useStoreHoursStore(state => state.fetchHours);
   const fetchOrders = useAuthStore(state => state.fetchOrders);
   
   const guestOrders = useGuestOrderStore(state => state.guestOrders);
@@ -96,6 +98,7 @@ function App() {
     
     fetchOrders();
     fetchSettings();
+    fetchStoreHours();
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         fetchProfile(session.user.id);
@@ -109,11 +112,19 @@ function App() {
         setIsStoreClosed(newValue.value === 'true');
       })
       .subscribe();
-      
+
+    // Listen to Horarios changes — Néstor los edita desde el panel admin y se reflejan al instante
+    const hoursChannel = supabase.channel('public:store_hours')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_hours' }, () => {
+        fetchStoreHours();
+      })
+      .subscribe();
+
     return () => {
       window.removeEventListener('open-tracking', handleOpenTracking);
       window.removeEventListener('order-delivered', handleOrderDelivered as EventListener);
       supabase.removeChannel(settingsChannel);
+      supabase.removeChannel(hoursChannel);
     };
   }, []);
 

@@ -8,6 +8,7 @@ import AdminAnalytics from '../features/admin/AdminAnalytics';
 import AdminHistory from '../features/admin/AdminHistory';
 import AdminPrinterSettings from '../features/admin/AdminPrinterSettings';
 import AdminPwaAnalytics from '../features/admin/AdminPwaAnalytics';
+import AdminSchedule from '../features/admin/AdminSchedule';
 import { supabase } from '../lib/supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useAdminUiStore } from '../store/adminUiStore';
@@ -283,6 +284,13 @@ export default function AdminDashboard() {
             >
               📊 {t('analytics')}
             </button>
+            {/* 5.5. Horarios */}
+            <button
+              onClick={() => { setActiveTab('schedule'); setIsSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'schedule' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              🕒 <span className="uppercase tracking-wider">Horarios</span>
+            </button>
             {/* 6. Impresoras */}
             <button
               onClick={() => { setActiveTab('printers'); setIsSidebarOpen(false); }}
@@ -419,6 +427,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className={activeTab === 'pwa' ? 'block h-full overflow-y-auto pt-4' : 'hidden'}><AdminPwaAnalytics /></div>
+          <div className={activeTab === 'schedule' ? 'block h-full overflow-y-auto' : 'hidden'}><AdminSchedule /></div>
         </div>
       </main>
       

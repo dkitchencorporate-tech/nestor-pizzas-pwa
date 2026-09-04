@@ -11,6 +11,7 @@ interface PromoJuevesModalProps {
 
 export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
   const [selectedPizzas, setSelectedPizzas] = useState<Product[]>([]);
+  const [notes, setNotes] = useState('');
   const addItem = useCartStore(state => state.addItem);
   const { t, tDynamic, lang } = useI18nStore() as any;
   
@@ -49,7 +50,8 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
         productId: p.id,
         name: `${p.name} ${isPromo ? `(${t('promo_title_2')})` : ''}`,
         price: isPromo ? 5.50 : p.price,
-        quantity: 1
+        quantity: 1,
+        notes: notes.trim() || undefined
       });
     });
 
@@ -149,6 +151,19 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
                   })}
                 </div>
               )}
+
+              {selectedPizzas.length > 0 && (
+                <div className="mt-4">
+                  <label className="text-white font-bold mb-2 uppercase tracking-wider text-xs flex items-center gap-2">📝 {t('special_notes')}</label>
+                  <input
+                    type="text"
+                    placeholder={t('pizza_notes_placeholder')}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-white text-sm focus:border-green-500 outline-none"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="p-4 sm:p-6 bg-zinc-900 border-t border-zinc-800">
@@ -185,7 +200,7 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
                     <span className={`text-[9px] font-black ${isPromo ? 'text-green-400' : 'text-zinc-400'}`}>
                       {isPromo ? '5,50€' : `${pizza.price.toFixed(2)}€`}
                     </span>
-                    <button 
+                    <button
                       onClick={() => handleRemovePizza(index)}
                       className="text-zinc-400 hover:text-red-400 font-bold ml-0.5 text-xs"
                     >
@@ -195,6 +210,16 @@ export default function PromoJuevesModal({ onClose }: PromoJuevesModalProps) {
                 );
               })}
             </div>
+          )}
+
+          {selectedPizzas.length > 0 && (
+            <input
+              type="text"
+              placeholder={t('pizza_notes_placeholder')}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full mb-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-green-500 outline-none"
+            />
           )}
 
           <div className="flex items-center justify-between gap-3 pt-1">
