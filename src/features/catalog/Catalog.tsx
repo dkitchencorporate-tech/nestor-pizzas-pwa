@@ -9,6 +9,30 @@ import { supabase } from '../../lib/supabase';
 import PromoJuevesModal from '../../components/PromoJuevesModal';
 import NotificationManager from '../../components/NotificationManager';
 import { useI18nStore } from '../../store/i18nStore';
+import { generateSafeUUID } from '../../utils/uuid';
+
+// Sesión de tráfico: un id por pestaña/navegador, no se repite en recargas
+const getVisitSessionId = () => {
+  let id = sessionStorage.getItem('nestor_visit_session');
+  if (!id) {
+    id = generateSafeUUID();
+    sessionStorage.setItem('nestor_visit_session', id);
+  }
+  return id;
+};
+
+const trackSiteEvent = async (eventType: 'page_view' | 'category_click', label?: string) => {
+  try {
+    await supabase.from('site_visits').insert([{
+      session_id: getVisitSessionId(),
+      event_type: eventType,
+      label: label || null,
+      device_type: /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+    }]);
+  } catch (e) {
+    // Silencioso: el tracking nunca debe romper la experiencia de compra
+  }
+};
 
 export default function Catalog() {
   const { t, tDynamic, lang } = useI18nStore() as any;
@@ -109,6 +133,14 @@ export default function Catalog() {
     };
   }, []);
 
+  // Una visita por sesión de navegador, no en cada recarga/renderizado
+  useEffect(() => {
+    if (!sessionStorage.getItem('nestor_visit_tracked')) {
+      sessionStorage.setItem('nestor_visit_tracked', '1');
+      trackSiteEvent('page_view');
+    }
+  }, []);
+
   // Categorías a mostrar
   const displayCategories = ['TODOS', ...categories.map(c => c.name)];
 
@@ -178,6 +210,7 @@ export default function Catalog() {
                     key={cat}
                     onClick={() => {
                       setActiveCategory(cat);
+                      trackSiteEvent('category_click', cat);
                       window.scrollTo({ top: 480, behavior: 'smooth' });
                     }}
                     className={isActive 
