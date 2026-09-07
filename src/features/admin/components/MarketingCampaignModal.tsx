@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+import { supabase } from '../../../lib/supabase';
 
 interface MarketingCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userCount: number;
+  recipients: string[];
 }
 
-export const MarketingCampaignModal: React.FC<MarketingCampaignModalProps> = ({ isOpen, onClose, userCount }) => {
+export const MarketingCampaignModal: React.FC<MarketingCampaignModalProps> = ({ isOpen, onClose, recipients }) => {
+  const userCount = recipients.length;
   const [subject, setSubject] = useState('');
   const [headline, setHeadline] = useState('');
   const [message, setMessage] = useState('');
@@ -16,6 +18,7 @@ export const MarketingCampaignModal: React.FC<MarketingCampaignModalProps> = ({ 
   const [isSending, setIsSending] = useState(false);
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
   const [sendSuccess, setSendSuccess] = useState(false);
+  const [sendError, setSendError] = useState('');
 
   if (!isOpen) return null;
 
@@ -24,17 +27,31 @@ export const MarketingCampaignModal: React.FC<MarketingCampaignModalProps> = ({ 
     if (!subject.trim() || !message.trim()) return;
 
     setIsSending(true);
+    setSendError('');
     try {
-      // Simulación de envío masivo con remitente corporativo
-      await new Promise(res => setTimeout(res, 1200));
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sesión no válida, vuelve a iniciar sesión.');
+
+      const res = await fetch('/api/send-campaign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ subject, headline, message, flyerUrl, ctaText, ctaUrl, recipients })
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Error al enviar la campaña.');
+
       setSendSuccess(true);
       setTimeout(() => {
         setSendSuccess(false);
         onClose();
-      }, 2000);
-    } catch (error) {
+      }, 2500);
+    } catch (error: any) {
       console.error(error);
-      alert('Error al enviar la campaña.');
+      setSendError(error.message || 'Error al enviar la campaña.');
     } finally {
       setIsSending(false);
     }
@@ -160,9 +177,15 @@ export const MarketingCampaignModal: React.FC<MarketingCampaignModalProps> = ({ 
                 </div>
               </div>
 
+              {sendError && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl px-4 py-3">
+                  {sendError}
+                </div>
+              )}
+
               <div className="pt-4 border-t border-zinc-800 flex justify-end gap-3">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={onClose}
                   className="px-5 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 font-bold text-xs uppercase hover:bg-zinc-800"
                 >
