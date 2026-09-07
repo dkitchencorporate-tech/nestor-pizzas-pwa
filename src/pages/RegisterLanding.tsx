@@ -6,6 +6,13 @@ import { emailService } from '../lib/emailService';
 import { generateSafeUUID } from '../utils/uuid';
 import Footer from '../components/Footer';
 
+declare global {
+  interface Window {
+    gsap?: any;
+    ScrollTrigger?: any;
+  }
+}
+
 // Mismo patrón de tracking de tráfico que Catalog.tsx — sesión por pestaña, nunca bloquea la UI.
 const getVisitSessionId = () => {
   let id = sessionStorage.getItem('nestor_visit_session');
@@ -29,10 +36,8 @@ const trackSiteEvent = async (eventType: 'page_view' | 'category_click', label?:
   }
 };
 
-// Hook ligero de scroll-reveal: añade .is-visible cuando el elemento entra en viewport.
-// Usa un callback ref (no useEffect con deps []) porque algunas secciones (el ticker de
-// menú) se montan de forma condicional tras cargar datos async — un ref normal con
-// useEffect[] solo observa el nodo que existía en el primer render y nunca lo reconecta.
+// Scroll-reveal ligero para elementos sin animación 3D propia (usa GSAP si está disponible,
+// si no cae a la clase CSS .reveal — nunca deja contenido invisible si el motor no cargó).
 function useReveal<T extends HTMLElement>() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   return useCallback((node: T | null) => {
@@ -76,10 +81,15 @@ export default function RegisterLanding() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const stepsRef = useReveal<HTMLDivElement>();
-  const vipRef = useReveal<HTMLDivElement>();
-  const menuRef = useReveal<HTMLDivElement>();
-  const whyRef = useReveal<HTMLDivElement>();
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const heroImgRef = useRef<HTMLDivElement | null>(null);
+  const heroBadgeRef = useRef<HTMLDivElement | null>(null);
+  const stepCardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const whyCardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const vipCardRef = useRef<HTMLDivElement | null>(null);
+  const tickerRowRef = useRef<HTMLDivElement | null>(null);
+  const tickerSectionRef = useRef<HTMLDivElement | null>(null);
+
   const formRef = useReveal<HTMLDivElement>();
 
   useEffect(() => {
@@ -96,6 +106,107 @@ export default function RegisterLanding() {
         if (data && data.length > 0) setMenuItems(data as MenuItem[]);
       });
   }, []);
+
+  // Motor de movimiento: parallax en el hero, orbes de color flotando, entradas 3D en tarjetas,
+  // y el menú desplazándose en horizontal enlazado al propio scroll vertical. Progressive
+  // enhancement puro — si GSAP no cargó (CDN caído, bloqueado, etc.) la página sigue 100%
+  // funcional y legible, solo sin el movimiento extra.
+  useEffect(() => {
+    const gsap = window.gsap;
+    const ScrollTrigger = window.ScrollTrigger;
+    if (!gsap || !ScrollTrigger || !rootRef.current) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+    const ctx = gsap.context(() => {
+      // Parallax de la foto del hero: escala y sube ligeramente al hacer scroll.
+      if (heroImgRef.current) {
+        gsap.to(heroImgRef.current, {
+          yPercent: 12,
+          scale: 1.18,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: heroImgRef.current.parentElement,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 0.5
+          }
+        });
+      }
+
+      // Orbes de color flotando de forma continua (vida en el fondo, no depende del scroll).
+      gsap.utils.toArray<HTMLElement>('.landing-orb').forEach((orb, i) => {
+        gsap.to(orb, {
+          y: i % 2 === 0 ? '+=40' : '-=40',
+          x: i % 2 === 0 ? '-=20' : '+=20',
+          duration: 5 + i,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut'
+        });
+      });
+
+      if (heroBadgeRef.current) {
+        gsap.from(heroBadgeRef.current, { opacity: 0, y: -14, duration: 0.7, ease: 'power2.out' });
+      }
+
+      // Entradas 3D con perspectiva para las tarjetas de "Cómo funciona" y "Por qué Néstor Pizzas".
+      const setup3DBatch = (cards: (HTMLDivElement | null)[]) => {
+        const els = cards.filter(Boolean) as HTMLDivElement[];
+        if (els.length === 0) return;
+        gsap.set(els, { transformPerspective: 1000, transformOrigin: 'top center' });
+        ScrollTrigger.batch(els, {
+          start: 'top 85%',
+          onEnter: (batch: HTMLElement[]) =>
+            gsap.fromTo(
+              batch,
+              { opacity: 0, y: 70, rotateX: -35, scale: 0.9 },
+              { opacity: 1, y: 0, rotateX: 0, scale: 1, duration: 0.9, ease: 'power3.out', stagger: 0.15 }
+            )
+        });
+      };
+      setup3DBatch(stepCardsRef.current);
+      setup3DBatch(whyCardsRef.current);
+
+      if (vipCardRef.current) {
+        gsap.set(vipCardRef.current, { transformPerspective: 1200, transformOrigin: 'center center' });
+        gsap.fromTo(
+          vipCardRef.current,
+          { opacity: 0, rotateY: -18, scale: 0.9 },
+          {
+            opacity: 1,
+            rotateY: 0,
+            scale: 1,
+            duration: 1,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: vipCardRef.current, start: 'top 85%' }
+          }
+        );
+      }
+
+      // Menú: la fila entera se desliza en horizontal enlazada al scroll vertical de la sección
+      // (no es un autoplay — se mueve porque tú te mueves). Las pizzas "fluyen" con el scroll.
+      if (tickerRowRef.current && tickerSectionRef.current) {
+        const row = tickerRowRef.current;
+        const maxShift = Math.max(0, row.scrollWidth - row.parentElement!.clientWidth) * 0.6;
+        gsap.fromTo(
+          row,
+          { x: 40 },
+          {
+            x: -maxShift,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: tickerSectionRef.current,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: 0.6
+            }
+          }
+        );
+      }
+    }, rootRef);
+
+    return () => ctx.revert();
+  }, [menuItems.length]);
 
   const scrollToForm = () => {
     trackSiteEvent('category_click', 'landing_cta_hero');
@@ -143,7 +254,12 @@ export default function RegisterLanding() {
   const tickerItems = menuItems.length > 0 ? [...menuItems, ...menuItems] : [];
 
   return (
-    <div className="min-h-screen bg-nestor-base text-white overflow-x-hidden">
+    <div ref={rootRef} className="min-h-screen bg-nestor-base text-white overflow-x-hidden relative">
+      {/* Orbes de color de fondo — dan vida y color a todo el recorrido, no solo a una tarjeta */}
+      <div className="landing-orb pointer-events-none absolute z-0 top-[10%] left-[-10%] w-96 h-96 rounded-full bg-nestor-green/20 blur-[100px]"></div>
+      <div className="landing-orb pointer-events-none absolute z-0 top-[45%] right-[-8%] w-[28rem] h-[28rem] rounded-full bg-nestor-gold/15 blur-[110px]"></div>
+      <div className="landing-orb pointer-events-none absolute z-0 top-[80%] left-[5%] w-80 h-80 rounded-full bg-nestor-red/10 blur-[100px]"></div>
+
       {/* Header flotante */}
       <header className="fixed top-0 inset-x-0 z-50 glass-nav">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
@@ -162,22 +278,24 @@ export default function RegisterLanding() {
         </div>
       </header>
 
-      {/* HERO */}
-      <section className="relative min-h-[92vh] flex items-center pt-16">
-        <div className="absolute inset-0">
-          <img src={heroImage} alt="Néstor Pizzas" className="w-full h-full object-cover" />
+      {/* HERO — foto grande con parallax de scroll */}
+      <section className="relative z-10 min-h-[92vh] flex items-center pt-16 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden">
+          <div ref={heroImgRef} className="absolute inset-0 will-change-transform">
+            <img src={heroImage} alt="Néstor Pizzas" className="w-full h-full object-cover scale-110" />
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-nestor-base via-nestor-base/85 to-nestor-base/40"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-nestor-base/95 sm:via-nestor-base/60 to-transparent"></div>
         </div>
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-8 py-24 w-full">
           <div className="max-w-xl">
-            <div className="inline-flex items-center gap-2 bg-nestor-green/10 border border-nestor-green/40 rounded-full px-4 py-1.5 mb-6 animate-glow-pulse">
+            <div ref={heroBadgeRef} className="inline-flex items-center gap-2 bg-nestor-green/10 border border-nestor-green/40 rounded-full px-4 py-1.5 mb-6 animate-glow-pulse">
               <span className="w-2 h-2 rounded-full bg-nestor-green"></span>
               <span className="text-nestor-green text-xs font-bold uppercase tracking-widest">{t('landing_badge')}</span>
             </div>
 
-            <h1 className="font-display font-black text-4xl sm:text-6xl uppercase leading-[1.05] tracking-tight whitespace-pre-line mb-6">
+            <h1 className="font-display font-black text-4xl sm:text-6xl md:text-7xl uppercase leading-[1.02] tracking-tight whitespace-pre-line mb-6 bg-gradient-to-br from-white via-white to-zinc-400 bg-clip-text text-transparent">
               {t('landing_hero_title')}
             </h1>
 
@@ -210,21 +328,29 @@ export default function RegisterLanding() {
             </div>
           </div>
         </div>
+
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-zinc-500 animate-bounce">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+        </div>
       </section>
 
       {/* CÓMO FUNCIONA */}
-      <section className="py-20 px-4 sm:px-8">
-        <div ref={stepsRef} className="reveal max-w-6xl mx-auto">
+      <section className="py-20 px-4 sm:px-8 relative z-10">
+        <div className="max-w-6xl mx-auto">
           <h2 className="font-display font-black text-2xl sm:text-3xl uppercase text-center mb-12 tracking-wide">
             {t('landing_steps_title')}
           </h2>
-          <div className="grid sm:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-3 gap-5" style={{ perspective: '1200px' }}>
             {[
               { n: '01', emoji: '📝', title: t('landing_step1_title'), desc: t('landing_step1_desc') },
               { n: '02', emoji: '🍕', title: t('landing_step2_title'), desc: t('landing_step2_desc') },
               { n: '03', emoji: '🏆', title: t('landing_step3_title'), desc: t('landing_step3_desc') },
-            ].map((s) => (
-              <div key={s.n} className="card-curved p-6 sm:p-7 relative">
+            ].map((s, i) => (
+              <div
+                key={s.n}
+                ref={(el) => { stepCardsRef.current[i] = el; }}
+                className="card-curved p-6 sm:p-7 relative"
+              >
                 <span className="absolute top-4 right-5 font-display font-black text-4xl text-white/5">{s.n}</span>
                 <div className="text-4xl mb-4">{s.emoji}</div>
                 <h3 className="font-display font-bold text-lg uppercase tracking-wide mb-1.5">{s.title}</h3>
@@ -236,8 +362,8 @@ export default function RegisterLanding() {
       </section>
 
       {/* CLUB VIP */}
-      <section className="px-4 sm:px-8 pb-20">
-        <div ref={vipRef} className="reveal max-w-4xl mx-auto rounded-3xl overflow-hidden relative border border-nestor-gold/30 shadow-premium">
+      <section className="px-4 sm:px-8 pb-20 relative z-10" style={{ perspective: '1400px' }}>
+        <div ref={vipCardRef} className="max-w-4xl mx-auto rounded-3xl overflow-hidden relative border border-nestor-gold/30 shadow-premium">
           <div className="absolute inset-0 bg-gradient-to-br from-nestor-card via-nestor-charcoal to-nestor-card"></div>
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-nestor-gold/10 rounded-full blur-3xl"></div>
           <div className="relative p-8 sm:p-12 text-center">
@@ -258,25 +384,25 @@ export default function RegisterLanding() {
         </div>
       </section>
 
-      {/* MENÚ — ticker de productos reales */}
+      {/* MENÚ — la fila se desplaza en horizontal enlazada al scroll (no autoplay) */}
       {tickerItems.length > 0 && (
-        <section id="landing-menu" className="py-16 overflow-hidden">
-          <div ref={menuRef} className="reveal">
-            <h2 className="font-display font-black text-2xl sm:text-3xl uppercase text-center mb-10 tracking-wide px-4">
-              {t('landing_menu_title')}
-            </h2>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-nestor-base to-transparent z-10 pointer-events-none"></div>
-              <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-nestor-base to-transparent z-10 pointer-events-none"></div>
-              <div className="flex gap-5 animate-marquee">
+        <section id="landing-menu" ref={tickerSectionRef} className="py-16 overflow-hidden relative z-10">
+          <h2 className="font-display font-black text-2xl sm:text-3xl uppercase text-center mb-10 tracking-wide px-4">
+            {t('landing_menu_title')}
+          </h2>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-nestor-base to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-nestor-base to-transparent z-10 pointer-events-none"></div>
+            <div className="overflow-hidden px-4 sm:px-8">
+              <div ref={tickerRowRef} className="flex gap-6 will-change-transform">
                 {tickerItems.map((item, i) => (
-                  <div key={i} className="card-curved w-52 sm:w-60 shrink-0 overflow-hidden">
-                    <div className="h-36 sm:h-40 overflow-hidden">
+                  <div key={i} className="card-curved w-64 sm:w-80 shrink-0 overflow-hidden">
+                    <div className="h-44 sm:h-56 overflow-hidden">
                       <img src={item.img_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                     </div>
                     <div className="p-4">
                       <p className="font-bold text-sm truncate">{item.name}</p>
-                      <p className="text-nestor-green font-display font-black text-lg">{Number(item.price).toFixed(2)}€</p>
+                      <p className="text-nestor-green font-display font-black text-xl">{Number(item.price).toFixed(2)}€</p>
                     </div>
                   </div>
                 ))}
@@ -287,18 +413,22 @@ export default function RegisterLanding() {
       )}
 
       {/* POR QUÉ NÉSTOR PIZZAS */}
-      <section className="py-20 px-4 sm:px-8">
-        <div ref={whyRef} className="reveal max-w-6xl mx-auto">
+      <section className="py-20 px-4 sm:px-8 relative z-10">
+        <div className="max-w-6xl mx-auto">
           <h2 className="font-display font-black text-2xl sm:text-3xl uppercase text-center mb-12 tracking-wide">
             {t('landing_why_title')}
           </h2>
-          <div className="grid sm:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-3 gap-5" style={{ perspective: '1200px' }}>
             {[
               { emoji: '🔥', title: t('landing_why_1_title'), desc: t('landing_why_1_desc') },
               { emoji: '🍅', title: t('landing_why_2_title'), desc: t('landing_why_2_desc') },
               { emoji: '✋', title: t('landing_why_3_title'), desc: t('landing_why_3_desc') },
             ].map((s, i) => (
-              <div key={i} className="card-curved p-6 sm:p-7 text-center">
+              <div
+                key={i}
+                ref={(el) => { whyCardsRef.current[i] = el; }}
+                className="card-curved p-6 sm:p-7 text-center"
+              >
                 <div className="text-4xl mb-4">{s.emoji}</div>
                 <h3 className="font-display font-bold text-base uppercase tracking-wide mb-1.5">{s.title}</h3>
                 <p className="text-zinc-400 text-sm leading-relaxed">{s.desc}</p>
@@ -309,7 +439,7 @@ export default function RegisterLanding() {
       </section>
 
       {/* CTA FINAL + FORMULARIO */}
-      <section id="registro-form" className="py-20 px-4 sm:px-8 relative">
+      <section id="registro-form" className="py-20 px-4 sm:px-8 relative z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-nestor-green/5 to-transparent pointer-events-none"></div>
         <div ref={formRef} className="reveal relative max-w-md mx-auto">
           <div className="text-center mb-8">
