@@ -89,3 +89,27 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Notificaciones push — funcionan aunque la app esté cerrada
+self.addEventListener('push', (event) => {
+  const title = 'Néstor Pizzas';
+  const options = {
+    body: 'Tu pedido ha cambiado de estado. Abre la app para ver los detalles.',
+    icon: './assets/brand/icon-192x192.png',
+    badge: './assets/brand/icon-192x192.png',
+    tag: 'nestor-order-update'
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow('./');
+    })
+  );
+});
