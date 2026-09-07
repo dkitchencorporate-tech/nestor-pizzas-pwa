@@ -254,7 +254,7 @@ export default function RegisterLanding() {
   const tickerItems = menuItems.length > 0 ? [...menuItems, ...menuItems] : [];
 
   return (
-    <div ref={rootRef} className="min-h-screen bg-nestor-base text-white overflow-x-hidden relative">
+    <div ref={rootRef} className="min-h-screen bg-nestor-base text-white relative">
       {/* Orbes de color de fondo — dan vida y color a todo el recorrido, no solo a una tarjeta */}
       <div className="landing-orb pointer-events-none absolute z-0 top-[10%] left-[-10%] w-96 h-96 rounded-full bg-nestor-green/20 blur-[100px]"></div>
       <div className="landing-orb pointer-events-none absolute z-0 top-[45%] right-[-8%] w-[28rem] h-[28rem] rounded-full bg-nestor-gold/15 blur-[110px]"></div>
