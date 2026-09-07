@@ -109,29 +109,8 @@ export default function Catalog() {
     };
   }, []);
 
-  // Lógica de días en horario de España (UTC+2 verano)
-  const getSpainDay = () => {
-    const now = new Date();
-    // Ajustar a UTC+2 (CEST) para España en verano
-    const spainOffset = 2 * 60;
-    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-    const spainTime = new Date(utc + spainOffset * 60000);
-    return spainTime.getDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
-  };
-  const todayDay = getSpainDay();
-  // Fin de semana operativo: Viernes (5), Sábado (6), Domingo (0)
-  const isWeekend = [0, 5, 6].includes(todayDay);
-  // Secret Burguer: Solo Viernes (5) y Sábado (6)
-  const isSecretBurguerDay = [5, 6].includes(todayDay);
-
-  // Categorías a mostrar (filtrando por lógica temporal si la hubiera)
-  const displayCategories = ['TODOS', ...categories
-    .filter(cat => {
-      if (cat.name === 'SECRET BURGUER' && !isSecretBurguerDay) return false;
-      if (cat.name === 'ALGO MÁS' && !isWeekend) return false;
-      return true;
-    })
-    .map(c => c.name)];
+  // Categorías a mostrar
+  const displayCategories = ['TODOS', ...categories.map(c => c.name)];
 
   // Categorías a renderizar en la vista principal
   const categoriesToRender = activeCategory === 'TODOS'
@@ -189,11 +168,7 @@ export default function Catalog() {
                 // Calcular el conteo real
                 let count = 0;
                 if (cat === 'TODOS') {
-                  count = products.filter(p => {
-                    if (p.category_id === 'SECRET BURGUER' && !isSecretBurguerDay) return false;
-                    if (p.category_id === 'ALGO MÁS' && !isWeekend) return false;
-                    return true;
-                  }).length;
+                  count = products.length;
                 } else {
                   count = products.filter(p => p.category_id === cat || p.category === cat).length; // Check both id and name for safety
                 }
@@ -260,10 +235,6 @@ export default function Catalog() {
       <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-8 pb-32 min-h-screen space-y-12">
         {categoriesToRender.map(cat => {
           let catProducts = products.filter(p => p.category_id === cat.id || p.category === cat.id);
-          
-          // Ocultar productos si la categoría está inactiva por fecha (aunque por ahora está en TRUE)
-          if (cat.name === 'SECRET BURGUER' && !isSecretBurguerDay) return null;
-          if (cat.name === 'ALGO MÁS' && !isWeekend) return null;
           
           if (catProducts.length === 0 && cat.id !== 'POR INGREDIENTES') return null;
 

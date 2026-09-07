@@ -71,7 +71,8 @@ export default function IngredientsModal({ product, onClose }: IngredientsModalP
       price: finalPrice,
       quantity: 1,
       extras: selectedIngredients,
-      notes: itemNotes
+      notes: itemNotes,
+      size: (isMaxxiPizza || pizzaBase === 'Maxxi') ? 'maxi' : 'normal'
     });
 
     onClose();

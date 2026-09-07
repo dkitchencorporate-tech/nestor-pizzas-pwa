@@ -7,6 +7,7 @@ import TicketPrinter from '../../components/TicketPrinter';
 import KioskSauceModal from '../../components/KioskSauceModal';
 import KioskIngredientsModal from '../../components/KioskIngredientsModal';
 import KioskPromoJuevesModal from '../../components/KioskPromoJuevesModal';
+import KioskNotesModal from '../../components/KioskNotesModal';
 import { CartItem } from '../../store/cartStore';
 import { formatAddress } from '../../utils/addressUtils';
 
@@ -101,6 +102,7 @@ export default function AdminKiosk() {
   const [kioskSauceProduct, setKioskSauceProduct] = useState<Product | null>(null);
   const [kioskIngrProduct, setKioskIngrProduct] = useState<Product | null>(null);
   const [kioskPromoOpen, setKioskPromoOpen] = useState(false);
+  const [kioskNotesProduct, setKioskNotesProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     loadCatalog();
@@ -336,6 +338,11 @@ export default function AdminKiosk() {
       product.id === 23
     ) {
       setKioskIngrProduct(product);
+      return;
+    }
+    // Secret Burguer → notas para cocina / quitar ingredientes
+    if (product.category_id === 'SECRET BURGUER') {
+      setKioskNotesProduct(product);
       return;
     }
     // Resto de productos → añadir directo
@@ -726,6 +733,14 @@ export default function AdminKiosk() {
         <KioskPromoJuevesModal
           onClose={() => setKioskPromoOpen(false)}
           onAdd={(item) => { addItem(item); setKioskPromoOpen(false); }}
+        />
+      )}
+
+      {kioskNotesProduct && (
+        <KioskNotesModal
+          product={kioskNotesProduct as any}
+          onClose={() => setKioskNotesProduct(null)}
+          onAdd={(item) => { addItem(item); setKioskNotesProduct(null); }}
         />
       )}
 
