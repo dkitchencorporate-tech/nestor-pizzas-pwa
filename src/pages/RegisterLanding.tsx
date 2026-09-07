@@ -279,7 +279,7 @@ export default function RegisterLanding() {
       </header>
 
       {/* HERO — foto grande con parallax de scroll */}
-      <section className="relative z-10 min-h-[92vh] flex items-center pt-16 overflow-hidden">
+      <section className="relative z-10 min-h-[92vh] flex items-center pt-16">
         <div className="absolute inset-0 overflow-hidden">
           <div ref={heroImgRef} className="absolute inset-0 will-change-transform">
             <img src={heroImage} alt="Néstor Pizzas" className="w-full h-full object-cover scale-110" />
@@ -386,7 +386,7 @@ export default function RegisterLanding() {
 
       {/* MENÚ — la fila se desplaza en horizontal enlazada al scroll (no autoplay) */}
       {tickerItems.length > 0 && (
-        <section id="landing-menu" ref={tickerSectionRef} className="py-16 overflow-hidden relative z-10">
+        <section id="landing-menu" ref={tickerSectionRef} className="py-16 relative z-10">
           <h2 className="font-display font-black text-2xl sm:text-3xl uppercase text-center mb-10 tracking-wide px-4">
             {t('landing_menu_title')}
           </h2>
