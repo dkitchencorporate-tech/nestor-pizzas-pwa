@@ -7,7 +7,6 @@ import AdminKiosk from '../features/admin/AdminKiosk';
 import AdminAnalytics from '../features/admin/AdminAnalytics';
 import AdminHistory from '../features/admin/AdminHistory';
 import AdminPrinterSettings from '../features/admin/AdminPrinterSettings';
-import AdminPwaAnalytics from '../features/admin/AdminPwaAnalytics';
 import AdminSchedule from '../features/admin/AdminSchedule';
 import { supabase } from '../lib/supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
@@ -298,14 +297,6 @@ export default function AdminDashboard() {
             >
               🖨️ <span className="uppercase tracking-wider">Impresoras</span>
             </button>
-            {/* 7. PWA Analytics */}
-            <button
-              onClick={() => { setActiveTab('pwa'); setIsSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'pwa' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
-            >
-              📱 <span className="uppercase tracking-wider">PWA Analytics</span>
-            </button>
-
           <div className="pt-4 mt-4 border-t border-zinc-800">
             <button 
               onClick={promptToInstall}
@@ -426,7 +417,6 @@ export default function AdminDashboard() {
               <AdminPrinterSettings />
             </div>
           </div>
-          <div className={activeTab === 'pwa' ? 'block h-full overflow-y-auto pt-4' : 'hidden'}><AdminPwaAnalytics /></div>
           <div className={activeTab === 'schedule' ? 'block h-full overflow-y-auto' : 'hidden'}><AdminSchedule /></div>
         </div>
       </main>
