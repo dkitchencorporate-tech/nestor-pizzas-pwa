@@ -50,10 +50,89 @@ export default function AdminAnalytics() {
   const [showMarketingModal, setShowMarketingModal] = useState(false);
   const [selectedUserForHistory, setSelectedUserForHistory] = useState<any>(null);
 
+  // Tráfico de la web (visitas + categorías más vistas)
+  const [siteVisits, setSiteVisits] = useState<any[]>([]);
+  const [visitsError, setVisitsError] = useState('');
+  const [visitsLoading, setVisitsLoading] = useState(true);
+
+  // Instalaciones de la App (PWA) — fusionado desde la sección PWA Analytics
+  const [pwaInstalls, setPwaInstalls] = useState<any[]>([]);
+  const [pwaError, setPwaError] = useState('');
+
   useEffect(() => {
     fetchUsers();
     fetchTodaySales();
+    fetchSiteVisits();
+    fetchPwaInstalls();
   }, []);
+
+  const fetchSiteVisits = async () => {
+    setVisitsLoading(true);
+    const { data, error } = await supabase.from('site_visits').select('*').order('created_at', { ascending: false });
+    if (error) {
+      if (error.code === '42P01') {
+        setVisitsError('La tabla "site_visits" aún no ha sido creada en Supabase. Ejecuta la migración migration_site_visits.sql en el SQL Editor.');
+      } else {
+        setVisitsError(error.message);
+      }
+    } else {
+      setSiteVisits(data || []);
+    }
+    setVisitsLoading(false);
+  };
+
+  const fetchPwaInstalls = async () => {
+    const { data, error } = await supabase.from('pwa_analytics').select('*').order('created_at', { ascending: false });
+    if (error) {
+      setPwaError(error.code === '42P01' ? 'Tabla pwa_analytics no encontrada.' : error.message);
+    } else {
+      setPwaInstalls(data || []);
+    }
+  };
+
+  // --- Derivados de tráfico ---
+  const pageViews = siteVisits.filter(v => v.event_type === 'page_view');
+  const categoryClicks = siteVisits.filter(v => v.event_type === 'category_click');
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const visitsToday = pageViews.filter(v => new Date(v.created_at) >= startOfToday).length;
+  const visitsTotal = pageViews.length;
+
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+  const visitsByDay = last7Days.map(day => {
+    const next = new Date(day);
+    next.setDate(next.getDate() + 1);
+    const count = pageViews.filter(v => {
+      const t = new Date(v.created_at);
+      return t >= day && t < next;
+    }).length;
+    return { label: day.toLocaleDateString('es-ES', { weekday: 'short' }), count };
+  });
+  const maxDayCount = Math.max(1, ...visitsByDay.map(d => d.count));
+
+  const topCategories = Object.entries(
+    categoryClicks.reduce((acc: Record<string, number>, c) => {
+      const key = c.label || 'Sin categoría';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {})
+  )
+    .map(([label, count]) => ({ label, count: count as number }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
+  const maxCategoryCount = Math.max(1, ...topCategories.map(c => c.count));
+
+  // --- Derivados de instalaciones PWA ---
+  const pwaPublicInstalls = pwaInstalls.filter(i => i.app_type === 'public').length;
+  const pwaAdminInstalls = pwaInstalls.filter(i => i.app_type === 'admin').length;
+  const pwaMobileInstalls = pwaInstalls.filter(i => i.device_type === 'mobile').length;
+  const pwaDesktopInstalls = pwaInstalls.filter(i => i.device_type === 'desktop').length;
 
   const fetchUsers = async () => {
     const { data: profilesData } = await supabase.from('profiles').select('*');
@@ -189,7 +268,15 @@ export default function AdminAnalytics() {
           Analítica y <span className="text-green-500">Marketing</span>
         </h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+          <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Visitas Hoy</h3>
+          <p className="text-4xl font-black text-blue-400">{visitsToday}</p>
+        </div>
+        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+          <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Visitas Totales</h3>
+          <p className="text-4xl font-black text-white">{visitsTotal}</p>
+        </div>
         <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
           <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Ventas de Hoy</h3>
           <p className="text-4xl font-black text-white">{todaySales.toFixed(2)}€</p>
@@ -199,6 +286,107 @@ export default function AdminAnalytics() {
           <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Total Clientes BD</h3>
           <p className="text-4xl font-black text-white">{users.length}</p>
         </div>
+      </div>
+
+      {/* Tráfico: tendencia 7 días + categorías más vistas */}
+      {visitsError ? (
+        <div className="bg-red-500/10 border border-red-500/30 p-6 rounded-2xl mb-6">
+          <h3 className="text-red-400 font-bold mb-2">Tráfico web sin configurar</h3>
+          <p className="text-gray-300 text-sm mb-4">{visitsError}</p>
+          <div className="bg-[#0A0A0E] p-4 rounded-xl border border-zinc-800 font-mono text-xs text-blue-300 overflow-x-auto whitespace-pre">
+{`-- Ejecuta esto en Supabase SQL Editor:
+CREATE TABLE site_visits (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  session_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  label TEXT,
+  device_type TEXT
+);
+ALTER TABLE site_visits ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Enable insert for everyone" ON site_visits FOR INSERT WITH CHECK (true);
+CREATE POLICY "Enable select for authenticated admins" ON site_visits FOR SELECT USING (auth.role() = 'authenticated');`}
+          </div>
+        </div>
+      ) : !visitsLoading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+            <h3 className="font-bold text-white text-sm uppercase tracking-widest mb-4">Visitas — últimos 7 días</h3>
+            {visitsTotal === 0 ? (
+              <p className="text-gray-500 italic text-sm">Aún no hay visitas registradas.</p>
+            ) : (
+              <div className="flex items-end justify-between gap-2 h-32">
+                {visitsByDay.map((d, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                    <div className="w-full flex items-end justify-center h-24">
+                      <div
+                        className="w-full max-w-[28px] bg-green-500 rounded-t-md transition-all"
+                        style={{ height: `${Math.max(4, (d.count / maxDayCount) * 100)}%` }}
+                        title={`${d.count} visitas`}
+                      ></div>
+                    </div>
+                    <span className="text-[10px] text-gray-500 uppercase font-bold">{d.label}</span>
+                    <span className="text-[10px] text-gray-400">{d.count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+            <h3 className="font-bold text-white text-sm uppercase tracking-widest mb-4">Categorías más vistas</h3>
+            {topCategories.length === 0 ? (
+              <p className="text-gray-500 italic text-sm">Aún no hay clics registrados en categorías.</p>
+            ) : (
+              <div className="space-y-3">
+                {topCategories.map(cat => (
+                  <div key={cat.label}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-300 font-bold uppercase">{cat.label}</span>
+                      <span className="text-gray-500">{cat.count}</span>
+                    </div>
+                    <div className="w-full bg-zinc-800 rounded-full h-2">
+                      <div className="bg-green-500 h-2 rounded-full" style={{ width: `${(cat.count / maxCategoryCount) * 100}%` }}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Instalaciones de la App (fusionado desde PWA Analytics) */}
+      <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6 mb-6">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="font-bold text-white text-sm uppercase tracking-widest">Instalaciones de la App</h3>
+          <span className="text-4xl font-black text-white">{pwaInstalls.length}</span>
+        </div>
+        <p className="text-[11px] text-gray-500 mb-4">
+          Cuenta solo instalaciones formales confirmadas por el navegador (botón "Instalar App" + diálogo nativo de Chrome/Android).
+          En iPhone/iPad, Safari no avisa cuando alguien la instala manualmente, así que este número siempre estará por debajo del real si hay usuarios de iOS.
+        </p>
+        {pwaError ? (
+          <p className="text-red-400 text-xs">{pwaError}</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase font-bold">App Clientes</p>
+              <p className="text-xl font-bold text-green-400">{pwaPublicInstalls}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase font-bold">Kitchen POS</p>
+              <p className="text-xl font-bold text-nestor-gold">{pwaAdminInstalls}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase font-bold">Móvil</p>
+              <p className="text-xl font-bold text-blue-400">{pwaMobileInstalls}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 uppercase font-bold">PC</p>
+              <p className="text-xl font-bold text-purple-400">{pwaDesktopInstalls}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6 flex-1 flex flex-col">
