@@ -161,7 +161,20 @@ export default function AdminOrders() {
     }
     
     await supabase.from('orders').update(updateData).eq('id', id);
-    
+
+    // Aviso push al cliente (silencioso: si falla o no está configurado, no bloquea nada)
+    const orderForPush = orders.find(o => o.id === id);
+    if (orderForPush?.client_phone) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session) return;
+        fetch('/api/send-order-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ phone: orderForPush.client_phone })
+        }).catch(() => {});
+      });
+    }
+
     if (status === 'cooking') {
       let orderToPrint = orders.find(o => o.id === id);
       
