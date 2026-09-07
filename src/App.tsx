@@ -19,13 +19,14 @@ import { useI18nStore } from './store/i18nStore';
 const Catalog = lazy(() => import('./features/catalog/Catalog'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const OrderTracking = lazy(() => import('./pages/OrderTracking'));
+const RegisterLanding = lazy(() => import('./pages/RegisterLanding'));
 
 import { supabase } from './lib/supabase';
 
 function App() {
   const { t } = useI18nStore();
   const { isInstallModalOpen, setIsInstallModalOpen, isIOS, isStandalone, triggerDirectPrompt, installPrompt } = usePWAInstall();
-  const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking'>('splash');
+  const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking' | 'registro'>('splash');
   const [isPreloaderFading, setIsPreloaderFading] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
   
@@ -59,13 +60,16 @@ function App() {
 
   const hasActiveOrder = activeOrdersCount > 0;
 
-  // Check if URL is /admin on load
+  // Check if URL is /admin or /registro on load
   if (currentView === 'splash' && window.location.pathname.startsWith('/admin')) {
     setCurrentView('admin');
   }
+  if (currentView === 'splash' && window.location.pathname.startsWith('/registro')) {
+    setCurrentView('registro');
+  }
 
   useEffect(() => {
-    if (currentView === 'splash' && window.location.pathname !== '/admin') {
+    if (currentView === 'splash' && window.location.pathname !== '/admin' && window.location.pathname !== '/registro') {
       const timer = setTimeout(() => {
         setIsPreloaderFading(true);
         setTimeout(() => {
@@ -146,6 +150,15 @@ function App() {
     return (
       <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">{t('loading')} Administración...</div>}>
         <AdminDashboard />
+      </Suspense>
+    );
+  }
+
+  if (currentView === 'registro') {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">{t('loading')}...</div>}>
+        <RegisterLanding />
+        <UserModal />
       </Suspense>
     );
   }
