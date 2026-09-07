@@ -45,6 +45,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [addressNotes, setAddressNotes] = useState(initNotes);
   const [orderNotes, setOrderNotes] = useState('');
   const [pointsRedeemed, setPointsRedeemed] = useState(false);
+  const [redeemItemId, setRedeemItemId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [geofenceError, setGeofenceError] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -63,13 +64,16 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const { deliveryFee, minOrderDelivery, juevesPromoFee } = useSettingsStore();
   const subtotal = getTotal();
   
-  // Find eligible item for discount (Pizza or Burger)
-  const eligibleItems = items.filter(item => 
-    item.name.toLowerCase().includes('pizza') || 
+  // Productos elegibles para el descuento VIP (Pizza o Burger). El cliente elige a cuál lo aplica —
+  // por defecto se preselecciona el más económico, pero puede cambiarlo a cualquier otro elegible del carrito.
+  const eligibleItems = items.filter(item =>
+    item.name.toLowerCase().includes('pizza') ||
     item.name.toLowerCase().includes('burguer')
   );
-  const eligibleDiscount = eligibleItems.length > 0 ? Math.min(...eligibleItems.map(i => i.price)) : 0;
-  
+  const selectedRedeemItem = eligibleItems.find(i => i.id === redeemItemId)
+    || (eligibleItems.length > 0 ? eligibleItems.reduce((cheapest, i) => i.price < cheapest.price ? i : cheapest) : null);
+  const eligibleDiscount = selectedRedeemItem ? selectedRedeemItem.price : 0;
+
   const discount = pointsRedeemed && eligibleDiscount > 0 ? eligibleDiscount : 0;
   
   const hasJuevesLocos = items.some(item => 
@@ -167,11 +171,12 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         product_id: typeof item.productId === 'number' && item.productId < 1000 ? item.productId : null,
         quantity: item.quantity,
         unit_price: item.price,
-        customization_details: { 
-          name: item.name, 
-          notes: item.notes, 
-          extras: item.extras, 
-          size: item.size 
+        redeem_target: !!(pointsRedeemed && selectedRedeemItem && item.id === selectedRedeemItem.id),
+        customization_details: {
+          name: item.name,
+          notes: item.notes,
+          extras: item.extras,
+          size: item.size
         }
       }));
 
@@ -361,6 +366,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
           {/* Puntos Club VIP */}
           {user ? (
+            <>
             <div className="bg-gradient-to-r from-zinc-950 to-zinc-900 border border-yellow-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-orange-600 text-white font-display font-bold flex items-center justify-center text-sm shrink-0 shadow">VIP</div>
@@ -376,7 +382,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   <span className="text-[10px] text-green-400 font-bold block mt-0.5">{t('earn_points')} +{pointsEarned} {t('with_this_order')}</span>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setPointsRedeemed(!pointsRedeemed)}
                 disabled={!canRedeem && !pointsRedeemed}
                 className={`w-full sm:w-auto justify-center font-display font-bold px-4 py-2.5 rounded-xl text-sm uppercase tracking-wider shrink-0 transition-all border ${pointsRedeemed ? 'bg-green-600 text-white border-green-500' : (canRedeem ? 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700' : 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed')}`}
@@ -384,6 +390,28 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                 {pointsRedeemed ? t('redeemed_btn') : t('redeem_btn')}
               </button>
             </div>
+            {pointsRedeemed && eligibleItems.length > 1 && (
+              <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 -mt-1">
+                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-2">{t('choose_redeem_item')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {eligibleItems.map(item => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setRedeemItemId(item.id)}
+                      className={`text-xs font-bold px-3 py-2 rounded-lg border transition-all ${
+                        selectedRedeemItem?.id === item.id
+                          ? 'bg-green-600 text-white border-green-500'
+                          : 'bg-zinc-900 text-zinc-300 border-zinc-700 hover:border-zinc-500'
+                      }`}
+                    >
+                      {item.name} · {item.price.toFixed(2)}€
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            </>
           ) : (
             <div className="bg-gradient-to-r from-zinc-950 to-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
