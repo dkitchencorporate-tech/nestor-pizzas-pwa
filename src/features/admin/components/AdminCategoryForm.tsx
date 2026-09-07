@@ -214,7 +214,7 @@ export default function AdminCategoryForm({ category, onClose, onSuccess }: Admi
               min="0"
               className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors"
             />
-            <p className="text-[10px] text-gray-500 mt-1">Número menor aparece primero (0, 1, 2...).</p>
+            <p className="text-[10px] text-gray-500 mt-1">Número menor aparece primero. Para reordenar sin riesgo de repetir números, usa las flechas ↑↓ de cada categoría en el listado del Catálogo.</p>
           </div>
 
           <div className="pt-4 flex gap-3">
