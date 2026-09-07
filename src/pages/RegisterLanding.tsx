@@ -30,24 +30,30 @@ const trackSiteEvent = async (eventType: 'page_view' | 'category_click', label?:
 };
 
 // Hook ligero de scroll-reveal: añade .is-visible cuando el elemento entra en viewport.
+// Usa un callback ref (no useEffect con deps []) porque algunas secciones (el ticker de
+// menú) se montan de forma condicional tras cargar datos async — un ref normal con
+// useEffect[] solo observa el nodo que existía en el primer render y nunca lo reconecta.
 function useReveal<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add('is-visible');
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.15 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  return useCallback((node: T | null) => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+    if (node) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            node.classList.add('is-visible');
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.15 }
+      );
+      observer.observe(node);
+      observerRef.current = observer;
+    }
   }, []);
-  return ref;
 }
 
 interface MenuItem {
