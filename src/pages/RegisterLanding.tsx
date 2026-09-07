@@ -255,6 +255,9 @@ export default function RegisterLanding() {
 
   return (
     <div ref={rootRef} className="min-h-screen bg-nestor-base text-white relative">
+      {/* Grano editorial — textura de papel/print sobre todo el recorrido, sensación de autor, no plana */}
+      <div className="landing-grain"></div>
+
       {/* Orbes de color de fondo — dan vida y color a todo el recorrido, no solo a una tarjeta */}
       <div className="landing-orb pointer-events-none absolute z-0 top-[10%] left-[-10%] w-96 h-96 rounded-full bg-nestor-green/20 blur-[100px]"></div>
       <div className="landing-orb pointer-events-none absolute z-0 top-[45%] right-[-8%] w-[28rem] h-[28rem] rounded-full bg-nestor-gold/15 blur-[110px]"></div>
@@ -271,7 +274,7 @@ export default function RegisterLanding() {
           </div>
           <button
             onClick={scrollToForm}
-            className="bg-nestor-green hover:bg-nestor-greenDark text-black font-display font-bold px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm uppercase tracking-wider transition-all shadow-premium hover:scale-105"
+            className="landing-stamp-btn bg-nestor-green hover:bg-nestor-greenDark text-black font-display font-bold px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm uppercase tracking-wider transition-all shadow-premium"
           >
             {t('landing_cta_primary')}
           </button>
@@ -288,6 +291,22 @@ export default function RegisterLanding() {
           <div className="absolute inset-0 bg-gradient-to-r from-nestor-base/95 sm:via-nestor-base/60 to-transparent"></div>
         </div>
 
+        {/* Sello giratorio — firma de marca, flota sobre la foto */}
+        <div className="landing-seal absolute top-24 right-6 sm:right-14 w-24 h-24 sm:w-32 sm:h-32 hidden sm:block" aria-hidden="true">
+          <svg viewBox="0 0 200 200" className="w-full h-full">
+            <defs>
+              <path id="sealCircle" d="M 100,15 A 85,85 0 1,1 99.99,15" fill="none" />
+            </defs>
+            <circle cx="100" cy="100" r="98" fill="none" stroke="rgba(34,197,94,0.45)" strokeWidth="1.5" />
+            <text fontSize="12.5" fontWeight="800" letterSpacing="3" fill="#4ADE80">
+              <textPath href="#sealCircle" startOffset="0%">
+                ARTESANAL • CANILES • HECHA AL MOMENTO •
+              </textPath>
+            </text>
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center text-3xl sm:text-4xl">🍕</div>
+        </div>
+
         <div className="relative max-w-6xl mx-auto px-4 sm:px-8 py-24 w-full">
           <div className="max-w-xl">
             <div ref={heroBadgeRef} className="inline-flex items-center gap-2 bg-nestor-green/10 border border-nestor-green/40 rounded-full px-4 py-1.5 mb-6 animate-glow-pulse">
@@ -295,8 +314,19 @@ export default function RegisterLanding() {
               <span className="text-nestor-green text-xs font-bold uppercase tracking-widest">{t('landing_badge')}</span>
             </div>
 
-            <h1 className="font-display font-black text-4xl sm:text-6xl md:text-7xl uppercase leading-[1.02] tracking-tight whitespace-pre-line mb-6 bg-gradient-to-br from-white via-white to-zinc-400 bg-clip-text text-transparent">
-              {t('landing_hero_title')}
+            <h1 className="font-display font-black text-4xl sm:text-6xl md:text-7xl uppercase leading-[1.02] tracking-tight mb-6">
+              {t('landing_hero_title').split('\n').map((line: string, i: number) => (
+                <span
+                  key={i}
+                  className={
+                    i === 1
+                      ? 'block italic text-nestor-green normal-case font-bold tracking-normal text-[0.62em] my-1'
+                      : 'block bg-gradient-to-br from-white via-white to-zinc-400 bg-clip-text text-transparent'
+                  }
+                >
+                  {line}
+                </span>
+              ))}
             </h1>
 
             <p className="text-zinc-300 text-base sm:text-lg leading-relaxed mb-8 max-w-lg">
@@ -306,7 +336,7 @@ export default function RegisterLanding() {
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <button
                 onClick={scrollToForm}
-                className="bg-nestor-green hover:bg-nestor-greenDark text-black font-display font-bold px-7 py-4 rounded-2xl uppercase tracking-wider text-sm transition-all shadow-premium hover:shadow-premium-hover hover:scale-[1.03]"
+                className="landing-stamp-btn bg-nestor-green hover:bg-nestor-greenDark text-black font-display font-bold px-7 py-4 rounded-lg uppercase tracking-wider text-sm transition-all shadow-premium hover:shadow-premium-hover"
               >
                 {t('landing_cta_primary')}
               </button>
@@ -340,7 +370,7 @@ export default function RegisterLanding() {
           <h2 className="font-display font-black text-2xl sm:text-3xl uppercase text-center mb-12 tracking-wide">
             {t('landing_steps_title')}
           </h2>
-          <div className="grid sm:grid-cols-3 gap-5" style={{ perspective: '1200px' }}>
+          <div className="max-w-3xl mx-auto divide-y divide-white/10 border-y border-white/10" style={{ perspective: '1200px' }}>
             {[
               { n: '01', emoji: '📝', title: t('landing_step1_title'), desc: t('landing_step1_desc') },
               { n: '02', emoji: '🍕', title: t('landing_step2_title'), desc: t('landing_step2_desc') },
@@ -349,12 +379,16 @@ export default function RegisterLanding() {
               <div
                 key={s.n}
                 ref={(el) => { stepCardsRef.current[i] = el; }}
-                className="card-curved p-6 sm:p-7 relative"
+                className="flex items-center gap-6 sm:gap-10 py-8 sm:py-10"
               >
-                <span className="absolute top-4 right-5 font-display font-black text-4xl text-white/5">{s.n}</span>
-                <div className="text-4xl mb-4">{s.emoji}</div>
-                <h3 className="font-display font-bold text-lg uppercase tracking-wide mb-1.5">{s.title}</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">{s.desc}</p>
+                <span className="landing-outline-num font-display font-black text-6xl sm:text-8xl shrink-0 select-none">{s.n}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-1.5">
+                    <span className="text-2xl shrink-0">{s.emoji}</span>
+                    <h3 className="font-display font-bold text-lg sm:text-xl uppercase tracking-wide">{s.title}</h3>
+                  </div>
+                  <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">{s.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -519,7 +553,7 @@ export default function RegisterLanding() {
 
                 <button
                   type="submit" disabled={isLoading}
-                  className="w-full bg-nestor-green hover:bg-nestor-greenDark text-black font-display font-bold py-3.5 rounded-xl uppercase tracking-wider text-sm transition-all shadow-premium disabled:opacity-50 flex justify-center items-center gap-2"
+                  className="landing-stamp-btn w-full bg-nestor-green hover:bg-nestor-greenDark text-black font-display font-bold py-3.5 rounded-lg uppercase tracking-wider text-sm transition-all shadow-premium disabled:opacity-50 flex justify-center items-center gap-2"
                 >
                   {isLoading ? (
                     <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
