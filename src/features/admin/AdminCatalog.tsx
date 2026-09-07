@@ -108,6 +108,31 @@ export default function AdminCatalog() {
     }
   };
 
+  const moveCategory = async (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= categories.length) return;
+
+    const reordered = [...categories];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(newIndex, 0, moved);
+
+    // Reasigna sort_order secuencial (0,1,2...) a toda la lista para eliminar empates
+    const withNewOrder = reordered.map((cat, i) => ({ ...cat, sort_order: i }));
+    setCategories(withNewOrder);
+
+    try {
+      const results = await Promise.all(
+        withNewOrder.map(cat => supabase.from('categories').update({ sort_order: cat.sort_order }).eq('id', cat.id))
+      );
+      const failed = results.find(r => r.error);
+      if (failed) throw failed.error;
+      showNotification('Orden actualizado', 'success');
+    } catch (error) {
+      showNotification('Error al actualizar el orden', 'error');
+      fetchData();
+    }
+  };
+
   const deleteSubcategory = async (subcategory: any) => {
     const hasProducts = products.some(p => p.subcategory_id === subcategory.id);
     if (hasProducts) {
@@ -255,10 +280,10 @@ export default function AdminCatalog() {
             </div>
           ) : (
             <div className="space-y-8 pb-10">
-              {categories.map(category => {
+              {categories.map((category, categoryIndex) => {
                 const categoryProducts = products.filter(p => p.category_id === category.id);
                 const categorySubcats = subcategories.filter(s => s.category_id === category.id);
-                
+
                 return (
                   <div key={category.id} className="bg-[#14141E] border border-zinc-800 rounded-3xl p-6 shadow-xl">
                     <div className="flex justify-between items-center mb-6 pb-4 border-b border-zinc-800">
@@ -270,7 +295,25 @@ export default function AdminCatalog() {
                         {category.description && <p className="text-sm text-gray-500 mt-1">{tDynamic(category.description)}</p>}
                       </div>
                       <div className="flex gap-2">
-                        <button 
+                        <div className="flex flex-col gap-0.5 mr-1">
+                          <button
+                            onClick={() => moveCategory(categoryIndex, -1)}
+                            disabled={categoryIndex === 0}
+                            title="Subir orden"
+                            className="p-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 15l7-7 7 7"/></svg>
+                          </button>
+                          <button
+                            onClick={() => moveCategory(categoryIndex, 1)}
+                            disabled={categoryIndex === categories.length - 1}
+                            title="Bajar orden"
+                            className="p-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"/></svg>
+                          </button>
+                        </div>
+                        <button
                           onClick={() => setSubcategoryModal({ isOpen: true, categoryId: category.id })}
                           className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-yellow-500 font-bold text-[10px] uppercase transition-colors"
                           title="Añadir Subcategoría"
