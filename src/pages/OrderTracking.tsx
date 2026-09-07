@@ -3,12 +3,50 @@ import { useAuthStore } from '../store/authStore';
 import { useGuestOrderStore } from '../store/guestOrderStore';
 import { useI18nStore } from '../store/i18nStore';
 
+// Convierte la clave pública VAPID (base64url) al formato Uint8Array que pide pushManager.subscribe
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
 export default function OrderTracking({ onBack }: { onBack: () => void }) {
   const { t } = useI18nStore();
   const { orders, user } = useAuthStore();
   const { guestOrders, guestOrder } = useGuestOrderStore();
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0);
+  const [pushStatus, setPushStatus] = useState<'idle' | 'subscribing' | 'subscribed' | 'denied' | 'unsupported' | 'error'>('idle');
+
+  const subscribeToPush = async (phone: string) => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !import.meta.env.VITE_VAPID_PUBLIC_KEY) {
+      setPushStatus('unsupported');
+      return;
+    }
+    setPushStatus('subscribing');
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        setPushStatus('denied');
+        return;
+      }
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY)
+      });
+      await fetch('/api/save-push-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, subscription: subscription.toJSON() })
+      });
+      setPushStatus('subscribed');
+    } catch (e) {
+      console.error('Error activando notificaciones push:', e);
+      setPushStatus('error');
+    }
+  };
 
   const activeOrders = useMemo(() => {
     if (user) {
@@ -166,6 +204,21 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                           <p className="text-sm font-bold text-amber-400 mt-1">
                             ⏰ Hora Estimada: {activeOrder.estimated_ready_at}
                           </p>
+                        )}
+                        {activeOrder.client_phone && (
+                          pushStatus === 'subscribed' ? (
+                            <p className="text-xs text-green-400 font-bold mt-2 flex items-center gap-1">🔔 Te avisaremos cuando cambie el estado</p>
+                          ) : pushStatus === 'denied' ? (
+                            <p className="text-xs text-zinc-500 mt-2">Notificaciones bloqueadas por el navegador</p>
+                          ) : pushStatus !== 'unsupported' && (
+                            <button
+                              onClick={() => subscribeToPush(activeOrder.client_phone)}
+                              disabled={pushStatus === 'subscribing'}
+                              className="text-xs text-green-400 hover:text-green-300 font-bold mt-2 underline disabled:opacity-50"
+                            >
+                              {pushStatus === 'subscribing' ? 'Activando…' : '🔔 Avisarme cuando cambie el estado'}
+                            </button>
+                          )
                         )}
                       </div>
                       <div className="text-right">
