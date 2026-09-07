@@ -611,10 +611,12 @@ export default function UserModal() {
               
               <div className="bg-[#14141E] border border-white/5 rounded-2xl p-4 max-h-[50vh] overflow-y-auto no-scrollbar text-gray-400 text-sm leading-relaxed space-y-3">
                 <p><strong>{t('last_updated_july_2026')}</strong></p>
-                <p>{t('legal_p1')}</p>
-                <p>{t('legal_p2')}</p>
-                <p>{t('legal_p3')}</p>
-                <p>{t('legal_p4')}</p>
+                {(activeLegalDoc === 'Términos y Condiciones'
+                  ? ['legal_terms_p1', 'legal_terms_p2', 'legal_terms_p3', 'legal_terms_p4', 'legal_terms_p5', 'legal_terms_p6']
+                  : activeLegalDoc === 'Uso y Tratamiento de Datos'
+                  ? ['legal_data_p1', 'legal_data_p2', 'legal_data_p3', 'legal_data_p4', 'legal_data_p5']
+                  : ['legal_privacy_p1', 'legal_privacy_p2', 'legal_privacy_p3', 'legal_privacy_p4', 'legal_privacy_p5', 'legal_privacy_p6']
+                ).map(key => <p key={key}>{t(key)}</p>)}
               </div>
               
               <button onClick={() => setModalView('legal')} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-4 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
