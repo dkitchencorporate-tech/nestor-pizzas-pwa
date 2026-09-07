@@ -520,7 +520,54 @@ const dictionary: Translations = {
   geofence_too_far: { es: 'Nuestro radio máximo para realizar pedidos por la app es de 10 km. Para pedidos excepcionales o de alto volumen, contáctanos.', en: 'Our maximum radius for app orders is 10 km. For exceptional or high-volume orders, contact us.' },
   geofence_denied: { es: 'Necesitamos acceso a tu ubicación para verificar el radio de cobertura de Néstor Pizzas. Por favor, actívala en tu navegador.', en: 'We need access to your location to verify Néstor Pizzas coverage area. Please enable it in your browser.' },
   distance_away: { es: 'Estás a', en: 'You are' },
-  km_from_caniles: { es: 'km de Caniles.', en: 'km from Caniles.' }
+  km_from_caniles: { es: 'km de Caniles.', en: 'km from Caniles.' },
+
+  // Landing /registro — copy de alto impacto (reutilizable para marca blanca y nuevas ubicaciones)
+  landing_badge: { es: 'Club VIP Néstor Pizzas', en: 'Néstor Pizzas VIP Club' },
+  landing_hero_title: { es: 'PIZZA ARTESANA.\nPEDIDO EN SEGUNDOS.\nEN TU PUERTA EN MINUTOS.', en: 'ARTISAN PIZZA.\nORDER IN SECONDS.\nAT YOUR DOOR IN MINUTES.' },
+  landing_hero_subtitle: { es: 'Regístrate gratis y entra al Club VIP: acumulas puntos con cada pedido y los canjeas por pizza o burger gratis. Sin trucos, sin letra pequeña.', en: 'Sign up for free and join the VIP Club: earn points with every order and redeem them for a free pizza or burger. No tricks, no fine print.' },
+  landing_cta_primary: { es: 'Quiero mi cuenta gratis', en: 'I want my free account' },
+  landing_cta_secondary: { es: 'Ver el menú', en: 'See the menu' },
+  landing_trust_1: { es: 'Pedido en menos de 2 minutos', en: 'Order in under 2 minutes' },
+  landing_trust_2: { es: 'Masa artesana horneada al momento', en: 'Artisan dough baked fresh' },
+  landing_trust_3: { es: 'Entrega o recogida en tu zona', en: 'Delivery or pickup in your area' },
+
+  landing_steps_title: { es: 'Así de simple', en: 'This simple' },
+  landing_step1_title: { es: 'Regístrate', en: 'Sign up' },
+  landing_step1_desc: { es: '30 segundos. Solo nombre, teléfono y email.', en: '30 seconds. Just name, phone and email.' },
+  landing_step2_title: { es: 'Pide', en: 'Order' },
+  landing_step2_desc: { es: 'Elige tu pizza, personalízala y confirma.', en: 'Choose your pizza, customize it and confirm.' },
+  landing_step3_title: { es: 'Gana y canjea', en: 'Earn and redeem' },
+  landing_step3_desc: { es: 'Suma puntos en cada pedido y consigue comida gratis.', en: 'Earn points with every order and get free food.' },
+
+  landing_vip_title: { es: 'CLUB VIP DE PUNTOS', en: 'VIP POINTS CLUB' },
+  landing_vip_rate: { es: 'Por cada 10€ en tu pedido', en: 'For every €10 in your order' },
+  landing_vip_points: { es: '+4 puntos', en: '+4 points' },
+  landing_vip_reward_label: { es: 'Desde 25 puntos acumulados', en: 'From 25 points accumulated' },
+  landing_vip_reward: { es: 'tu pizza o burger más barata del pedido, GRATIS', en: 'your cheapest pizza or burger in the order, FREE' },
+
+  landing_menu_title: { es: 'Nuestro menú te está esperando', en: 'Our menu is waiting for you' },
+  landing_why_title: { es: 'Por qué Néstor Pizzas', en: 'Why Néstor Pizzas' },
+  landing_why_1_title: { es: 'Masa artesana', en: 'Artisan dough' },
+  landing_why_1_desc: { es: 'Horneada al momento, nunca precocinada.', en: 'Baked to order, never precooked.' },
+  landing_why_2_title: { es: 'Ingredientes frescos', en: 'Fresh ingredients' },
+  landing_why_2_desc: { es: 'Base de tomate natural y mozzarella fior di latte.', en: 'Natural tomato base and fior di latte mozzarella.' },
+  landing_why_3_title: { es: 'A tu medida', en: 'Made your way' },
+  landing_why_3_desc: { es: 'Crea tu propia pizza con los ingredientes que elijas.', en: 'Build your own pizza with the ingredients you choose.' },
+
+  landing_final_cta_title: { es: '¿A qué esperas?', en: 'What are you waiting for?' },
+  landing_final_cta_subtitle: { es: 'Crea tu cuenta gratis y tu primer pedido ya empieza a sumar puntos VIP.', en: 'Create your free account and your first order already starts earning VIP points.' },
+
+  landing_form_title: { es: 'Crea tu cuenta gratis', en: 'Create your free account' },
+  landing_form_name: { es: 'Nombre completo', en: 'Full name' },
+  landing_form_phone: { es: 'Teléfono', en: 'Phone' },
+  landing_form_legal_prefix: { es: 'Acepto los ', en: 'I accept the ' },
+  landing_form_legal_link: { es: 'Términos y la Política de Privacidad', en: 'Terms and Privacy Policy' },
+  landing_form_submit: { es: 'Crear mi cuenta VIP', en: 'Create my VIP account' },
+  landing_form_error_legal: { es: 'Debes aceptar los términos y la política de privacidad para continuar.', en: 'You must accept the terms and privacy policy to continue.' },
+  landing_success_title: { es: '¡Ya eres parte del Club VIP!', en: 'You are now part of the VIP Club!' },
+  landing_success_desc: { es: 'Tu cuenta está lista. Empieza a pedir y suma tus primeros puntos.', en: 'Your account is ready. Start ordering and earn your first points.' },
+  landing_success_cta: { es: 'Empezar a pedir ahora', en: 'Start ordering now' },
 };
 
 const dynamicDictionary: Record<string, string> = {
