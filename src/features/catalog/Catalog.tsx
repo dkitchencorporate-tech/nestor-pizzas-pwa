@@ -8,6 +8,7 @@ import { Product } from '../../data/products';
 import { supabase } from '../../lib/supabase';
 import PromoJuevesModal from '../../components/PromoJuevesModal';
 import NotificationManager from '../../components/NotificationManager';
+import Footer from '../../components/Footer';
 import { useI18nStore } from '../../store/i18nStore';
 import { generateSafeUUID } from '../../utils/uuid';
 
@@ -351,6 +352,8 @@ export default function Catalog() {
           );
         })}
       </main>
+
+      <Footer />
 
       {ingredientsProduct && (
         <IngredientsModal product={ingredientsProduct} onClose={() => setIngredientsProduct(null)} />
