@@ -45,7 +45,7 @@ const OrderHistoryModal = ({ user, onClose, orders }: { user: any, onClose: () =
 export default function AdminAnalytics() {
   const { t } = useI18nStore();
   const [users, setUsers] = useState<any[]>([]);
-  const [todaySales, setTodaySales] = useState(0);
+  const [ordersToday, setOrdersToday] = useState(0);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMarketingModal, setShowMarketingModal] = useState(false);
   const [selectedUserForHistory, setSelectedUserForHistory] = useState<any>(null);
@@ -61,7 +61,7 @@ export default function AdminAnalytics() {
 
   useEffect(() => {
     fetchUsers();
-    fetchTodaySales();
+    fetchOrdersToday();
     fetchSiteVisits();
     fetchPwaInstalls();
   }, []);
@@ -71,7 +71,7 @@ export default function AdminAnalytics() {
     const { data, error } = await supabase.from('site_visits').select('*').order('created_at', { ascending: false });
     if (error) {
       if (error.code === '42P01') {
-        setVisitsError('La tabla "site_visits" aún no ha sido creada en Supabase. Ejecuta la migración migration_site_visits.sql en el SQL Editor.');
+        setVisitsError('la tabla de tráfico aún no está creada en la base de datos');
       } else {
         setVisitsError(error.message);
       }
@@ -133,6 +133,9 @@ export default function AdminAnalytics() {
   const pwaAdminInstalls = pwaInstalls.filter(i => i.app_type === 'admin').length;
   const pwaMobileInstalls = pwaInstalls.filter(i => i.device_type === 'mobile').length;
   const pwaDesktopInstalls = pwaInstalls.filter(i => i.device_type === 'desktop').length;
+
+  // Solo clientes con un email real reciben la campaña (kiosko/mostrador no suelen tener)
+  const emailRecipients = Array.from(new Set(users.filter(u => u.email && u.email.includes('@')).map(u => u.email)));
 
   const fetchUsers = async () => {
     const { data: profilesData } = await supabase.from('profiles').select('*');
@@ -198,20 +201,20 @@ export default function AdminAnalytics() {
     setUsers(allUsers);
   };
 
-  const fetchTodaySales = async () => {
+  const fetchOrdersToday = async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const { data } = await supabase
+    const { count } = await supabase
       .from('orders')
-      .select('total_amount')
+      .select('id', { count: 'exact', head: true })
       .gte('created_at', today.toISOString())
       .neq('status', 'cancelled');
-      
-    if (data) {
-      const total = data.reduce((acc, order) => acc + Number(order.total_amount), 0);
-      setTodaySales(total);
-    }
+
+    setOrdersToday(count || 0);
   };
+
+  // Escapa un valor para CSV: comillas dobles duplicadas, todo entre comillas
+  const csvEscape = (value: any) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 
   const downloadCSV = () => {
     if (users.length === 0) {
@@ -219,23 +222,37 @@ export default function AdminAnalytics() {
       return;
     }
 
-    // Professional headers
-    const headers = [t('client_id'), t('name'), t('email'), t('phone'), t('points'), t('registration_date')];
-    
+    // Delimitador ; en vez de , — con configuración regional española, Excel
+    // interpreta , como decimal y espera ; como separador de columnas, si no
+    // todo el archivo aparece amontonado en una sola columna al abrirlo.
+    const DELIM = ';';
+    const headers = [t('client_id'), t('name'), t('email'), t('phone'), t('points'), 'Pedidos', 'Total Gastado (€)', t('registration_date')];
+
     const rows = users.map(u => {
       const date = new Date(u.created_at).toLocaleDateString('es-ES');
-      return `"${u.id.slice(0,8)}","${u.full_name || ''}","${u.email || ''}","${u.phone || ''}","${u.points || 0}","${date}"`;
+      const orderCount = u.orderHistory?.length || 0;
+      const totalSpent = (u.orderHistory || []).reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0);
+      return [
+        u.id.slice(0, 8),
+        u.full_name || '',
+        u.email || '',
+        u.phone || '',
+        u.points || 0,
+        orderCount,
+        totalSpent.toFixed(2),
+        date
+      ].map(csvEscape).join(DELIM);
     });
 
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const csvContent = headers.join(',') + '\n' + rows.join('\n');
-    
+    const csvContent = headers.map(csvEscape).join(DELIM) + '\r\n' + rows.join('\r\n');
+
     const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.setAttribute('hidden', '');
     a.setAttribute('href', url);
-    
+
     // Add date to filename
     const dateStr = new Date().toISOString().split('T')[0];
     a.setAttribute('download', `Nestor_Pizzas_Clientes_${dateStr}.csv`);
@@ -278,9 +295,9 @@ export default function AdminAnalytics() {
           <p className="text-4xl font-black text-white">{visitsTotal}</p>
         </div>
         <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
-          <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Ventas de Hoy</h3>
-          <p className="text-4xl font-black text-white">{todaySales.toFixed(2)}€</p>
-          <p className="text-xs text-green-500 mt-2">Calculado de órdenes no canceladas</p>
+          <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Pedidos Hoy</h3>
+          <p className="text-4xl font-black text-amber-400">{ordersToday}</p>
+          <p className="text-xs text-zinc-500 mt-2">El desglose de caja está en Historial</p>
         </div>
         <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
           <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Total Clientes BD</h3>
@@ -291,22 +308,8 @@ export default function AdminAnalytics() {
       {/* Tráfico: tendencia 7 días + categorías más vistas */}
       {visitsError ? (
         <div className="bg-red-500/10 border border-red-500/30 p-6 rounded-2xl mb-6">
-          <h3 className="text-red-400 font-bold mb-2">Tráfico web sin configurar</h3>
-          <p className="text-gray-300 text-sm mb-4">{visitsError}</p>
-          <div className="bg-[#0A0A0E] p-4 rounded-xl border border-zinc-800 font-mono text-xs text-blue-300 overflow-x-auto whitespace-pre">
-{`-- Ejecuta esto en Supabase SQL Editor:
-CREATE TABLE site_visits (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  session_id TEXT NOT NULL,
-  event_type TEXT NOT NULL,
-  label TEXT,
-  device_type TEXT
-);
-ALTER TABLE site_visits ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable insert for everyone" ON site_visits FOR INSERT WITH CHECK (true);
-CREATE POLICY "Enable select for authenticated admins" ON site_visits FOR SELECT USING (auth.role() = 'authenticated');`}
-          </div>
+          <h3 className="text-red-400 font-bold mb-2">Tráfico web no disponible</h3>
+          <p className="text-gray-300 text-sm">No se pudo cargar el tráfico de la web ({visitsError}). Contacta con soporte técnico si el problema persiste.</p>
         </div>
       ) : !visitsLoading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -393,11 +396,13 @@ CREATE POLICY "Enable select for authenticated admins" ON site_visits FOR SELECT
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-white text-lg">Base de Datos de Clientes</h3>
           <div className="flex gap-2 relative">
-            <button 
+            <button
               onClick={() => setShowMarketingModal(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition-colors shadow-lg"
+              disabled={emailRecipients.length === 0}
+              title={emailRecipients.length === 0 ? 'Ningún cliente tiene email registrado todavía' : ''}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition-colors shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              📧 Enviar Campaña Email (tupizza@)
+              📧 Enviar Campaña Email ({emailRecipients.length})
             </button>
             <button 
               onClick={() => setShowExportMenu(!showExportMenu)} 
@@ -524,10 +529,10 @@ CREATE POLICY "Enable select for authenticated admins" ON site_visits FOR SELECT
         </div>
       </div>
       
-      <MarketingCampaignModal 
-        isOpen={showMarketingModal} 
-        onClose={() => setShowMarketingModal(false)} 
-        userCount={users.length} 
+      <MarketingCampaignModal
+        isOpen={showMarketingModal}
+        onClose={() => setShowMarketingModal(false)}
+        recipients={emailRecipients}
       />
       {selectedUserForHistory && (
         <OrderHistoryModal 
