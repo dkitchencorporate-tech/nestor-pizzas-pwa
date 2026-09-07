@@ -215,8 +215,8 @@ export default function UserModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[1200] flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 overflow-y-auto no-scrollbar">
-      <div className="bg-[#1A1A24] border border-green-500/30 rounded-3xl shadow-2xl w-full max-w-lg sm:max-w-xl overflow-hidden relative max-h-[85vh] sm:max-h-[90vh] animate-fade-in-up">
+    <div className="fixed inset-0 z-[1200] flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4">
+      <div className="bg-[#1A1A24] border border-green-500/30 rounded-3xl shadow-2xl w-full max-w-lg sm:max-w-xl overflow-hidden relative max-h-[85vh] sm:max-h-[90vh] flex flex-col animate-fade-in-up">
         
         {/* Botón Cerrar */}
         <button onClick={closeUserModal} className="absolute top-4 right-4 bg-[#14141E] text-gray-400 hover:text-white p-2 rounded-xl border border-white/5 hover:border-red-500/50 transition-all z-[1200] cursor-pointer">
@@ -224,7 +224,7 @@ export default function UserModal() {
         </button>
 
         {/* Header del Modal */}
-        <div className="bg-[#101018] px-6 py-8 text-center border-b border-white/5 relative overflow-hidden">
+        <div className="bg-[#101018] px-6 py-8 text-center border-b border-white/5 relative overflow-hidden shrink-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-500/10 via-transparent to-transparent opacity-50"></div>
           <div className="relative z-10 flex flex-col items-center">
             <div className="w-16 h-16 bg-zinc-950 rounded-2xl border border-green-500/40 p-2 shadow-[0_0_20px_rgba(34,197,94,0.2)] mb-4 flex items-center justify-center">
@@ -238,7 +238,7 @@ export default function UserModal() {
         </div>
 
         {/* Contenedor Dinámico (Vistas) */}
-        <div className="p-4 sm:p-6 overflow-y-auto max-h-[70vh] no-scrollbar">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 no-scrollbar">
           
           {profile?.is_admin && userModalView !== 'legal' && userModalView !== 'legal-doc' && userModalView !== 'delete-account' && userModalView !== 'delete-success' ? (
             <div className="space-y-4 text-center py-6">
