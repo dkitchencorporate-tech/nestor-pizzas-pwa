@@ -45,9 +45,9 @@ const dictionary: Translations = {
   saturation_mode: { es: '⚠️ MODO SATURACIÓN ACTIVO: Los pedidos tardarán más de 1 hora. Disculpen las molestias.', en: '⚠️ HIGH DEMAND MODE: Orders will take over 1 hour. We apologize for the inconvenience.' },
   full_menu: { es: 'MENÚ COMPLETO', en: 'FULL MENU' },
   order_now: { es: 'PEDIR AHORA', en: 'ORDER NOW' },
-  flash_offer: { es: '🔥 OFERTA FLASH: Instala la App hoy y llévate una ración de PATATAS GRATIS en tu primer pedido', en: '🔥 FLASH OFFER: Install the App today and get FREE FRIES with your first order' },
-  offer_ends: { es: '⏱️ LA OFERTA TERMINA EN:', en: '⏱️ OFFER ENDS IN:' },
-  win_pizza: { es: '⚡ ¡GANA UNA PIZZA! Regístrate, compártelo con 5 amigos y tu próxima pizza te sale GRATIS (pedidos >15€)', en: '⚡ WIN A PIZZA! Register, share with 5 friends and your next pizza is FREE (orders >15€)' },
+  vip_ticker_msg: { es: '🏆 CLUB VIP: gana 4 puntos por cada 10€ y canjea pizza o burger GRATIS desde 25 puntos', en: '🏆 VIP CLUB: earn 4 points for every €10 and redeem a FREE pizza or burger from 25 points' },
+  offer_ends_today: { es: '⏱️ HOY TERMINA A MEDIANOCHE:', en: '⏱️ TODAY ENDS AT MIDNIGHT:' },
+  jueves_ticker_msg: { es: '🔥 JUEVES LOCOS: 2 pizzas por 11€ — todos los jueves', en: '🔥 CRAZY THURSDAYS: 2 pizzas for €11 — every Thursday' },
 
   // App Level
   splash_title: { es: 'Encendiendo motores...', en: 'Starting engines...' },
@@ -338,10 +338,10 @@ const dictionary: Translations = {
   
   // Hero
   promo_badge: { es: '🔥 PROMOCIÓN EXCLUSIVA CANILES', en: '🔥 EXCLUSIVE CANILES PROMO' },
-  referral_badge: { es: '🎁 PROGRAMA DE REFERIDOS NÉSTOR', en: '🎁 NESTOR REFERRAL PROGRAM' },
-  win_pizza_title: { es: 'GANA UNA PIZZA:', en: 'WIN A PIZZA:' },
-  win_pizza_subtitle: { es: '¡COMPLETAMENTE GRATIS!', en: 'COMPLETELY FREE!' },
-  win_pizza_desc: { es: '¡Regístrate ahora! Comparte tu código con 5 amigos y en tu próximo pedido superior a 15€, te regalamos una Pizza Familiar.', en: 'Register now! Share your code with 5 friends and on your next order over 15€, you get a free Family Pizza.' },
+  vip_slide_badge: { es: '🎁 CLUB VIP NÉSTOR PIZZAS', en: '🎁 NESTOR PIZZAS VIP CLUB' },
+  vip_slide_title: { es: 'GANA PUNTOS EN CADA PEDIDO:', en: 'EARN POINTS ON EVERY ORDER:' },
+  vip_slide_subtitle: { es: '¡Y CANJEA PIZZA GRATIS!', en: 'AND REDEEM A FREE PIZZA!' },
+  vip_slide_desc: { es: 'Regístrate gratis, acumula 4 puntos por cada 10€ en tus pedidos y desde 25 puntos, tu pizza o burger favorita sale gratis.', en: 'Register for free, earn 4 points for every €10 you spend, and from 25 points your favorite pizza or burger is on us.' },
 
   // IngredientsModal
   custom_taste: { es: 'A TU GUSTO', en: 'CUSTOM TASTE' },
@@ -397,6 +397,7 @@ const dictionary: Translations = {
   create_free_account: { es: 'Crear mi cuenta gratis', en: 'Create my free account' },
   what_did_you_think: { es: '¿Qué te ha parecido?', en: 'What did you think?' },
   submit_rating: { es: 'Enviar Valoración', en: 'Submit Rating' },
+  review_comment_placeholder: { es: 'Cuéntanos más (opcional)...', en: 'Tell us more (optional)...' },
 
   // Guest Registration
   error_creating_account: { es: 'Error al crear la cuenta.', en: 'Error creating account.' },
