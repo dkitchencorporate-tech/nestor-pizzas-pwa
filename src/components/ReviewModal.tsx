@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useHardwareBack } from '../utils/useHardwareBack';
 import { useAuthStore } from '../store/authStore';
 import { useI18nStore } from '../store/i18nStore';
+import { supabase } from '../lib/supabase';
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -13,7 +14,9 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
   useHardwareBack(isOpen, onClose);
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
+  const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { user, openUserModal, setModalView } = useAuthStore();
   const { t } = useI18nStore();
 
@@ -22,8 +25,19 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
   const isGuest = !user;
   const pointsEarned = Math.floor(order.total_amount / 10) * 4;
 
-  const handleSubmit = () => {
-    // Aquí se podría enviar la reseña a Supabase en el futuro
+  const handleSubmit = async () => {
+    setIsSaving(true);
+    try {
+      await supabase.from('reviews').insert([{
+        order_id: order.id || null,
+        client_phone: order.client_phone || null,
+        rating,
+        comment: comment.trim() || null
+      }]);
+    } catch (e) {
+      // Silencioso: una reseña que falla nunca debe bloquear el cierre del pedido para el cliente
+    }
+    setIsSaving(false);
     setSubmitted(true);
     setTimeout(() => {
       onClose();
@@ -31,6 +45,7 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
       setTimeout(() => {
         setSubmitted(false);
         setRating(0);
+        setComment('');
       }, 500);
     }, 2000);
   };
@@ -110,10 +125,21 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
                 </div>
               </div>
 
+              {rating > 0 && (
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder={t('review_comment_placeholder')}
+                  maxLength={300}
+                  rows={3}
+                  className="w-full bg-zinc-900 border border-zinc-800 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 transition-colors resize-none placeholder:text-zinc-600"
+                />
+              )}
+
               <div className="space-y-3 pt-4">
-                <button 
+                <button
                   onClick={handleSubmit}
-                  disabled={rating === 0}
+                  disabled={rating === 0 || isSaving}
                   className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-sm transition-all shadow-[0_0_20px_rgba(22,163,74,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('submit_rating')}
