@@ -35,6 +35,20 @@ const trackSiteEvent = async (eventType: 'page_view' | 'category_click', label?:
   }
 };
 
+// Cuenta atrás real hasta medianoche (hora de Madrid) — a diferencia del texto fijo anterior,
+// esta sí cambia según la hora real a la que se visita la web.
+const getTimeUntilMidnight = () => {
+  const now = new Date();
+  const madridNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
+  const midnight = new Date(madridNow);
+  midnight.setHours(24, 0, 0, 0);
+  const diffMs = midnight.getTime() - madridNow.getTime();
+  const h = Math.floor(diffMs / 3600000);
+  const m = Math.floor((diffMs % 3600000) / 60000);
+  const s = Math.floor((diffMs % 60000) / 1000);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+};
+
 export default function Catalog() {
   const { t, tDynamic, lang } = useI18nStore() as any;
   const [activeCategory, setActiveCategory] = useState('TODOS');
@@ -45,6 +59,12 @@ export default function Catalog() {
   const [isSaturationMode, setIsSaturationMode] = useState(false);
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [timeUntilMidnight, setTimeUntilMidnight] = useState(getTimeUntilMidnight());
+
+  useEffect(() => {
+    const interval = setInterval(() => setTimeUntilMidnight(getTimeUntilMidnight()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -234,23 +254,23 @@ export default function Catalog() {
           
           <div className="flex whitespace-nowrap animate-marquee items-center">
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-gray-300 uppercase tracking-wide flex items-center gap-2">
-                  {t('flash_offer')}
+                  {t('vip_ticker_msg')}
               </span>
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-green-500 uppercase tracking-wide flex items-center gap-2">
-                  {t('offer_ends')} <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">05:43:21</span>
+                  {t('offer_ends_today')} <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">{timeUntilMidnight}</span>
               </span>
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-gray-300 uppercase tracking-wide flex items-center gap-2">
-                  {t('win_pizza')}
-              </span>
-              <span className="mx-8 text-[11px] sm:text-sm font-bold text-green-500 uppercase tracking-wide flex items-center gap-2">
-                  {t('offer_ends')} <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">05:43:21</span>
+                  {t('jueves_ticker_msg')}
               </span>
               {/* Duplicate for infinite scroll loop */}
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-gray-300 uppercase tracking-wide flex items-center gap-2">
-                  {t('flash_offer')}
+                  {t('vip_ticker_msg')}
               </span>
               <span className="mx-8 text-[11px] sm:text-sm font-bold text-green-500 uppercase tracking-wide flex items-center gap-2">
-                  {t('offer_ends')} <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">05:43:21</span>
+                  {t('offer_ends_today')} <span className="font-black text-white bg-black px-2 py-0.5 rounded border border-green-500/50">{timeUntilMidnight}</span>
+              </span>
+              <span className="mx-8 text-[11px] sm:text-sm font-bold text-gray-300 uppercase tracking-wide flex items-center gap-2">
+                  {t('jueves_ticker_msg')}
               </span>
           </div>
         </div>
