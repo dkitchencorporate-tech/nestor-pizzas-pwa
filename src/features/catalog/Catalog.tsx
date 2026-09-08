@@ -11,6 +11,7 @@ import NotificationManager from '../../components/NotificationManager';
 import Footer from '../../components/Footer';
 import { useI18nStore } from '../../store/i18nStore';
 import { generateSafeUUID } from '../../utils/uuid';
+import { preloadCatalogData, getCachedCatalogData } from '../../lib/catalogPreload';
 
 // Sesión de tráfico: un id por pestaña/navegador, no se repite en recargas
 const getVisitSessionId = () => {
@@ -49,15 +50,18 @@ export default function Catalog() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const [catsRes, subcatsRes, prodsRes] = await Promise.all([
-        supabase.from('categories').select('*').order('sort_order'),
-        supabase.from('subcategories').select('*').order('sort_order'),
-        supabase.from('products').select('*').eq('is_active', true)
-      ]);
-      
+      // Si App.tsx ya lanzó la precarga durante el preloader, esto resuelve al instante
+      // (o reutiliza la misma consulta en curso) en vez de repetir las 3 consultas.
+      const cached = getCachedCatalogData();
+      const { categories: catData, subcategories: subcatData, products: prodData } =
+        cached || (await preloadCatalogData());
+      const catsRes = { data: catData };
+      const subcatsRes = { data: subcatData };
+      const prodsRes = { data: prodData };
+
       if (catsRes.data) setCategories(catsRes.data);
       if (subcatsRes.data) setSubcategories(subcatsRes.data);
-      
+
       if (prodsRes.data && subcatsRes.data) {
         let fetchedProducts = prodsRes.data;
         let allSubcats = subcatsRes.data;
