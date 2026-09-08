@@ -45,13 +45,13 @@ export default function Hero({ onOpenPromo }: HeroProps) {
         <div className={`absolute inset-0 flex flex-col sm:flex-row items-center justify-between p-6 sm:p-14 transition-all duration-700 ${activeSlide === 2 ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'} bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-red-900/40 via-nestor-obsidian to-nestor-obsidian`}>
           <div className="relative z-10 w-full sm:w-[55%] space-y-4 sm:space-y-6 text-center sm:text-left pb-16 sm:pb-0">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-red-500/20 text-red-400 text-[10px] sm:text-sm font-display font-bold uppercase tracking-widest border border-red-500/40 shadow">
-              <span className="animate-pulse">{t('referral_badge')}</span>
+              <span className="animate-pulse">{t('vip_slide_badge')}</span>
             </div>
             <h2 className="font-display font-black text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight leading-none uppercase drop-shadow-lg">
-              {t('win_pizza_title')}<br/><span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">{t('win_pizza_subtitle')}</span>
+              {t('vip_slide_title')}<br/><span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">{t('vip_slide_subtitle')}</span>
             </h2>
             <p className="text-sm sm:text-base text-gray-300 font-normal leading-relaxed max-w-xl mx-auto sm:mx-0">
-              {t('win_pizza_desc')}
+              {t('vip_slide_desc')}
             </p>
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 relative z-30">
               <button 
