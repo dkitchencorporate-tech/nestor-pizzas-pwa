@@ -46,7 +46,6 @@ const dictionary: Translations = {
   full_menu: { es: 'MENÚ COMPLETO', en: 'FULL MENU' },
   order_now: { es: 'PEDIR AHORA', en: 'ORDER NOW' },
   vip_ticker_msg: { es: '🏆 CLUB VIP: gana 4 puntos por cada 10€ y canjea pizza o burger GRATIS desde 25 puntos', en: '🏆 VIP CLUB: earn 4 points for every €10 and redeem a FREE pizza or burger from 25 points' },
-  offer_ends_today: { es: '⏱️ HOY TERMINA A MEDIANOCHE:', en: '⏱️ TODAY ENDS AT MIDNIGHT:' },
   jueves_ticker_msg: { es: '🔥 JUEVES LOCOS: 2 pizzas por 11€ — todos los jueves', en: '🔥 CRAZY THURSDAYS: 2 pizzas for €11 — every Thursday' },
 
   // App Level
