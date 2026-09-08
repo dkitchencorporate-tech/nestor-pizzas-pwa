@@ -2,6 +2,10 @@
    NÉSTOR PIZZAS PWA - CUSTOM DESIGN SYSTEM (ULTRA-DARK OBSIDIAN THEME)
    ========================================================================= */
 
+html {
+    overflow-x: hidden;
+}
+
 body {
     background-color: #0A0A0E;
     color: #F3F4F6;
@@ -166,6 +170,35 @@ body {
 .landing-outline-num {
     -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.25);
     color: transparent;
+}
+
+/* =========================================================================
+   ANIMACIONES DE ENTRADA DE MODALES — usadas en más de 10 componentes
+   (AddToCartModal, ReviewModal, UserModal, GuestRegistrationModal, etc.)
+   pero nunca estuvieron definidas: los modales aparecían sin transición.
+   ========================================================================= */
+@keyframes fadeInModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.animate-fade-in {
+    animation: fadeInModal 0.25s ease-out forwards;
+}
+
+@keyframes scaleInModal {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+    animation: scaleInModal 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpModal {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+    animation: slideUpModal 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* =========================================================================
