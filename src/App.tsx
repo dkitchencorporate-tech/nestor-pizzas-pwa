@@ -22,6 +22,7 @@ const OrderTracking = lazy(() => import('./pages/OrderTracking'));
 const RegisterLanding = lazy(() => import('./pages/RegisterLanding'));
 
 import { supabase } from './lib/supabase';
+import { preloadCatalogData } from './lib/catalogPreload';
 
 function App() {
   const { t } = useI18nStore();
@@ -67,6 +68,16 @@ function App() {
   if (currentView === 'splash' && window.location.pathname.startsWith('/registro')) {
     setCurrentView('registro');
   }
+
+  // Precarga real del catálogo (código + datos) desde el primer instante del preloader,
+  // no cuando termina — así, cuando el cronómetro del splash acaba, el catálogo ya está
+  // listo para mostrarse al instante en vez de empezar a cargar recién ahí.
+  useEffect(() => {
+    if (window.location.pathname !== '/admin' && window.location.pathname !== '/registro') {
+      import('./features/catalog/Catalog');
+      preloadCatalogData();
+    }
+  }, []);
 
   useEffect(() => {
     if (currentView === 'splash' && window.location.pathname !== '/admin' && window.location.pathname !== '/registro') {
