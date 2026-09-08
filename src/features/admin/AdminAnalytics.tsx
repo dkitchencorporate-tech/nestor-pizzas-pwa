@@ -59,12 +59,36 @@ export default function AdminAnalytics() {
   const [pwaInstalls, setPwaInstalls] = useState<any[]>([]);
   const [pwaError, setPwaError] = useState('');
 
+  // Inteligencia de ventas real: productos, horas pico, ticket medio, repetición, reseñas
+  const [allOrders, setAllOrders] = useState<any[]>([]);
+  const [orderItemsRaw, setOrderItemsRaw] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsError, setReviewsError] = useState('');
+
   useEffect(() => {
     fetchUsers();
     fetchOrdersToday();
     fetchSiteVisits();
     fetchPwaInstalls();
+    fetchOrderItems();
+    fetchReviews();
   }, []);
+
+  const fetchOrderItems = async () => {
+    const { data } = await supabase
+      .from('order_items')
+      .select('quantity, unit_price, customization_details, order_id, orders(created_at, status)');
+    setOrderItemsRaw(data || []);
+  };
+
+  const fetchReviews = async () => {
+    const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+    if (error) {
+      setReviewsError(error.code === '42P01' ? 'la tabla de reseñas aún no está creada' : error.message);
+    } else {
+      setReviews(data || []);
+    }
+  };
 
   const fetchSiteVisits = async () => {
     setVisitsLoading(true);
@@ -137,11 +161,64 @@ export default function AdminAnalytics() {
   // Solo clientes con un email real reciben la campaña (kiosko/mostrador no suelen tener)
   const emailRecipients = Array.from(new Set(users.filter(u => u.email && u.email.includes('@')).map(u => u.email)));
 
+  // --- Inteligencia de ventas real (nada inventado — todo sale de orders/order_items) ---
+  const validOrders = allOrders.filter(o => o.status !== 'cancelled');
+
+  // Productos más vendidos (por unidades e ingresos) — excluye líneas de pedidos cancelados
+  const productStats = orderItemsRaw
+    .filter((item: any) => item.orders?.status !== 'cancelled')
+    .reduce((acc: Record<string, { qty: number; revenue: number }>, item: any) => {
+    const name = item.customization_details?.name || 'Producto sin nombre';
+    if (!acc[name]) acc[name] = { qty: 0, revenue: 0 };
+    acc[name].qty += Number(item.quantity || 0);
+    acc[name].revenue += Number(item.quantity || 0) * Number(item.unit_price || 0);
+    return acc;
+  }, {});
+  const topProducts = Object.entries(productStats)
+    .map(([name, s]) => ({ name, ...(s as { qty: number; revenue: number }) }))
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 5);
+  const maxProductQty = Math.max(1, ...topProducts.map(p => p.qty));
+
+  // Horas de mayor demanda (agrupadas por franja de 2h)
+  const hourBuckets = Array.from({ length: 12 }, (_, i) => ({ label: `${String(i * 2).padStart(2, '0')}h`, count: 0 }));
+  validOrders.forEach(o => {
+    const h = new Date(o.created_at).getHours();
+    hourBuckets[Math.floor(h / 2)].count++;
+  });
+  const maxHourCount = Math.max(1, ...hourBuckets.map(h => h.count));
+  const peakBucket = hourBuckets.reduce((max, b) => (b.count > max.count ? b : max), hourBuckets[0]);
+
+  // Ticket medio general y de los últimos 7 días
+  const avgTicketAll = validOrders.length > 0
+    ? validOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0) / validOrders.length
+    : 0;
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const ordersLast7 = validOrders.filter(o => new Date(o.created_at) >= sevenDaysAgo);
+  const avgTicketLast7 = ordersLast7.length > 0
+    ? ordersLast7.reduce((sum, o) => sum + Number(o.total_amount || 0), 0) / ordersLast7.length
+    : 0;
+
+  // Tasa de clientes que repiten (2+ pedidos) sobre el total de clientes con al menos 1 pedido
+  const usersWithOrders = users.filter(u => (u.orderHistory?.length || 0) > 0);
+  const repeatCustomers = usersWithOrders.filter(u => (u.orderHistory?.length || 0) >= 2);
+  const repeatRate = usersWithOrders.length > 0 ? (repeatCustomers.length / usersWithOrders.length) * 100 : 0;
+
+  // Tasa de canje de puntos VIP: pedidos con descuento aplicado vs. pedidos de clientes que ya podían canjear
+  const ordersWithRedemption = validOrders.filter(o => Number(o.discount_applied || 0) > 0).length;
+  const eligibleOrders = validOrders.filter(o => o.user_id).length;
+  const redemptionRate = eligibleOrders > 0 ? (ordersWithRedemption / eligibleOrders) * 100 : 0;
+
+  // Satisfacción real (reseñas guardadas de verdad, ya no descartadas)
+  const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / reviews.length : 0;
+
   const fetchUsers = async () => {
     const { data: profilesData } = await supabase.from('profiles').select('*');
     const { data: kioskData } = await supabase.from('kiosk_customers').select('*');
     const { data: ordersData } = await supabase.from('orders').select('*');
-    
+    setAllOrders(ordersData || []);
+
     // Create a unified map of users by phone number
     const usersMap = new Map();
 
@@ -357,6 +434,84 @@ export default function AdminAnalytics() {
           </div>
         </div>
       )}
+
+      {/* Inteligencia de ventas real — más allá del dinero */}
+      <h3 className="font-bold text-white text-sm uppercase tracking-widest mb-4 mt-2">Inteligencia de Ventas</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+          <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Ticket Medio (7 días)</h3>
+          <p className="text-3xl font-black text-green-400">{avgTicketLast7.toFixed(2)}€</p>
+          <p className="text-[11px] text-zinc-500 mt-1">Histórico: {avgTicketAll.toFixed(2)}€</p>
+        </div>
+        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+          <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Clientes que Repiten</h3>
+          <p className="text-3xl font-black text-blue-400">{repeatRate.toFixed(0)}%</p>
+          <p className="text-[11px] text-zinc-500 mt-1">{repeatCustomers.length} de {usersWithOrders.length} con pedidos</p>
+        </div>
+        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+          <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Canje de Puntos VIP</h3>
+          <p className="text-3xl font-black text-nestor-gold">{redemptionRate.toFixed(0)}%</p>
+          <p className="text-[11px] text-zinc-500 mt-1">{ordersWithRedemption} pedidos con descuento aplicado</p>
+        </div>
+        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+          <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest mb-2">Satisfacción</h3>
+          {reviewsError ? (
+            <p className="text-red-400 text-xs">{reviewsError}</p>
+          ) : reviews.length === 0 ? (
+            <p className="text-gray-500 italic text-xs">Aún sin reseñas guardadas.</p>
+          ) : (
+            <>
+              <p className="text-3xl font-black text-yellow-400">{avgRating.toFixed(1)} ★</p>
+              <p className="text-[11px] text-zinc-500 mt-1">{reviews.length} reseña{reviews.length === 1 ? '' : 's'}</p>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+          <h3 className="font-bold text-white text-sm uppercase tracking-widest mb-4">Productos Más Vendidos</h3>
+          {topProducts.length === 0 ? (
+            <p className="text-gray-500 italic text-sm">Aún no hay pedidos suficientes.</p>
+          ) : (
+            <div className="space-y-3">
+              {topProducts.map(p => (
+                <div key={p.name}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-300 font-bold uppercase truncate max-w-[70%]">{p.name}</span>
+                    <span className="text-gray-500">{p.qty} uds · {p.revenue.toFixed(0)}€</span>
+                  </div>
+                  <div className="w-full bg-zinc-800 rounded-full h-2">
+                    <div className="bg-nestor-gold h-2 rounded-full" style={{ width: `${(p.qty / maxProductQty) * 100}%` }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6">
+          <h3 className="font-bold text-white text-sm uppercase tracking-widest mb-1">Horas de Mayor Demanda</h3>
+          <p className="text-[11px] text-zinc-500 mb-4">Pico: {peakBucket.label}–{String((hourBuckets.indexOf(peakBucket) * 2 + 2) % 24).padStart(2, '0')}h con {peakBucket.count} pedidos</p>
+          {validOrders.length === 0 ? (
+            <p className="text-gray-500 italic text-sm">Aún no hay pedidos registrados.</p>
+          ) : (
+            <div className="flex items-end justify-between gap-1 h-24">
+              {hourBuckets.map((h, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full flex items-end justify-center h-16">
+                    <div
+                      className="w-full bg-blue-500 rounded-t-sm transition-all"
+                      style={{ height: `${Math.max(3, (h.count / maxHourCount) * 100)}%` }}
+                      title={`${h.count} pedidos`}
+                    ></div>
+                  </div>
+                  <span className="text-[8px] text-gray-500">{h.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Instalaciones de la App (fusionado desde PWA Analytics) */}
       <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6 mb-6">
