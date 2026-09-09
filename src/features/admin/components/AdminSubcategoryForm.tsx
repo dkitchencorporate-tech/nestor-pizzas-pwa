@@ -130,7 +130,11 @@ export default function AdminSubcategoryForm({ subcategory, categoryId, onClose,
       onSuccess();
     } catch (err: any) {
       console.error('Error saving subcategory:', err);
-      setError(err.message || 'Ocurrió un error al guardar la subcategoría.');
+      if (err.code === '23505') {
+        setError('Ya existe una subcategoría con ese nombre en esta categoría. Prueba con un nombre distinto.');
+      } else {
+        setError(err.message || 'Ocurrió un error al guardar la subcategoría.');
+      }
     } finally {
       setIsSubmitting(false);
     }
