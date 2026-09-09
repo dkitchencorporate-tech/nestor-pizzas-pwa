@@ -91,22 +91,14 @@ export default function AdminCatalog() {
       }
     }
 
-    // 2. Borrar de la BD
+    // 2. Borrar de la BD. `order_items.product_id` apunta a `products` con
+    // ON DELETE SET NULL: si el producto ya tiene pedidos, esos pedidos se
+    // quedan intactos (el nombre/precio que se vendió ya está guardado en su
+    // propio `customization_details`, no depende de que el producto siga
+    // existiendo) — el borrado en sí siempre se puede completar.
     const { error } = await supabase.from('products').delete().eq('id', product.id);
     if (error) {
-      // Código 23503 = violación de clave foránea: el producto ya tiene pedidos
-      // reales asociados (order_items lo referencia con ON DELETE RESTRICT, a
-      // propósito, para no perder nunca el histórico de pedidos/facturación).
-      // No es un fallo — es la base de datos protegiendo el historial. Se le
-      // ofrece al usuario la alternativa real: ocultarlo con el interruptor.
-      if (error.code === '23503') {
-        showNotification(
-          `"${product.name}" ya tiene pedidos registrados, así que no se puede borrar del todo (para no perder ese historial). Usa el interruptor verde de la tarjeta para ocultarlo del catálogo y del Kiosko — el efecto para tus clientes es el mismo.`,
-          'error'
-        );
-      } else {
-        showNotification(t('error_deleting_product'), 'error');
-      }
+      showNotification(t('error_deleting_product'), 'error');
     } else {
       showNotification(t('product_deleted_success'), 'success');
       fetchData();
