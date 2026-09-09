@@ -5,7 +5,7 @@ const wrap = (title, bodyHtml) => `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
     <tr>
       <td style="background:#0f172a;padding:24px;text-align:center;border-bottom:4px solid #16a34a;">
-        <div style="font-size:18px;font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">NÉSTOR PIZZAS GOURMET</div>
+        <div style="font-size:18px;font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">NÉSTOR PIZZAS</div>
         <div style="font-size:11px;color:#4ade80;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">${title}</div>
       </td>
     </tr>
