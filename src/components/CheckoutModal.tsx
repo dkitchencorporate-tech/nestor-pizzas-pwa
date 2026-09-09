@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-import { SumUpPaymentModal } from './SumUpPaymentModal';
 import { isStoreOpen, generateAvailableTimeSlots } from '../utils/timeUtils';
 import { useHardwareBack } from '../utils/useHardwareBack';
 import { emailService } from '../lib/emailService';
@@ -49,7 +48,6 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [isProcessing, setIsProcessing] = useState(false);
   const [geofenceError, setGeofenceError] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [minimumOrderError, setMinimumOrderError] = useState(false);
   const [acceptSmallOrderFee, setAcceptSmallOrderFee] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'physical'>('online');
@@ -150,12 +148,73 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
     }
 
     // ✅ FIX 2: Recogida NUNCA abre SumUp — procesa directamente
-    // Domicilio con pago online → SumUp
+    // Domicilio con pago online → SumUp (redirige a la pasarela)
     // Domicilio con pago físico → procesa directo
     if (deliveryMethod === 'delivery' && paymentMethod === 'online') {
-      setShowPaymentModal(true);
+      initiateOnlinePayment();
     } else {
       processOrder();
+    }
+  };
+
+  const initiateOnlinePayment = async () => {
+    setIsProcessing(true);
+    setPaymentError(null);
+
+    const finalDeliveryAddress = `${addressStreet}, Nº ${addressNumber}, CP ${addressCP} Caniles${addressNotes ? '. Notas: ' + addressNotes : ''}`;
+    const finalOrderNotes = [
+      scheduledTime !== 'asap' ? `⏰ Programado: ${scheduledTime}` : '',
+      addressNotes ? `Dir/Mesa: ${addressNotes}` : '',
+      orderNotes.trim() ? `📝 ${orderNotes.trim()}` : ''
+    ].filter(Boolean).join(' | ');
+
+    const orderItems = items.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      name: item.name,
+      redeem_target: !!(pointsRedeemed && selectedRedeemItem && item.id === selectedRedeemItem.id),
+      customization_details: {
+        name: item.name,
+        notes: item.notes,
+        extras: item.extras,
+        size: item.size
+      }
+    }));
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch('/api/sumup-create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
+        body: JSON.stringify({
+          items: orderItems,
+          deliveryMethod,
+          clientName,
+          clientPhone,
+          deliveryAddress: finalDeliveryAddress,
+          notes: finalOrderNotes || null,
+          pointsRedeemed,
+          acceptSmallOrderFee,
+          userId: user?.id || null
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'No se pudo iniciar el pago.');
+      }
+
+      // Redirige a la página de pago alojada por SumUp — el pago ocurre
+      // fuera de nuestro dominio, nunca vemos datos de tarjeta.
+      window.location.href = result.hostedCheckoutUrl;
+    } catch (err: any) {
+      setIsProcessing(false);
+      setPaymentError(err.message || 'No se pudo iniciar el pago online. Inténtalo de nuevo.');
     }
   };
 
@@ -667,23 +726,15 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           </div>
         </div>
 
-        {isProcessing && !showPaymentModal && (
+        {isProcessing && (
           <div className="absolute inset-0 z-[1200] bg-zinc-950/90 backdrop-blur-md flex flex-col items-center justify-center rounded-[2.5rem] animate-fade-in">
             <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-green-500 font-bold uppercase tracking-widest animate-pulse">{t('confirming_order')}</p>
+            <p className="text-green-500 font-bold uppercase tracking-widest animate-pulse">
+              {paymentMethod === 'online' && deliveryMethod === 'delivery' ? 'Redirigiendo a pago seguro...' : t('confirming_order')}
+            </p>
           </div>
         )}
       </div>
-
-      <SumUpPaymentModal 
-        isOpen={showPaymentModal} 
-        onClose={() => {
-          setShowPaymentModal(false);
-          setPaymentError(t('sumup_cancelled'));
-        }} 
-        onSuccess={() => processOrder()} 
-        amount={finalTotal} 
-      />
     </div>
   );
 }
