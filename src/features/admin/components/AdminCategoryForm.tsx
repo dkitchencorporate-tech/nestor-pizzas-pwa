@@ -86,7 +86,11 @@ export default function AdminCategoryForm({ category, onClose, onSuccess }: Admi
       onSuccess();
     } catch (err: any) {
       console.error('Error saving category:', err);
-      setError(err.message || 'Ocurrió un error al guardar la categoría.');
+      if (err.code === '23505') {
+        setError(`Ya existe una categoría con ese identificador ("${formData.id}"). Prueba con un nombre distinto.`);
+      } else {
+        setError(err.message || 'Ocurrió un error al guardar la categoría.');
+      }
     } finally {
       setIsSubmitting(false);
     }
