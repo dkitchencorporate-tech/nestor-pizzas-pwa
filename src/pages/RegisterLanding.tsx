@@ -4,7 +4,6 @@ import { useAuthStore } from '../store/authStore';
 import { useI18nStore } from '../store/i18nStore';
 import { emailService } from '../lib/emailService';
 import { generateSafeUUID } from '../utils/uuid';
-import Footer from '../components/Footer';
 
 declare global {
   interface Window {
@@ -565,7 +564,18 @@ export default function RegisterLanding() {
         </div>
       </section>
 
-      <Footer />
+      {/* Pie minimalista: sin datos sensibles (CIF, dirección, teléfono) en esta
+          página de captación — solo un enlace al mismo modal de páginas legales
+          que ya usa el resto de la app. Si alguien necesita esos datos, se piden
+          por comunicación oficial, no se exhiben aquí. */}
+      <footer className="border-t border-zinc-800 bg-[#0A0A0E] px-4 sm:px-8 py-8 mt-4 text-center">
+        <button
+          onClick={() => openUserModal('legal')}
+          className="text-zinc-400 hover:text-green-400 transition-colors uppercase tracking-wider font-bold text-xs"
+        >
+          Páginas legales y Privacidad
+        </button>
+      </footer>
     </div>
   );
 }
