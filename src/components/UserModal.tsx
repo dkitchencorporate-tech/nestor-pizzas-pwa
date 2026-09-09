@@ -78,6 +78,19 @@ export default function UserModal() {
   const handleRegister = async () => {
     setErrorMsg('');
     setIsLoading(true);
+
+    // Comprobamos el teléfono ANTES de crear la cuenta de autenticación —
+    // así nunca queda una cuenta a medias (creada pero sin teléfono) si el
+    // número ya pertenece a otro cliente.
+    if (registerPhone) {
+      const { data: phoneTaken } = await supabase.rpc('is_phone_registered', { p_phone: registerPhone });
+      if (phoneTaken) {
+        setErrorMsg('Ese número de teléfono ya está registrado en otra cuenta.');
+        setIsLoading(false);
+        return;
+      }
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -178,7 +191,11 @@ export default function UserModal() {
       await updateProfile({ phone: editPhone, address: addressJson });
       setModalView('profile');
     } catch (e: any) {
-      setErrorMsg(e.message || t('error_updating_profile'));
+      if (e.code === '23505') {
+        setErrorMsg('Ese número de teléfono ya está en uso por otra cuenta. Revisa que esté bien escrito.');
+      } else {
+        setErrorMsg(e.message || t('error_updating_profile'));
+      }
     } finally {
       setIsLoading(false);
     }
