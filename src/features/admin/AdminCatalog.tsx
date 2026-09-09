@@ -23,6 +23,13 @@ export default function AdminCatalog() {
   // Notification state
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
+  // Modal de confirmación propio (reemplaza window.confirm, que se ve como una
+  // alerta genérica del navegador y rompe la estética del panel).
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+  const askConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmModal({ isOpen: true, title, message, onConfirm });
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -49,7 +56,7 @@ export default function AdminCatalog() {
 
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
+    setTimeout(() => setNotification(null), type === 'error' ? 7000 : 3000);
   };
 
   const toggleProductActive = async (id: number, currentStatus: boolean) => {
@@ -61,9 +68,15 @@ export default function AdminCatalog() {
     }
   };
 
-  const deleteProduct = async (product: any) => {
-    if (!window.confirm(t('confirm_delete_product'))) return;
-    
+  const deleteProduct = (product: any) => {
+    askConfirm(
+      t('confirm_delete_product_title'),
+      t('confirm_delete_product'),
+      () => doDeleteProduct(product)
+    );
+  };
+
+  const doDeleteProduct = async (product: any) => {
     // 1. Borrar la imagen de storage si la tiene
     if (product.img_url && product.img_url.includes('supabase.co')) {
       try {
@@ -81,24 +94,42 @@ export default function AdminCatalog() {
     // 2. Borrar de la BD
     const { error } = await supabase.from('products').delete().eq('id', product.id);
     if (error) {
-      showNotification(t('error_deleting_product'), 'error');
+      // Código 23503 = violación de clave foránea: el producto ya tiene pedidos
+      // reales asociados (order_items lo referencia con ON DELETE RESTRICT, a
+      // propósito, para no perder nunca el histórico de pedidos/facturación).
+      // No es un fallo — es la base de datos protegiendo el historial. Se le
+      // ofrece al usuario la alternativa real: ocultarlo con el interruptor.
+      if (error.code === '23503') {
+        showNotification(
+          `"${product.name}" ya tiene pedidos registrados, así que no se puede borrar del todo (para no perder ese historial). Usa el interruptor verde de la tarjeta para ocultarlo del catálogo y del Kiosko — el efecto para tus clientes es el mismo.`,
+          'error'
+        );
+      } else {
+        showNotification(t('error_deleting_product'), 'error');
+      }
     } else {
       showNotification(t('product_deleted_success'), 'success');
       fetchData();
     }
   };
 
-  const deleteCategory = async (id: string) => {
+  const deleteCategory = (id: string) => {
     const hasProducts = products.some(p => p.category_id === id);
     const hasSubcats = subcategories.some(s => s.category_id === id);
-    
+
     if (hasProducts || hasSubcats) {
       showNotification(t('error_delete_category_with_products'), 'error');
       return;
     }
 
-    if (!window.confirm(t('confirm_delete_category'))) return;
-    
+    askConfirm(
+      t('confirm_delete_category_title'),
+      t('confirm_delete_category'),
+      () => doDeleteCategory(id)
+    );
+  };
+
+  const doDeleteCategory = async (id: string) => {
     const { error } = await supabase.from('categories').delete().eq('id', id);
     if (error) {
       showNotification(t('error_deleting_category'), 'error');
@@ -133,15 +164,17 @@ export default function AdminCatalog() {
     }
   };
 
-  const deleteSubcategory = async (subcategory: any) => {
+  const deleteSubcategory = (subcategory: any) => {
     const hasProducts = products.some(p => p.subcategory_id === subcategory.id);
     if (hasProducts) {
       showNotification('No se puede eliminar porque tiene productos asignados', 'error');
       return;
     }
 
-    if (!window.confirm('¿Eliminar esta subcategoría?')) return;
-    
+    askConfirm('Eliminar subcategoría', '¿Eliminar esta subcategoría?', () => doDeleteSubcategory(subcategory));
+  };
+
+  const doDeleteSubcategory = async (subcategory: any) => {
     if (subcategory.img_url && subcategory.img_url.includes('supabase.co')) {
       try {
         const urlObj = new URL(subcategory.img_url);
@@ -219,7 +252,7 @@ export default function AdminCatalog() {
   return (
     <div className="h-full flex flex-col p-6 overflow-y-auto relative no-scrollbar">
       {notification && (
-        <div className={`fixed top-4 right-4 z-[3000] p-4 rounded-xl shadow-lg border ${
+        <div className={`fixed top-4 right-4 z-[3000] max-w-sm p-4 rounded-xl shadow-lg border text-sm leading-relaxed ${
           notification.type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
         } animate-fade-in`}>
           {notification.message}
@@ -450,6 +483,38 @@ export default function AdminCatalog() {
             showNotification(t('product_saved_success'), 'success');
           }}
         />
+      )}
+
+      {confirmModal?.isOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[4000] flex items-center justify-center p-4">
+          <div className="bg-[#14141E] border border-zinc-800 rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-fade-in">
+            <div className="p-6 text-center">
+              <div className="w-14 h-14 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </div>
+              <h3 className="font-black text-white text-lg uppercase tracking-wide mb-2">{confirmModal.title}</h3>
+              <p className="text-zinc-400 text-sm">{confirmModal.message}</p>
+            </div>
+            <div className="p-4 bg-zinc-900/50 flex gap-3 border-t border-zinc-800">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 py-3 text-white font-bold rounded-xl hover:bg-zinc-800 transition-colors"
+              >
+                {t('cancel')}
+              </button>
+              <button
+                onClick={() => {
+                  const action = confirmModal.onConfirm;
+                  setConfirmModal(null);
+                  action();
+                }}
+                className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl py-3 transition-colors shadow-lg shadow-red-600/20"
+              >
+                {t('confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
