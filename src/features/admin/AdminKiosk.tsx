@@ -340,11 +340,26 @@ export default function AdminKiosk() {
       setKioskIngrProduct(product);
       return;
     }
-    // Secret Burguer → notas para cocina / quitar ingredientes
-    if (product.category_id === 'SECRET BURGUER') {
+    const category = (product.category_id || '').toUpperCase();
+
+    // Secret Burguer → especialidad de fin de semana: solo se puede pedir viernes y sábado
+    if (category === 'SECRET BURGUER') {
+      const day = new Date().getDay(); // 5 = Viernes, 6 = Sábado
+      if (day !== 5 && day !== 6) {
+        showKioskNotif('Las Secret Burguer solo se preparan viernes y sábado.', 'error');
+        return;
+      }
       setKioskNotesProduct(product);
       return;
     }
+
+    // Bocadillos / bocatas / sandwiches → notas para cocina / quitar ingredientes
+    // Cubre cualquier variante de nombre que se cree desde el admin (Bocadillos, Bocatas, etc.)
+    if (category.includes('BOCADILLO') || category.includes('BOCATA') || category.includes('SANDWICH')) {
+      setKioskNotesProduct(product);
+      return;
+    }
+
     // Resto de productos → añadir directo
     addItem({ productId: product.id, name: product.name, price: product.price, quantity: 1 });
   };
