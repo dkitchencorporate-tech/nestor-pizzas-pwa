@@ -175,18 +175,25 @@ export default function AdminKiosk() {
 
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClientPhone || !newClientName || !addressStreet || !addressNumber || !addressCP) {
-      return alert('Faltan datos obligatorios');
+    // La dirección solo hace falta de verdad para pedidos a domicilio — para
+    // recogida en local (por teléfono o en persona) no tiene sentido exigirla.
+    const addressRequired = deliveryMethod === 'delivery';
+    if (!newClientPhone || !newClientName || (addressRequired && (!addressStreet || !addressNumber || !addressCP))) {
+      showKioskNotif('Faltan datos obligatorios.', 'error');
+      return;
     }
 
     setIsCreatingClient(true);
     try {
-      const addressJson = JSON.stringify({
-        street: addressStreet,
-        number: addressNumber,
-        cp: addressCP,
-        notes: addressNotes
-      });
+      const hasAddressData = addressStreet.trim() || addressNumber.trim() || addressNotes.trim();
+      const addressJson = hasAddressData
+        ? JSON.stringify({
+            street: addressStreet,
+            number: addressNumber,
+            cp: addressCP,
+            notes: addressNotes
+          })
+        : null;
 
       const { data: newId, error } = await supabase.rpc('create_kiosk_client', {
         p_full_name: newClientName,
@@ -201,7 +208,7 @@ export default function AdminKiosk() {
         id: newId,
         full_name: newClientName,
         phone: newClientPhone,
-        address: addressJson,
+        address: addressJson || undefined,
         is_registered: false
       });
       
@@ -702,18 +709,23 @@ export default function AdminKiosk() {
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Teléfono (Se usará de ID)</label>
                 <input type="tel" required value={newClientPhone} onChange={e => setNewClientPhone(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
               </div>
+              {deliveryMethod !== 'delivery' && (
+                <p className="text-xs text-zinc-500 bg-zinc-900/50 border border-zinc-800 rounded-xl px-3 py-2">
+                  Es para recogida — la dirección es opcional, solo hace falta para pedidos a domicilio.
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Calle o Avenida *</label>
-                  <input type="text" required value={addressStreet} onChange={e => setAddressStreet(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Calle o Avenida {deliveryMethod === 'delivery' ? '*' : '(Opcional)'}</label>
+                  <input type="text" required={deliveryMethod === 'delivery'} value={addressStreet} onChange={e => setAddressStreet(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Número *</label>
-                  <input type="text" required value={addressNumber} onChange={e => setAddressNumber(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Número {deliveryMethod === 'delivery' ? '*' : '(Opcional)'}</label>
+                  <input type="text" required={deliveryMethod === 'delivery'} value={addressNumber} onChange={e => setAddressNumber(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Código Postal *</label>
-                  <input type="text" required value={addressCP} onChange={e => setAddressCP(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Código Postal {deliveryMethod === 'delivery' ? '*' : '(Opcional)'}</label>
+                  <input type="text" required={deliveryMethod === 'delivery'} value={addressCP} onChange={e => setAddressCP(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white mt-1" />
                 </div>
                 <div className="col-span-2">
                   <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Notas adicionales (Opcional)</label>
