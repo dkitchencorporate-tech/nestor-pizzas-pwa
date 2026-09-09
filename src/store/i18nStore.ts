@@ -359,6 +359,11 @@ const dictionary: Translations = {
   not_thursday_title: { es: 'Hoy no es Jueves', en: 'Today is not Thursday' },
   not_thursday_desc: { es: 'Esta promoción es exclusiva para los días jueves. ¡Te esperamos el próximo jueves para disfrutarla!', en: 'This promotion is exclusive for Thursdays. We wait for you next Thursday to enjoy it!' },
   back_to_menu: { es: 'Volver al Menú', en: 'Back to Menu' },
+
+  // Secret Burguer (especialidad de fin de semana)
+  secret_burguer_closed_title: { es: 'Especialidad de fin de semana', en: 'Weekend Specialty' },
+  secret_burguer_closed_desc: { es: 'Las Secret Burguer se preparan solo los viernes y sábados. ¡Te esperamos este fin de semana para probarlas!', en: 'Secret Burguers are only prepared on Fridays and Saturdays. See you this weekend to try them!' },
+  secret_burguer_schedule_label: { es: 'Calendario de disponibilidad', en: 'Availability calendar' },
   selected_pizzas: { es: 'Pizzas Seleccionadas', en: 'Selected Pizzas' },
   no_pizza_selected: { es: 'Aún no has seleccionado ninguna pizza.', en: 'You have not selected any pizza yet.' },
   promo_price_label: { es: 'Precio Oferta (5.50€)', en: 'Promo Price (5.50€)' },
