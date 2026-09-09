@@ -4,12 +4,9 @@ import { randomUUID } from 'crypto';
 // Recalcula el total AQUÍ, con precios reales de la base de datos — nunca se
 // confía en lo que el navegador afirme que cuesta el pedido. El importe que
 // se le pide a SumUp que cobre es siempre este, no el que llegó en el body.
-// Se replica exactamente la misma fórmula que usa `process_checkout` para el
-// total final (incluido el recargo fijo de 1.50€ para pedidos pequeños, con
-// el mismo umbral de 12€) para garantizar que lo que se cobra con la tarjeta
-// y lo que queda registrado como importe del pedido sean siempre idénticos.
-const SMALL_ORDER_THRESHOLD = 12;
-const SMALL_ORDER_FEE = 1.50;
+// El umbral y el recargo de pedido mínimo se leen en vivo de `store_settings`
+// (igual que ahora hace `process_checkout`) — nunca hardcodeados, para que
+// un cambio futuro en el panel de admin se refleje aquí automáticamente.
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -113,11 +110,21 @@ export default async function handler(req, res) {
     }
   }
 
-  // 3) Recargo por pedido pequeño — misma regla exacta que process_checkout.
+  // 3) Recargo por pedido pequeño — mismo umbral/importe configurados en
+  //    Ajustes (store_settings), leídos en vivo, igual que process_checkout.
+  const { data: storeSettings } = await supabase
+    .from('store_settings')
+    .select('delivery_fee, min_order_delivery')
+    .eq('id', 1)
+    .single();
+
+  const minOrderDelivery = Number(storeSettings?.min_order_delivery ?? 10);
+  const deliveryFee = Number(storeSettings?.delivery_fee ?? 1);
+
   const afterDiscount = Math.max(0, subtotal - discount);
   let smallOrderFee = 0;
-  if (afterDiscount < SMALL_ORDER_THRESHOLD && acceptSmallOrderFee) {
-    smallOrderFee = SMALL_ORDER_FEE;
+  if (afterDiscount < minOrderDelivery && acceptSmallOrderFee) {
+    smallOrderFee = deliveryFee;
   }
 
   const amount = Math.round((afterDiscount + smallOrderFee) * 100) / 100;
