@@ -151,7 +151,11 @@ export default function AdminProductForm({ product, categories, subcategories, o
       onSuccess();
     } catch (err: any) {
       console.error('Error saving product:', err);
-      setError(err.message || 'Ocurrió un error al guardar el producto.');
+      if (err.code === '23505') {
+        setError(`Ya existe un producto llamado "${formData.name}". Cambia el nombre para evitar duplicados.`);
+      } else {
+        setError(err.message || 'Ocurrió un error al guardar el producto.');
+      }
     } finally {
       setIsSubmitting(false);
     }
