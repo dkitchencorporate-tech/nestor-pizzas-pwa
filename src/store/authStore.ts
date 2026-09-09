@@ -75,15 +75,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateProfile: async (updates) => {
     const user = get().user;
     if (!user) return;
-    
+
     const { error } = await supabase
       .from('profiles')
       .update(updates)
       .eq('id', user.id);
-      
-    if (!error) {
-      await get().fetchProfile(user.id);
+
+    if (error) {
+      throw error;
     }
+    await get().fetchProfile(user.id);
   },
   fetchOrders: async () => {
     const user = get().user;
