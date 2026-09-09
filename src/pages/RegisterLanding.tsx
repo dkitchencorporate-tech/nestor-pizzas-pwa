@@ -575,6 +575,16 @@ export default function RegisterLanding() {
         >
           Páginas legales y Privacidad
         </button>
+        <div className="mt-4">
+          <a
+            href="https://hosteleria.architectsys.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-zinc-600 hover:text-zinc-400 transition-colors text-[10px] uppercase tracking-widest"
+          >
+            Desarrollado por Architect Sys
+          </a>
+        </div>
       </footer>
     </div>
   );
