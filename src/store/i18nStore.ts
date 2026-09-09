@@ -442,6 +442,8 @@ const dictionary: Translations = {
   error_loading_catalog: { es: 'Error al cargar el catálogo', en: 'Error loading catalog' },
   error_delete_category_with_products: { es: 'No puedes eliminar una categoría que tiene productos. Mueve o borra sus productos primero.', en: 'You cannot delete a category that has products. Move or delete its products first.' },
   confirm_delete_category: { es: '¿Estás seguro de eliminar esta categoría?', en: 'Are you sure you want to delete this category?' },
+  confirm_delete_category_title: { es: 'Eliminar categoría', en: 'Delete category' },
+  confirm_delete_product_title: { es: 'Eliminar producto', en: 'Delete product' },
   error_deleting_category: { es: 'Error al eliminar categoría', en: 'Error deleting category' },
   category_deleted_success: { es: 'Categoría eliminada', en: 'Category deleted' },
   edit_category: { es: 'Editar categoría', en: 'Edit category' },
