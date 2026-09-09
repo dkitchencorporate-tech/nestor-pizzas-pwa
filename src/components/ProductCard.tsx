@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify';
 import SauceModal from './SauceModal';
 import AddToCartModal from './AddToCartModal';
 import SubcategoryModal from './SubcategoryModal';
+import SecretBurguerClosedModal from './SecretBurguerClosedModal';
 import { useI18nStore } from '../store/i18nStore';
 
 interface Product {
@@ -60,6 +61,7 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
   const [showSauceModal, setShowSauceModal] = useState(false);
   const [showAddToCartModal, setShowAddToCartModal] = useState(false);
   const [showSubcategoryModal, setShowSubcategoryModal] = useState(false);
+  const [showSecretBurguerClosed, setShowSecretBurguerClosed] = useState(false);
 
   const rawName = product.name || '';
   const rawNameEn = product.name_en || '';
@@ -74,6 +76,16 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
     if (product.isGroup) {
       setShowSubcategoryModal(true);
       return;
+    }
+
+    // Secret Burguer: especialidad de fin de semana, solo se puede pedir viernes y sábado
+    const productCategory = (product as any).category_id || product.category;
+    if (productCategory === 'SECRET BURGUER') {
+      const day = new Date().getDay(); // 5 = Viernes, 6 = Sábado
+      if (day !== 5 && day !== 6) {
+        setShowSecretBurguerClosed(true);
+        return;
+      }
     }
 
     // Si es Pizza Margarita (ID 22) o Mazzi Pizza (ID 23), o Jueves Locos (999), mostrar personalizador
@@ -162,6 +174,10 @@ export default function ProductCard({ product, onCustomize }: ProductCardProps) 
 
       {showSubcategoryModal && product.isGroup && (
         <SubcategoryModal productGroup={product} onClose={() => setShowSubcategoryModal(false)} />
+      )}
+
+      {showSecretBurguerClosed && (
+        <SecretBurguerClosedModal onClose={() => setShowSecretBurguerClosed(false)} />
       )}
     </>
   );
