@@ -757,9 +757,9 @@ export default function AdminHistory() {
         {/* 1. CABECERA OFICIAL FISCAL & METADATOS (SIN BLOQUES NEGROS) */}
         <div className="border-b-2 border-slate-300 pb-3 mb-4 flex justify-between items-start">
           <div>
-            <h1 className="text-xl font-black uppercase tracking-tight text-slate-900">NÉSTOR PIZZAS GOURMET S.L.</h1>
+            <h1 className="text-xl font-black uppercase tracking-tight text-slate-900">NÉSTOR PIZZAS</h1>
             <p className="text-[10px] text-slate-600 font-medium">Calle Alcalde Felip, 9 — Caniles (Granada) | CP: 18810</p>
-            <p className="text-[9px] text-slate-500">CIF: B-18810992 &bull; Sistema POS Enterprise &bull; Registro Fiscal de Ventas</p>
+            <p className="text-[9px] text-slate-500">Sistema POS Enterprise &bull; Registro Fiscal de Ventas</p>
           </div>
           
           <div className="border border-slate-300 bg-slate-50 rounded-lg p-2.5 text-right min-w-[200px]">
