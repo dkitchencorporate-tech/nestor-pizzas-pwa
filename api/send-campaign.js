@@ -6,7 +6,7 @@ const buildEmailHtml = ({ headline, message, flyerUrl, ctaText, ctaUrl }) => `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
     <tr>
       <td style="background:#0f172a;padding:28px 24px;text-align:center;border-bottom:4px solid #16a34a;">
-        <div style="font-size:20px;font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">NÉSTOR PIZZAS GOURMET</div>
+        <div style="font-size:20px;font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">NÉSTOR PIZZAS</div>
         <div style="font-size:11px;color:#4ade80;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-top:4px;">Masa Fresca Artesana &bull; Caniles (Granada)</div>
       </td>
     </tr>
@@ -22,7 +22,7 @@ const buildEmailHtml = ({ headline, message, flyerUrl, ctaText, ctaUrl }) => `
     </tr>
     <tr>
       <td style="background:#f1f5f9;padding:20px 24px;text-align:center;font-size:11px;color:#64748b;border-top:1px solid #e2e8f0;">
-        <div style="font-weight:700;color:#334155;">NÉSTOR PIZZAS GOURMET</div>
+        <div style="font-weight:700;color:#334155;">NÉSTOR PIZZAS</div>
         <div>Calle Alcalde Felip, 9 &bull; 18810 Caniles (Granada) &bull; Tel: +34 679 76 19 87</div>
         <div style="margin-top:8px;color:#94a3b8;">Has recibido este correo porque formas parte del Club VIP de Néstor Pizzas.</div>
       </td>
