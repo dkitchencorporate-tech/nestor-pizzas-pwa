@@ -16,10 +16,32 @@ import ReviewModal from './components/ReviewModal';
 import GuestRegistrationModal from './components/GuestRegistrationModal';
 import { useI18nStore } from './store/i18nStore';
 
-const Catalog = lazy(() => import('./features/catalog/Catalog'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const OrderTracking = lazy(() => import('./pages/OrderTracking'));
-const RegisterLanding = lazy(() => import('./pages/RegisterLanding'));
+// Cada despliegue publica los "trozos" de código (Catálogo, Admin, etc.) con nombre de
+// archivo nuevo. Si una pestaña quedó abierta desde antes de un despliegue y navega a una
+// sección que aún no había cargado, el navegador pide el trozo viejo — que ya no existe en
+// el servidor — y React lo lanza como error real, que el ErrorBoundary atrapa mostrando
+// "¡Ups! Algo salió mal". Con esto, ese fallo concreto se autorepara con una recarga
+// automática (una sola vez por pestaña) antes de llegar a mostrar el error al cliente.
+function lazyWithReload<T extends { default: any }>(importer: () => Promise<T>) {
+  return lazy(() =>
+    importer().catch((error) => {
+      const key = 'nestor-chunk-reload-attempted';
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        // Frena el render mientras la recarga ocurre, en vez de dejar que el error suba.
+        return new Promise<T>(() => {});
+      }
+      // Si ya se intentó recargar una vez en esta pestaña y sigue fallando, es un error real.
+      throw error;
+    })
+  );
+}
+
+const Catalog = lazyWithReload(() => import('./features/catalog/Catalog'));
+const AdminDashboard = lazyWithReload(() => import('./pages/AdminDashboard'));
+const OrderTracking = lazyWithReload(() => import('./pages/OrderTracking'));
+const RegisterLanding = lazyWithReload(() => import('./pages/RegisterLanding'));
 
 import { supabase } from './lib/supabase';
 import { preloadCatalogData } from './lib/catalogPreload';
@@ -74,7 +96,7 @@ function App() {
   // listo para mostrarse al instante en vez de empezar a cargar recién ahí.
   useEffect(() => {
     if (window.location.pathname !== '/admin' && window.location.pathname !== '/registro') {
-      import('./features/catalog/Catalog');
+      import('./features/catalog/Catalog').catch(() => {});
       preloadCatalogData();
     }
   }, []);
