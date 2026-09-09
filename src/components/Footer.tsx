@@ -9,10 +9,9 @@ export default function Footer() {
     <footer className="border-t border-zinc-800 bg-[#0A0A0E] px-4 sm:px-8 py-8 mt-4">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
         <div>
-          <p className="text-white font-display font-black text-sm uppercase tracking-wider">Néstor Pizzas Gourmet</p>
-          <p className="text-zinc-500 text-xs mt-1">
-            Calle Alcalde Felip, 9 &bull; 18810 Caniles (Granada) &bull; CIF B-18810992
-          </p>
+          <p className="text-white font-display font-black text-sm uppercase tracking-wider">Néstor Pizzas</p>
+          {/* Sin CIF/domicilio aquí a propósito — datos de identificación fiscal
+              y comercial solo bajo solicitud expresa (ver Páginas Legales). */}
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs">
           <button onClick={() => openUserModal('legal')} className="text-zinc-400 hover:text-green-400 transition-colors uppercase tracking-wider font-bold">
@@ -22,6 +21,16 @@ export default function Footer() {
             +34 679 76 19 87
           </a>
         </div>
+      </div>
+      <div className="max-w-7xl mx-auto text-center mt-6 pt-4 border-t border-zinc-900">
+        <a
+          href="https://hosteleria.architectsys.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-zinc-600 hover:text-zinc-400 transition-colors text-[10px] uppercase tracking-widest"
+        >
+          Desarrollado por Architect Sys
+        </a>
       </div>
     </footer>
   );
