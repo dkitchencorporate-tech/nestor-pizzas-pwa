@@ -38,6 +38,15 @@ export default function GuestRegistrationModal({ isOpen, order, onSkip, onSucces
     setError(null);
 
     try {
+      // Comprobamos el teléfono ANTES de crear la cuenta — así nunca queda
+      // una cuenta a medias si ese número ya pertenece a otro cliente.
+      if (order.client_phone) {
+        const { data: phoneTaken } = await supabase.rpc('is_phone_registered', { p_phone: order.client_phone });
+        if (phoneTaken) {
+          throw new Error('El teléfono de este pedido ya está registrado en otra cuenta. Inicia sesión con esa cuenta para ver este pedido.');
+        }
+      }
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -78,7 +87,11 @@ export default function GuestRegistrationModal({ isOpen, order, onSkip, onSucces
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || t('error_creating_account'));
+      if (err.code === '23505') {
+        setError('Ese teléfono ya está registrado en otra cuenta.');
+      } else {
+        setError(err.message || t('error_creating_account'));
+      }
     } finally {
       setIsLoading(false);
     }
