@@ -42,6 +42,7 @@ const Catalog = lazyWithReload(() => import('./features/catalog/Catalog'));
 const AdminDashboard = lazyWithReload(() => import('./pages/AdminDashboard'));
 const OrderTracking = lazyWithReload(() => import('./pages/OrderTracking'));
 const RegisterLanding = lazyWithReload(() => import('./pages/RegisterLanding'));
+const PaymentVerification = lazyWithReload(() => import('./pages/PaymentVerification'));
 
 import { supabase } from './lib/supabase';
 import { preloadCatalogData } from './lib/catalogPreload';
@@ -49,7 +50,7 @@ import { preloadCatalogData } from './lib/catalogPreload';
 function App() {
   const { t } = useI18nStore();
   const { isInstallModalOpen, setIsInstallModalOpen, isIOS, isStandalone, triggerDirectPrompt, installPrompt } = usePWAInstall();
-  const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking' | 'registro'>('splash');
+  const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking' | 'registro' | 'pago-verificando'>('splash');
   const [isPreloaderFading, setIsPreloaderFading] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
   
@@ -90,19 +91,22 @@ function App() {
   if (currentView === 'splash' && window.location.pathname.startsWith('/registro')) {
     setCurrentView('registro');
   }
+  if (currentView === 'splash' && window.location.pathname.startsWith('/pago-verificando')) {
+    setCurrentView('pago-verificando');
+  }
 
   // Precarga real del catálogo (código + datos) desde el primer instante del preloader,
   // no cuando termina — así, cuando el cronómetro del splash acaba, el catálogo ya está
   // listo para mostrarse al instante en vez de empezar a cargar recién ahí.
   useEffect(() => {
-    if (window.location.pathname !== '/admin' && window.location.pathname !== '/registro') {
+    if (!['/admin', '/registro', '/pago-verificando'].some(p => window.location.pathname.startsWith(p))) {
       import('./features/catalog/Catalog').catch(() => {});
       preloadCatalogData();
     }
   }, []);
 
   useEffect(() => {
-    if (currentView === 'splash' && window.location.pathname !== '/admin' && window.location.pathname !== '/registro') {
+    if (currentView === 'splash' && !['/admin', '/registro', '/pago-verificando'].some(p => window.location.pathname.startsWith(p))) {
       const timer = setTimeout(() => {
         setIsPreloaderFading(true);
         setTimeout(() => {
@@ -192,6 +196,14 @@ function App() {
       <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">{t('loading')}...</div>}>
         <RegisterLanding />
         <UserModal />
+      </Suspense>
+    );
+  }
+
+  if (currentView === 'pago-verificando') {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-[#0A0A0E] flex items-center justify-center text-green-500 font-display font-bold">{t('loading')}...</div>}>
+        <PaymentVerification />
       </Suspense>
     );
   }
