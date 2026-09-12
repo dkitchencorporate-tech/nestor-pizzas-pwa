@@ -358,7 +358,7 @@ export default function Catalog() {
       )}
 
       {isPromoOpen && (
-        <PromoJuevesModal onClose={() => setIsPromoOpen(false)} />
+        <PromoJuevesModal products={products} onClose={() => setIsPromoOpen(false)} />
       )}
     </>
   );

@@ -758,6 +758,7 @@ export default function AdminKiosk() {
 
       {kioskPromoOpen && (
         <KioskPromoJuevesModal
+          products={products}
           onClose={() => setKioskPromoOpen(false)}
           onAdd={(item) => { addItem(item); setKioskPromoOpen(false); }}
         />

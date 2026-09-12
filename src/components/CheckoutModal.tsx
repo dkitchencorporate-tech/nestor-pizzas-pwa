@@ -59,7 +59,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const isOpen = isStoreOpen();
   const availableSlots = generateAvailableTimeSlots(15);
 
-  const { deliveryFee, minOrderDelivery, juevesPromoFee } = useSettingsStore();
+  const { deliveryFee, minOrderDelivery } = useSettingsStore();
   const subtotal = getTotal();
   
   // Productos elegibles para el descuento VIP (Pizza o Burger). El cliente elige a cuál lo aplica —
@@ -74,15 +74,9 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   const discount = pointsRedeemed && eligibleDiscount > 0 ? eligibleDiscount : 0;
   
-  const hasJuevesLocos = items.some(item => 
-    item.productId === 999 || 
-    (item.name && (item.name.includes('(Promo Jueves)') || item.name.toUpperCase().includes('JUEVES') || item.name.toUpperCase().includes('THURSDAY')))
-  );
-
   const needsSmallOrderFee = deliveryMethod === 'delivery' && (subtotal - discount) < minOrderDelivery;
   const smallOrderFee = needsSmallOrderFee && acceptSmallOrderFee ? deliveryFee : 0;
-  const juevesSurcharge = deliveryMethod === 'delivery' && hasJuevesLocos ? (juevesPromoFee !== undefined ? juevesPromoFee : 1.00) : 0;
-  const finalTotal = Math.max(0, subtotal - discount) + smallOrderFee + juevesSurcharge;
+  const finalTotal = Math.max(0, subtotal - discount) + smallOrderFee;
   
   const userPoints = profile?.points || 0;
   const canRedeem = userPoints >= 25 && eligibleDiscount > 0;
@@ -691,17 +685,6 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                 />
                 <span className="text-sm text-gray-300">Aceptar recargo de {deliveryFee.toFixed(2).replace('.', ',')} € por pedido pequeño</span>
               </label>
-            </div>
-          )}
-
-          {deliveryMethod === 'delivery' && hasJuevesLocos && (
-            <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 space-y-3 mb-6 flex items-start gap-3">
-              <svg className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-sm text-orange-400/90 leading-relaxed">
-                Las promociones especiales de <strong className="text-orange-400">Jueves Locos</strong> tienen un recargo por envío de <strong className="text-orange-400">{juevesPromoFee.toFixed(2).replace('.', ',')} €</strong>.
-              </p>
             </div>
           )}
 

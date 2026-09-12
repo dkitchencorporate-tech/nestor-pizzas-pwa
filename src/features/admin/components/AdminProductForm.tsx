@@ -21,6 +21,7 @@ export default function AdminProductForm({ product, categories, subcategories, o
     badge: '',
     img_url: '',
     is_active: true,
+    jueves_promo_eligible: false,
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,6 +45,7 @@ export default function AdminProductForm({ product, categories, subcategories, o
         badge: product.badge || '',
         img_url: product.img_url || '',
         is_active: product.is_active !== false,
+        jueves_promo_eligible: product.jueves_promo_eligible === true,
       });
       if (product.img_url) {
         setImagePreview(product.img_url);
@@ -345,6 +347,20 @@ export default function AdminProductForm({ product, categories, subcategories, o
               />
               <label htmlFor="is_active" className="ml-3 text-sm font-medium text-white cursor-pointer">
                 Producto Activo (Visible en la carta)
+              </label>
+            </div>
+
+            <div className="md:col-span-2 flex items-center mt-2 bg-[#1A1A24] p-4 rounded-xl border border-zinc-700/50">
+              <input
+                type="checkbox"
+                id="jueves_promo_eligible"
+                name="jueves_promo_eligible"
+                checked={formData.jueves_promo_eligible}
+                onChange={handleChange}
+                className="w-5 h-5 rounded border-zinc-600 text-green-500 focus:ring-green-500 focus:ring-offset-zinc-900 bg-zinc-800"
+              />
+              <label htmlFor="jueves_promo_eligible" className="ml-3 text-sm font-medium text-white cursor-pointer">
+                Elegible para la oferta de Jueves Locos (2x1)
               </label>
             </div>
           </div>

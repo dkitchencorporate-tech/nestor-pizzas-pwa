@@ -4,6 +4,7 @@ import { useI18nStore } from '../store/i18nStore';
 import AdminOrders from '../features/admin/AdminOrders';
 import AdminCatalog from '../features/admin/AdminCatalog';
 import AdminKiosk from '../features/admin/AdminKiosk';
+import AdminClients from '../features/admin/AdminClients';
 import AdminAnalytics from '../features/admin/AdminAnalytics';
 import AdminHistory from '../features/admin/AdminHistory';
 import AdminPrinterSettings from '../features/admin/AdminPrinterSettings';
@@ -262,6 +263,13 @@ export default function AdminDashboard() {
             >
               🍕 {t('kiosk')}
             </button>
+            {/* 2.5. Clientes */}
+            <button
+              onClick={() => setActiveTab('clients')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'clients' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              👥 <span className="uppercase tracking-wider">Clientes</span>
+            </button>
             {/* 3. Catálogo */}
             <button 
               onClick={() => setActiveTab('catalog')}
@@ -409,6 +417,7 @@ export default function AdminDashboard() {
         <div className="flex-1 overflow-hidden relative">
           <div className={activeTab === 'orders' ? 'block h-full' : 'hidden'}><AdminOrders /></div>
           <div className={activeTab === 'kiosk' ? 'block h-full' : 'hidden'}><AdminKiosk /></div>
+          <div className={activeTab === 'clients' ? 'block h-full' : 'hidden'}><AdminClients /></div>
           <div className={activeTab === 'catalog' ? 'block h-full' : 'hidden'}><AdminCatalog /></div>
           <div className={activeTab === 'history' ? 'block h-full' : 'hidden'}><AdminHistory /></div>
           <div className={activeTab === 'analytics' ? 'block h-full' : 'hidden'}><AdminAnalytics /></div>
