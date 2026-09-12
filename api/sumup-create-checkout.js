@@ -37,6 +37,7 @@ export default async function handler(req, res) {
   // de verdad es ese usuario — igual que la comprobación ya existente en
   // process_checkout, pero aquí también, antes incluso de cobrar nada.
   let verifiedUserId = null;
+  let verifiedUserEmail = null;
   if (userId) {
     if (!callerToken) {
       return res.status(401).json({ error: 'Sesión requerida para operar con tu cuenta.' });
@@ -46,6 +47,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Sesión inválida.' });
     }
     verifiedUserId = user.id;
+    verifiedUserEmail = user.email || null;
   }
 
   // 1) Precios reales de catálogo — todo ítem debe mapear a un producto real
@@ -181,7 +183,8 @@ export default async function handler(req, res) {
   const { error: pendingError } = await supabase.rpc('sumup_create_pending_checkout', {
     p_checkout_reference: checkoutReference,
     p_amount: amount,
-    p_order_payload: orderPayload
+    p_order_payload: orderPayload,
+    p_client_email: verifiedUserEmail
   });
 
   if (pendingError) {

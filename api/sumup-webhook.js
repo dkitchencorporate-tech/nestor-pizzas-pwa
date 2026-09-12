@@ -70,7 +70,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, alreadyProcessed: true });
   }
 
-  const { order_payload: orderPayload } = claimed[0];
+  const { order_payload: orderPayload, amount: checkoutAmount, client_email: clientEmail } = claimed[0];
 
   // Cliente con la service_role key — SOLO se usa aquí, para esta única
   // llamada, después de haber confirmado el pago real con SumUp. Nunca se
@@ -102,6 +102,29 @@ export default async function handler(req, res) {
     // así que el próximo intento podrá reclamarlo y reintentar sin duplicar nada.
     return res.status(500).json({ error: 'No se pudo crear el pedido' });
   }
+
+  // Antes de este arreglo, un pedido pagado con tarjeta (todo lo que pasa
+  // por este webhook) nunca disparaba ni la confirmación al cliente ni el
+  // aviso de pedido nuevo al negocio — solo lo hacía el flujo de pago
+  // físico/efectivo, resuelto directo en CheckoutModal.tsx. Se espera a que
+  // termine el envío (en serverless, la función puede congelarse justo al
+  // devolver la respuesta, así que un "fire and forget" real aquí se
+  // perdería) pero un fallo de correo nunca debe convertirse en un 500 —
+  // el pedido ya está creado y cobrado, eso es lo único que importa para el
+  // código de estado que ve SumUp.
+  const origin = `https://${req.headers.host}`;
+  const emailPayload = { orderId, total: checkoutAmount, clientName: orderPayload.p_client_name };
+  const sendEmail = (body) => fetch(`${origin}/api/send-transactional-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).catch(err => console.error('Error enviando email post-pago:', err));
+
+  const emailSends = [sendEmail({ type: 'order_admin', ...emailPayload })];
+  if (clientEmail) {
+    emailSends.push(sendEmail({ type: 'order_confirmation', to: clientEmail, ...emailPayload }));
+  }
+  await Promise.allSettled(emailSends);
 
   return res.status(200).json({ ok: true, orderId });
 }
