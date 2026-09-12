@@ -227,15 +227,29 @@ export default function RegisterLanding() {
 
     setIsLoading(true);
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+      // Nombre y telefono van como metadata del propio signUp, no solo en un
+      // UPDATE posterior: con la confirmacion de email activada, signUp() no
+      // deja una sesion activa hasta que el cliente confirma, así que ese
+      // UPDATE se ejecutaba sin auth.uid() y la política de RLS
+      // ("Users can update own profile") no tocaba ninguna fila -- sin
+      // error, pero sin guardar tampoco. El trigger handle_new_user (que sí
+      // corre con permisos de servidor) ahora lee full_name/phone de aquí.
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: name, phone } }
+      });
       if (signUpError) throw signUpError;
 
       if (data.user) {
-        const { error: profileError } = await supabase
+        // Best-effort: si por lo que sea ya hay sesión activa (p.ej. si el
+        // proyecto tiene confirmación de email desactivada), esto sincroniza
+        // igual el email en el perfil. Si no hay sesión, no hace nada y no
+        // pasa nada -- el trigger ya dejó el dato correcto guardado.
+        await supabase
           .from('profiles')
           .update({ full_name: name, email, phone })
           .eq('id', data.user.id);
-        if (profileError) throw profileError;
 
         emailService.sendWelcomeEmail(email, name);
         trackSiteEvent('category_click', 'landing_registro_exito');

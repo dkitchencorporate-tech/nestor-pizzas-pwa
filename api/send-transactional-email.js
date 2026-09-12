@@ -48,7 +48,10 @@ const templates = {
     to: d.to,
     html: wrap('¡Bienvenido!', `
       <p>Hola ${escapeHtml(d.clientName) || ''},</p>
-      <p>Gracias por registrarte en Néstor Pizzas. A partir de ahora acumulas puntos VIP con cada pedido, canjeables por descuentos.</p>
+      <p>¡Gracias por registrarte en Néstor Pizzas! Tu cuenta ya está lista y a partir de ahora acumulas puntos VIP con cada pedido, canjeables por descuentos.</p>
+      <div style="text-align:center;margin:24px 0 8px;">
+        <a href="${d.appUrl || 'https://nestorpizzas.es/'}" style="display:inline-block;background:#16a34a;color:#ffffff;font-weight:900;text-transform:uppercase;letter-spacing:1px;font-size:13px;padding:14px 32px;border-radius:10px;text-decoration:none;">Ver la carta y pedir</a>
+      </div>
       <p>¡Que aproveche!</p>
     `)
   })
@@ -75,7 +78,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const built = templates[type](req.body || {});
+    const appUrl = `https://${req.headers.host}/`;
+    const built = templates[type]({ ...(req.body || {}), appUrl });
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT || 587),

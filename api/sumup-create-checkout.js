@@ -61,19 +61,35 @@ export default async function handler(req, res) {
 
   const { data: products, error: productsError } = await supabase
     .from('products')
-    .select('id, price, name, is_active')
+    .select('id, price, name, is_active, jueves_promo_eligible')
     .in('id', productIds);
 
   if (productsError) {
     return res.status(500).json({ error: 'No se pudo verificar el catálogo.' });
   }
 
+  // Igual que process_checkout: el jueves, un producto marcado como elegible
+  // para la oferta (jueves_promo_eligible) y etiquetado como "(Promo Jueves)"
+  // por el modal de la oferta se cobra a 5.50€ en vez del precio de catálogo.
+  // Nunca se confía en un precio suelto que mande el navegador -- solo se
+  // activa este precio fijo bajo esas dos condiciones verificadas aquí.
+  const madridWeekday = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Madrid', weekday: 'long' }).format(new Date());
+  const isThursdayInMadrid = madridWeekday === 'Thursday';
+  const JUEVES_PROMO_PRICE = 5.50;
+
   const productsById = new Map((products || []).map(p => [p.id, p]));
   let subtotal = 0;
   let eligibleDiscount = 0;
   let redeemTargetChosen = false;
+  // Guardado por posición para reutilizar el mismo precio (ya con el
+  // descuento de Jueves Locos aplicado si toca) al construir el pedido
+  // pendiente más abajo — así el importe que cobra SumUp y el que queda
+  // grabado en `orders`/`order_items` cuando el webhook confirme el pago
+  // son siempre el mismo número, nunca dos cálculos que puedan divergir.
+  const unitPricesByIndex = [];
 
-  for (const item of items) {
+  for (let index = 0; index < items.length; index++) {
+    const item = items[index];
     const product = productsById.get(item.productId);
     if (!product || !product.is_active) {
       return res.status(409).json({ error: `El producto "${item.name || item.productId}" ya no está disponible.` });
@@ -82,22 +98,28 @@ export default async function handler(req, res) {
     if (qty <= 0) {
       return res.status(400).json({ error: 'Cantidad inválida en el pedido.' });
     }
-    subtotal += product.price * qty;
+
+    const itemLabel = String(item.name || item.customization_details?.name || '');
+    const isJuevesPromoItem = isThursdayInMadrid && product.jueves_promo_eligible === true && itemLabel.includes('(Promo Jueves)');
+    const unitPrice = isJuevesPromoItem ? JUEVES_PROMO_PRICE : product.price;
+    unitPricesByIndex[index] = unitPrice;
+
+    subtotal += unitPrice * qty;
 
     if (pointsRedeemed) {
       const nameLower = (product.name || '').toLowerCase();
       if (nameLower.includes('pizza') || nameLower.includes('burguer')) {
         if (item.redeem_target === true) {
-          eligibleDiscount = product.price;
+          eligibleDiscount = unitPrice;
           redeemTargetChosen = true;
-        } else if (!redeemTargetChosen && (eligibleDiscount === 0 || product.price < eligibleDiscount)) {
-          eligibleDiscount = product.price;
+        } else if (!redeemTargetChosen && (eligibleDiscount === 0 || unitPrice < eligibleDiscount)) {
+          eligibleDiscount = unitPrice;
         }
       }
     }
   }
 
-  // 2) Elegibilidad real de canje de puntos VIP (25+ puntos reales en el perfil).
+  // 2) Elegibilidad real de canje de puntos VIP (25+ puntos reales en el perfil, único).
   let discount = 0;
   if (pointsRedeemed && verifiedUserId && eligibleDiscount > 0) {
     const { data: profile } = await supabase
@@ -142,10 +164,10 @@ export default async function handler(req, res) {
     p_client_phone: clientPhone,
     p_delivery_address: deliveryAddress,
     p_delivery_method: deliveryMethod,
-    p_items: items.map(item => ({
+    p_items: items.map((item, index) => ({
       product_id: item.productId,
       quantity: item.quantity,
-      unit_price: productsById.get(item.productId).price,
+      unit_price: unitPricesByIndex[index],
       redeem_target: !!item.redeem_target,
       customization_details: item.customization_details || { name: item.name, notes: item.notes, extras: item.extras }
     })),
