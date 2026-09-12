@@ -47,17 +47,29 @@ export default function GuestRegistrationModal({ isOpen, order, onSkip, onSucces
         }
       }
 
+      // Nombre y telefono van como metadata del propio signUp: con la
+      // confirmacion de email activada, signUp() no deja sesion activa
+      // hasta que se confirma, y el UPDATE de perfil de mas abajo se
+      // ejecuta entonces sin auth.uid() -- la RLS no toca ninguna fila, sin
+      // error pero sin guardar nada. El trigger handle_new_user (que si
+      // corre con permisos de servidor) lee full_name/phone de aqui.
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: order.client_name,
+            phone: order.client_phone
+          }
+        }
       });
 
       if (signUpError) throw signUpError;
 
       if (data.user) {
-        // Actualizar perfil con los datos que ya introdujo en el checkout
-        // y añadir los puntos que ganó con esta orden.
-        const { error: profileError } = await supabase
+        // Best-effort: solo se aplica de verdad si hay sesion activa. Si no
+        // la hay, el trigger ya dejo guardados los datos correctos.
+        await supabase
           .from('profiles')
           .update({
             full_name: order.client_name,
@@ -67,15 +79,19 @@ export default function GuestRegistrationModal({ isOpen, order, onSkip, onSucces
           })
           .eq('id', data.user.id);
 
-        if (profileError) throw profileError;
-
-        // Reasignar la orden anónima al nuevo usuario
-        const { error: orderError } = await supabase
-          .from('orders')
-          .update({ user_id: data.user.id })
-          .eq('id', order.id);
-
-        if (orderError) throw orderError;
+        // Reasignar la orden anonima al nuevo usuario y sumar los puntos --
+        // via RPC porque, con la confirmacion de email activada, todavia no
+        // hay ninguna sesion en este punto (signUp() no la deja hasta que
+        // se confirma), asi que se pasa el id explicito del usuario recien
+        // creado. El RPC solo deja reclamar si el telefono del pedido
+        // coincide con el que se acaba de guardar en el perfil y si el
+        // pedido es reciente, para que nadie pueda apropiarse de un pedido
+        // ajeno solo por conocer su id.
+        const { error: claimError } = await supabase.rpc('claim_guest_order', {
+          p_order_id: order.id,
+          p_target_user_id: data.user.id
+        });
+        if (claimError) throw claimError;
 
         emailService.sendWelcomeEmail(email, order.client_name);
 

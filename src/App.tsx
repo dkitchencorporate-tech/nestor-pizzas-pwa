@@ -104,19 +104,29 @@ function App() {
   if (currentView === 'splash' && window.location.pathname.startsWith('/pago-verificando')) {
     setCurrentView('pago-verificando');
   }
+  // /pedido: enlace real de seguimiento desde los correos de confirmación
+  // de pedido -- antes no existía ninguna URL a la que apuntar, el correo
+  // solo decía "sigue tu pedido desde la app" sin ningún sitio real al que
+  // llevar. El registrado ve sus pedidos en cuanto entra (misma sesión que
+  // ya tiene guardada); el invitado ve los suyos si los hizo en este mismo
+  // navegador -- igual que ya funcionaba el botón de seguimiento interno,
+  // solo que ahora también es una URL a la que se puede llegar directo.
+  if (currentView === 'splash' && window.location.pathname.startsWith('/pedido')) {
+    setCurrentView('tracking');
+  }
 
   // Precarga real del catálogo (código + datos) desde el primer instante del preloader,
   // no cuando termina — así, cuando el cronómetro del splash acaba, el catálogo ya está
   // listo para mostrarse al instante en vez de empezar a cargar recién ahí.
   useEffect(() => {
-    if (!['/admin', '/registro', '/pago-verificando'].some(p => window.location.pathname.startsWith(p))) {
+    if (!['/admin', '/registro', '/pago-verificando', '/pedido'].some(p => window.location.pathname.startsWith(p))) {
       import('./features/catalog/Catalog').catch(() => {});
       preloadCatalogData();
     }
   }, []);
 
   useEffect(() => {
-    if (currentView === 'splash' && !['/admin', '/registro', '/pago-verificando'].some(p => window.location.pathname.startsWith(p))) {
+    if (currentView === 'splash' && !['/admin', '/registro', '/pago-verificando', '/pedido'].some(p => window.location.pathname.startsWith(p))) {
       const timer = setTimeout(() => {
         setIsPreloaderFading(true);
         setTimeout(() => {

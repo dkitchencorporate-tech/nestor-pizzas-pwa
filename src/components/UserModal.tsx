@@ -91,12 +91,19 @@ export default function UserModal() {
       }
     }
 
+    // Telefono va como metadata del propio signUp, no solo en el UPDATE de
+    // abajo: con la confirmacion de email activada, signUp() no deja una
+    // sesion activa hasta que se confirma, y ese UPDATE se ejecuta sin
+    // auth.uid() -- la politica de RLS no toca ninguna fila, sin error pero
+    // sin guardar el telefono tampoco. El trigger handle_new_user (que si
+    // corre con permisos de servidor) lee full_name/phone de aqui.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: name
+          full_name: name,
+          phone: registerPhone
         }
       }
     });
@@ -105,6 +112,9 @@ export default function UserModal() {
       setErrorMsg(error.message);
     } else {
       if (data.user) {
+        // Best-effort: si hubiera sesion activa, esto sincroniza el email
+        // igual. Si no la hay, no hace nada -- el trigger ya dejo el dato
+        // correcto guardado.
         await supabase.from('profiles').update({ email: email, phone: registerPhone }).eq('id', data.user.id);
       }
       if (!data.session) {

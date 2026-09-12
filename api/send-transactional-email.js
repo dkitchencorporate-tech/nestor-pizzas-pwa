@@ -31,7 +31,9 @@ const templates = {
       <div style="background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:14px;margin:16px 0;">
         <p style="margin:0;"><strong>Total:</strong> ${Number(d.total || 0).toFixed(2)}€</p>
       </div>
-      <p>Puedes seguir el estado de tu pedido desde la app.</p>
+      <div style="text-align:center;margin:20px 0 4px;">
+        <a href="${d.appUrl || 'https://nestorpizzas.es/'}pedido" style="display:inline-block;background:#16a34a;color:#ffffff;font-weight:900;text-transform:uppercase;letter-spacing:1px;font-size:13px;padding:14px 32px;border-radius:10px;text-decoration:none;">Seguir mi pedido</a>
+      </div>
     `)
   }),
   order_admin: (d) => ({
