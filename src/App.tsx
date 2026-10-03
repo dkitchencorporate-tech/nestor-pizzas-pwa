@@ -15,6 +15,7 @@ import { useGuestOrderStore } from './store/guestOrderStore';
 import ReviewModal from './components/ReviewModal';
 import GuestRegistrationModal from './components/GuestRegistrationModal';
 import { useI18nStore } from './store/i18nStore';
+import PreLaunchScreen, { PRELAUNCH_ACTIVE } from './components/PreLaunchScreen';
 
 // Cada despliegue publica los "trozos" de código (Catálogo, Admin, etc.) con nombre de
 // archivo nuevo. Si una pestaña quedó abierta desde antes de un despliegue y navega a una
@@ -189,6 +190,13 @@ function App() {
     };
   }, []);
 
+  // Prelanzamiento: no debe quedar ningún pedido a medias guardado en el navegador.
+  useEffect(() => {
+    if (PRELAUNCH_ACTIVE && !window.location.pathname.startsWith('/admin')) {
+      useCartStore.getState().clearCart();
+    }
+  }, []);
+
   // Cart Auto-Clear (15 minutes inactivity)
   useEffect(() => {
     const checkCartTimeout = () => {
@@ -202,6 +210,12 @@ function App() {
     const interval = setInterval(checkCartTimeout, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Prelanzamiento: todas las vistas públicas quedan sustituidas por la pantalla
+  // completa desde el primer instante. Solo /admin sigue accesible para el negocio.
+  if (PRELAUNCH_ACTIVE && !window.location.pathname.startsWith('/admin')) {
+    return <PreLaunchScreen />;
+  }
 
   if (currentView === 'admin') {
     return (

@@ -52,6 +52,10 @@ const dictionary: Translations = {
   splash_title: { es: 'Encendiendo motores...', en: 'Starting engines...' },
   splash_desc: { es: 'Preparando la mejor pizza', en: 'Preparing the best pizza' },
   closed_title: { es: 'Cerrado Temporalmente', en: 'Temporarily Closed' },
+  prelaunch_badge: { es: 'Muy pronto', en: 'Coming soon' },
+  prelaunch_title: { es: 'Estamos realizando actualizaciones.', en: 'We are making some updates.' },
+  prelaunch_desc: { es: 'Próximamente anunciaremos nuestro lanzamiento. ¡Gracias por tu paciencia!', en: 'We will announce our launch very soon. Thank you for your patience!' },
+  prelaunch_footer: { es: 'Caniles · Granada', en: 'Caniles · Granada' },
   closed_desc: { es: 'Lo sentimos mucho, pero en este momento no podemos aceptar nuevos pedidos por un cierre de emergencia o asuntos de fuerza mayor.', en: 'We are very sorry, but we cannot accept new orders at this time due to an emergency closure or force majeure.' },
   closed_btn: { es: 'Entendido, volveré más tarde', en: 'Understood, I will check back later' },
 
