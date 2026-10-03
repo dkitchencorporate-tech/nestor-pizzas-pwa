@@ -30,18 +30,21 @@ export default function AdminDashboard() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isLaunchLocked, setIsLaunchLocked] = useState(false);
 
   useEffect(() => {
     if (!user || !profile?.is_admin) return;
     
     // Fetch initial state
     const fetchMode = async () => {
-      const { data } = await supabase.from('app_settings').select('*').in('key', ['saturation_mode', 'store_closed']);
+      const { data } = await supabase.from('app_settings').select('*').in('key', ['saturation_mode', 'store_closed', 'launch_lock']);
       if (data) {
         const sat = data.find(s => s.key === 'saturation_mode');
         const closed = data.find(s => s.key === 'store_closed');
         if (sat && sat.value === 'true') setIsSaturated(true);
         if (closed && closed.value === 'true') setIsStoreClosed(true);
+        const launch = data.find(s => s.key === 'launch_lock');
+        setIsLaunchLocked(!!launch && launch.value === 'true');
       }
     };
     fetchMode();
@@ -53,6 +56,17 @@ export default function AdminDashboard() {
     await supabase.from('app_settings').upsert({ key: 'saturation_mode', value: newStatus ? 'true' : 'false' });
   };
   
+  const toggleLaunchLock = async () => {
+    const newStatus = !isLaunchLocked;
+    const msg = newStatus
+      ? '¿Activar el modo prelanzamiento? La web pública quedará cerrada y no se podrán hacer pedidos online.'
+      : '¿Desactivar el modo prelanzamiento? La web pública volverá a mostrar la carta y aceptar pedidos.';
+    if (!window.confirm(msg)) return;
+    const { error } = await supabase.from('app_settings').upsert({ key: 'launch_lock', value: newStatus ? 'true' : 'false' });
+    if (error) { alert('No se pudo cambiar el modo prelanzamiento: ' + error.message); return; }
+    setIsLaunchLocked(newStatus);
+  };
+
   const toggleStoreStatus = async () => {
     const newStatus = !isStoreClosed;
     setIsStoreClosed(newStatus);
@@ -317,6 +331,16 @@ export default function AdminDashboard() {
         </nav>
 
         <div className="p-4 border-t border-zinc-800 space-y-3">
+          <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('prelaunch_admin_title')}</h4>
+            <button
+              onClick={toggleLaunchLock}
+              className={`w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border shadow-lg ${isLaunchLocked ? 'bg-[#FF3B00] text-white border-[#FF3B00]' : 'bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:bg-zinc-800'}`}
+            >
+              {isLaunchLocked ? t('prelaunch_admin_on') : t('prelaunch_admin_off')}
+            </button>
+          </div>
+
           <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
             <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('emergency_closure')}</h4>
             <button 

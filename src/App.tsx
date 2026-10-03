@@ -15,6 +15,7 @@ import { useGuestOrderStore } from './store/guestOrderStore';
 import ReviewModal from './components/ReviewModal';
 import GuestRegistrationModal from './components/GuestRegistrationModal';
 import { useI18nStore } from './store/i18nStore';
+import PreLaunchScreen from './components/PreLaunchScreen';
 
 // Cada despliegue publica los "trozos" de código (Catálogo, Admin, etc.) con nombre de
 // archivo nuevo. Si una pestaña quedó abierta desde antes de un despliegue y navega a una
@@ -63,6 +64,10 @@ function App() {
   const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking' | 'registro' | 'pago-verificando'>('splash');
   const [isPreloaderFading, setIsPreloaderFading] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
+  // Prelanzamiento: 'loading' hasta leer app_settings.launch_lock. Si la lectura
+  // falla se trata como bloqueado (fallar en cerrado): nunca se muestra la carta
+  // sin confirmar antes que el lanzamiento está abierto.
+  const [launchLock, setLaunchLock] = useState<'loading' | boolean>('loading');
   
   // Modals state
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -156,6 +161,18 @@ function App() {
       }
     };
     fetchStoreStatus();
+
+    const fetchLaunchLock = async () => {
+      try {
+        const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'launch_lock').maybeSingle();
+        if (error) throw error;
+        setLaunchLock(data?.value === 'true');
+      } catch (err) {
+        console.error('No se pudo leer launch_lock; se mantiene bloqueado:', err);
+        setLaunchLock(true);
+      }
+    };
+    fetchLaunchLock();
     
     fetchOrders();
     fetchSettings();
@@ -174,6 +191,14 @@ function App() {
       })
       .subscribe();
 
+    // Prelanzamiento en tiempo real (se activa o se retira desde el panel admin)
+    const launchChannel = supabase.channel('public:app_settings_launch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings', filter: "key=eq.launch_lock" }, payload => {
+        const newValue = payload.new as any;
+        setLaunchLock(newValue?.value === 'true');
+      })
+      .subscribe();
+
     // Listen to Horarios changes — Néstor los edita desde el panel admin y se reflejan al instante
     const hoursChannel = supabase.channel('public:store_hours')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'store_hours' }, () => {
@@ -186,8 +211,16 @@ function App() {
       window.removeEventListener('order-delivered', handleOrderDelivered as EventListener);
       supabase.removeChannel(settingsChannel);
       supabase.removeChannel(hoursChannel);
+      supabase.removeChannel(launchChannel);
     };
   }, []);
+
+  // Con el prelanzamiento activo no debe quedar ningún pedido a medias guardado.
+  useEffect(() => {
+    if (launchLock === true && !window.location.pathname.startsWith('/admin')) {
+      useCartStore.getState().clearCart();
+    }
+  }, [launchLock]);
 
   // Cart Auto-Clear (15 minutes inactivity)
   useEffect(() => {
@@ -202,6 +235,16 @@ function App() {
     const interval = setInterval(checkCartTimeout, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Prelanzamiento: todas las vistas públicas quedan sustituidas por la pantalla
+  // completa. Solo /admin sigue accesible para el negocio.
+  const isAdminPath = window.location.pathname.startsWith('/admin');
+  if (!isAdminPath && launchLock === 'loading') {
+    return <div className="fixed inset-0 bg-[#0A0A0E]" aria-busy="true" />;
+  }
+  if (!isAdminPath && launchLock === true) {
+    return <PreLaunchScreen />;
+  }
 
   if (currentView === 'admin') {
     return (
