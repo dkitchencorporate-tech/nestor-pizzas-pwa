@@ -3,9 +3,13 @@ import { useI18nStore } from '../store/i18nStore';
 
 // Pantalla de prelanzamiento: ocupa toda la vista y no tiene forma de cerrarse.
 // App.tsx la muestra en lugar de cualquier vista pública (carta, registro,
-// seguimiento…) mientras `app_settings.launch_lock` = 'true'. El bloqueo real de
-// pedidos está en el servidor (trigger en `orders` y comprobación en
-// api/sumup-create-checkout.js); esta pantalla es la cara visible.
+// seguimiento…) mientras PRELAUNCH_ACTIVE sea true. No toca la base de datos.
+
+// ─── INTERRUPTOR DEL PRELANZAMIENTO ───────────────────────────────────────────
+// true  → la web pública muestra solo esta pantalla (carta, registro, seguimiento).
+// false → la web vuelve a funcionar con normalidad.
+// Para el lanzamiento: cambiar a false y desplegar (o revertir este cambio).
+export const PRELAUNCH_ACTIVE = true;
 
 const WHATSAPP_URL = 'https://wa.me/34679761987';
 const PHONE_LABEL = '+34 679 76 19 87';

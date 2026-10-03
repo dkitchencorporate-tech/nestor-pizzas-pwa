@@ -33,18 +33,6 @@ export default async function handler(req, res) {
     global: callerToken ? { headers: { Authorization: `Bearer ${callerToken}` } } : undefined
   });
 
-  // Prelanzamiento: con launch_lock activo no se crea ningún cobro en SumUp.
-  // Si no se puede leer el ajuste, se rechaza igualmente (fallar en cerrado).
-  try {
-    const { data: lock, error: lockError } = await supabase
-      .from('app_settings').select('value').eq('key', 'launch_lock').maybeSingle();
-    if (lockError || lock?.value === 'true') {
-      return res.status(503).json({ error: 'Los pedidos online están desactivados hasta el lanzamiento.' });
-    }
-  } catch (_) {
-    return res.status(503).json({ error: 'Los pedidos online están desactivados hasta el lanzamiento.' });
-  }
-
   // Si el pedido dice ser de un usuario logueado, comprobamos que quien llama
   // de verdad es ese usuario — igual que la comprobación ya existente en
   // process_checkout, pero aquí también, antes incluso de cobrar nada.
