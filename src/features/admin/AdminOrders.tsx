@@ -31,7 +31,7 @@ export default function AdminOrders() {
     // Realtime subscription — fires alarm on new INSERT
     const channel = supabase.channel('realtime_orders')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async () => {
-        console.log('🔔 Nuevo pedido recibido — disparando alarma.');
+        console.log('🔔 Nuevo pedido recibido vía WebSocket — disparando alarma.');
         fetchOrders();
         // Usar isArmed() (fuente de verdad del módulo) en lugar de window flags
         if (isArmed()) {
@@ -42,7 +42,19 @@ export default function AdminOrders() {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
         fetchOrders();
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('🟢 Canal realtime_orders conectado.');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('⚠️ Canal realtime_orders en estado:', status, '— el polling activo cada 10s mantiene la cobertura.');
+        }
+      });
+
+    // Red de seguridad activa: Polling cada 10 segundos para garantizar que ningún pedido
+    // quede rezagado si el WebSocket se congela por suspensión/ahorro de energía o pérdida de paquetes Wi-Fi
+    const pollInterval = setInterval(() => {
+      fetchOrders();
+    }, 10000);
 
     // Opening time interval sincronizado con store_hours dinámico
     const interval = setInterval(() => {
@@ -67,6 +79,7 @@ export default function AdminOrders() {
 
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollInterval);
       clearInterval(interval);
       stopAlarm();
     };
