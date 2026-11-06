@@ -44,7 +44,10 @@ export default async function handler(req, res) {
         status: 'paid',
         orderId: checkout.order_id,
         amount: checkout.amount,
-        clientName: checkout.order_payload?.p_client_name
+        clientName: checkout.order_payload?.p_client_name,
+        deliveryMethod: checkout.order_payload?.p_delivery_method || 'delivery',
+        deliveryAddress: checkout.order_payload?.p_delivery_address || '',
+        items: checkout.order_payload?.p_items || []
       });
     }
 
