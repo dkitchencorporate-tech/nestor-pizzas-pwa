@@ -462,19 +462,6 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                     </div>
                     <span className="text-lg font-bold text-white">{order.total_amount}€</span>
                   </div>
-                    <div>
-                      <span className="text-xs text-zinc-400 font-medium">{formatDate(order.created_at)}</span>
-                      <div className="mt-1 flex items-center gap-2">
-                        {order.status === 'delivered' ? (
-                          <span className="text-[10px] font-bold uppercase text-green-400 bg-green-500/10 px-2 py-1 rounded">{t('status_completed_title')}</span>
-                        ) : (
-                          <span className="text-[10px] font-bold uppercase text-red-400 bg-red-500/10 px-2 py-1 rounded">{t('status_cancelled_title')}</span>
-                        )}
-                        <span className="text-[10px] font-mono text-zinc-500 uppercase bg-zinc-900 px-2 py-1 rounded">ID: {order.id.slice(0,8)}</span>
-                      </div>
-                    </div>
-                    <span className="text-lg font-bold text-white">{order.total_amount}€</span>
-                  </div>
                   
                   <div className="mt-4 space-y-1">
                     {order.order_items?.map((item: any) => (
