@@ -190,14 +190,14 @@ export default function AdminClients() {
           </p>
         </div>
 
-        {/* Action Button: Difusión WhatsApp */}
+        {/* Action Button: Solicitar Campaña WhatsApp Meta */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsWhatsAppModalOpen(true)}
             className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-5 rounded-xl text-sm flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-105"
           >
-            <span className="text-lg">📲</span>
-            <span>Difusión WhatsApp (4 Lotes)</span>
+            <span className="text-lg">📢</span>
+            <span>Solicitar Campaña Oficial WhatsApp (Meta API)</span>
           </button>
         </div>
       </div>
@@ -376,11 +376,15 @@ export default function AdminClients() {
         </div>
       )}
 
-      {/* Modal de Difusión WhatsApp */}
+      {/* Modal de Solicitud de Campaña WhatsApp (Meta Cloud API) */}
       {isWhatsAppModalOpen && (
-        <WhatsAppBroadcastModal
+        <WhatsAppCampaignRequestModal
           clients={clients}
           onClose={() => setIsWhatsAppModalOpen(false)}
+          onSuccess={() => {
+            setIsWhatsAppModalOpen(false);
+            showNotification('¡Solicitud de campaña WhatsApp registrada con éxito! El equipo de DKitchen la revisará y activará en Meta Cloud API.', 'success');
+          }}
         />
       )}
 
@@ -434,9 +438,12 @@ export default function AdminClients() {
   );
 }
 
-// Modal de Campaña y Segmentación WhatsApp (4 Lotes Nocturnos)
-function WhatsAppBroadcastModal({ clients, onClose }: { clients: UnifiedClient[]; onClose: () => void }) {
-  // Filtrar solo contactos con teléfono móvil español válido
+// Modal de Solicitud de Campaña Oficial WhatsApp (Meta Cloud API & MCP)
+function WhatsAppCampaignRequestModal({ clients, onClose, onSuccess }: {
+  clients: UnifiedClient[];
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
   const validContacts = useMemo(() => {
     return clients
       .map(c => {
@@ -452,200 +459,219 @@ function WhatsAppBroadcastModal({ clients, onClose }: { clients: UnifiedClient[]
       .filter(c => c.phone.length === 9 && (c.phone.startsWith('6') || c.phone.startsWith('7')));
   }, [clients]);
 
-  // División en 4 lotes para servicio nocturno (19:30, 20:15, 21:00, 21:45)
-  const batches = useMemo(() => {
-    const size = 200;
-    return [
-      {
-        id: 1,
-        title: 'Lote 1 (19:30)',
-        subtitle: 'Pre-Apertura Cena',
-        contacts: validContacts.slice(0, size)
-      },
-      {
-        id: 2,
-        title: 'Lote 2 (20:15)',
-        subtitle: 'Apertura Oficial en Vivo',
-        contacts: validContacts.slice(size, size * 2)
-      },
-      {
-        id: 3,
-        title: 'Lote 3 (21:00)',
-        subtitle: 'Pico de Demanda Cena',
-        contacts: validContacts.slice(size * 2, size * 3)
-      },
-      {
-        id: 4,
-        title: 'Lote 4 (21:45)',
-        subtitle: 'Última Tanda de Cena',
-        contacts: validContacts.slice(size * 3)
-      }
-    ];
-  }, [validContacts]);
-
-  const [activeBatchIndex, setActiveBatchIndex] = useState(0);
-  const [copiedBatch, setCopiedBatch] = useState(false);
-
-  // Plantilla editable con selector listo para mañana
-  const [messageTemplate, setMessageTemplate] = useState(
+  const [campaignType, setCampaignType] = useState('apertura_domicilio');
+  const [targetAudience, setTargetAudience] = useState('todos');
+  const [preferredSchedule, setPreferredSchedule] = useState('horario_noche');
+  const [messageIdea, setMessageIdea] = useState(
     `🍕 ¡Hola, [Nombre]! Te escribimos de NÉSTOR PIZZAS en Caniles.\n\n` +
     `¡Ya puedes pedir tus pizzas y comida favorita A DOMICILIO directamente desde tu móvil sin esperas! 🛵✨\n\n` +
-    `👉 Haz tu pedido aquí: https://nestorpizzas.es?utm_source=whatsapp&utm_campaign=apertura_noche\n\n` +
+    `👉 Haz tu pedido aquí: https://nestorpizzas.es?utm_source=whatsapp&utm_campaign=apertura_domicilio\n\n` +
     `🎁 ¡Además, en cada pedido acumulas PUNTOS VIP para canjear por pizzas y hamburguesas gratis!\n\n` +
     `Te esperamos en el horno. 🔥\nCalle Alcalde Felip, 9 — Caniles\nTel: +34 679 76 19 87\n\n` +
     `(Responde BAJA si no deseas recibir más avisos de Néstor Pizzas)`
   );
 
-  const currentBatch = batches[activeBatchIndex];
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleCopyPhones = () => {
-    const phoneList = currentBatch.contacts.map(c => c.formattedPhone).join('\n');
-    navigator.clipboard.writeText(phoneList);
-    setCopiedBatch(true);
-    setTimeout(() => setCopiedBatch(false), 2500);
+  const handleSubmitRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageIdea.trim()) {
+      setErrorMsg('Por favor describe la propuesta o mensaje de la campaña.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/request-whatsapp-campaign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campaignType,
+          targetAudience,
+          preferredSchedule,
+          messageIdea: messageIdea.trim(),
+          clientName: 'Néstor Pizzas Gerencia'
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo enviar la solicitud.');
+      }
+
+      onSuccess();
+    } catch (err: any) {
+      console.error('Error enviando solicitud de campaña:', err);
+      setErrorMsg(err.message || 'Error de conexión al enviar la solicitud.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleExportCSV = () => {
-    const csvContent = "data:text/csv;charset=utf-8," + 
-      "Nombre;Telefono;Prefijo\n" + 
-      currentBatch.contacts.map(c => `"${c.name}";"${c.formattedPhone}";"+34"`).join('\n');
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `nestor_pizzas_whatsapp_lote_${currentBatch.id}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const previewFirstName = validContacts[0]?.firstName || 'Carlos';
 
   return (
     <div className="fixed inset-0 z-[3000] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[92vh] shadow-2xl flex flex-col overflow-hidden">
+      <div className="bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[94vh] shadow-2xl flex flex-col overflow-hidden">
         {/* Header Bar */}
         <div className="h-1.5 bg-gradient-to-r from-green-500 via-emerald-400 to-green-600"></div>
 
         <div className="p-5 sm:p-6 border-b border-zinc-800 flex justify-between items-center bg-[#0E0E16]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-green-500/20 border border-green-500/40 flex items-center justify-center text-xl">
-              📲
+              📢
             </div>
             <div>
               <h3 className="font-display font-black text-xl text-white uppercase tracking-wider">
-                Campaña de Difusión WhatsApp (4 Lotes Nocturnos)
+                Solicitar Campaña Oficial WhatsApp (Meta Cloud API)
               </h3>
               <p className="text-xs text-zinc-400">
-                Segmentación anti-saturación adaptada a la apertura nocturna &bull; <strong className="text-green-400">{validContacts.length} teléfonos móviles listos</strong>
+                Difusión masiva oficial supervisada &bull; <strong className="text-green-400">{validContacts.length} teléfonos móviles válidos</strong>
               </p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white">✕</button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
-          {/* Lotes Selector Tabs */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Selecciona el Lote de Envío:</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {batches.map((b, idx) => (
-                <button
-                  key={b.id}
-                  onClick={() => setActiveBatchIndex(idx)}
-                  className={`p-3 rounded-2xl border text-left transition-all ${activeBatchIndex === idx ? 'bg-green-500/20 border-green-500/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:bg-zinc-800'}`}
-                >
-                  <p className="font-bold text-sm text-white">{b.title}</p>
-                  <p className="text-[11px] text-zinc-400 mt-0.5">{b.subtitle}</p>
-                  <p className="text-xs font-mono font-bold text-green-400 mt-2">{b.contacts.length} contactos</p>
-                </button>
-              ))}
+        {/* Content Form */}
+        <form onSubmit={handleSubmitRequest} className="p-6 overflow-y-auto flex-1 space-y-6">
+          {errorMsg && (
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+              {errorMsg}
+            </div>
+          )}
+
+          {/* Transparent Meta Pricing & Quota Banner */}
+          <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-2xl p-4.5 text-xs text-emerald-200/90 leading-relaxed space-y-2">
+            <div className="flex items-center gap-2 font-bold text-emerald-300 uppercase tracking-wider text-xs">
+              <span>ℹ️</span> Gobernanza y Cuotas Oficiales de Meta Cloud API
+            </div>
+            <p>
+              • <strong>1.000 conversaciones gratuitas:</strong> Meta concede mensualmente 1.000 conversaciones de servicio/atención al cliente sin coste para el número de Néstor Pizzas.
+            </p>
+            <p>
+              • <strong>Campañas de Marketing masivas:</strong> Los envíos proactivos de marketing fuera de ventana tienen una tarificación de Meta de ~0.03€ a 0.05€ por mensaje entregado.
+            </p>
+            <p>
+              • <strong>Bonificación de lanzamiento:</strong> La <strong>1ª campaña de apertura a domicilio está 100% bonificada por DKitchen</strong>. Campañas posteriores o el agente conversacional de IA por WhatsApp se gestionarán con liquidación transparente según consumo oficial de Meta.
+            </p>
+          </div>
+
+          {/* Grid: Type + Audience + Schedule */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Tipo de Campaña */}
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Objetivo de la Campaña:
+              </label>
+              <select
+                value={campaignType}
+                onChange={e => setCampaignType(e.target.value)}
+                className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-green-500"
+              >
+                <option value="apertura_domicilio">🛵 Apertura Servicio a Domicilio</option>
+                <option value="ofertas_combos">🍕 Oferta / Combos de Fin de Semana</option>
+                <option value="reactivacion">💤 Reactivación de Clientes</option>
+                <option value="evento_horario">🎉 Horario Especial o Festivo</option>
+              </select>
+            </div>
+
+            {/* Audiencia Objetivo */}
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Audiencia Destino:
+              </label>
+              <select
+                value={targetAudience}
+                onChange={e => setTargetAudience(e.target.value)}
+                className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-green-500"
+              >
+                <option value="todos">Todos los contactos ({validContacts.length})</option>
+                <option value="vip">Clientes VIP / Frecuentes (2+ pedidos)</option>
+                <option value="inactivos">Clientes de Mostrador no registrados en App</option>
+              </select>
+            </div>
+
+            {/* Horario Preferente */}
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Franja Horaria Preferida:
+              </label>
+              <select
+                value={preferredSchedule}
+                onChange={e => setPreferredSchedule(e.target.value)}
+                className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-green-500"
+              >
+                <option value="horario_noche">🌙 Noche (19:30 a 22:00 en tandas)</option>
+                <option value="horario_mediodia">☀️ Mediodía (12:30 a 14:00)</option>
+                <option value="inmediato">⚡ Lo antes posible tras validación</option>
+              </select>
             </div>
           </div>
 
-          {/* Message Template Editor & Live Preview */}
+          {/* Template Textarea & WhatsApp Live Preview */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Texto del Mensaje (Editable para el momento del envío):
+                Propuesta de Mensaje o Promoción:
               </label>
               <textarea
-                value={messageTemplate}
-                onChange={e => setMessageTemplate(e.target.value)}
-                rows={10}
+                value={messageIdea}
+                onChange={e => setMessageIdea(e.target.value)}
+                rows={11}
                 className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-2xl p-4 text-white text-sm focus:outline-none focus:border-green-500 font-sans leading-relaxed resize-none custom-scrollbar"
+                placeholder="Escribe el texto o la oferta que quieres comunicar..."
               />
               <p className="text-[11px] text-zinc-500 mt-1.5">
-                💡 La etiqueta <code className="text-green-400">[Nombre]</code> se reemplaza automáticamente por el nombre de pila de cada cliente.
+                💡 La etiqueta <code className="text-green-400">[Nombre]</code> se personalizará de forma dinámica para cada cliente.
               </p>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Vista Previa en WhatsApp (Ejemplo con el 1º contacto):
+                Simulación Visual en WhatsApp Oficial:
               </label>
               <div className="bg-[#0b141a] border border-[#202c33] rounded-2xl p-4 text-sm text-[#e9edef] leading-relaxed shadow-inner">
+                <div className="text-[11px] text-[#8696a0] mb-2 font-mono flex items-center justify-between border-b border-[#202c33] pb-1.5">
+                  <span>Cuenta Comercial Verificada</span>
+                  <span className="text-green-400 font-bold">✓ Néstor Pizzas</span>
+                </div>
                 <div className="bg-[#005c4b] p-3.5 rounded-2xl rounded-tl-none shadow-md inline-block max-w-full whitespace-pre-wrap">
-                  {messageTemplate.replace('[Nombre]', currentBatch.contacts[0]?.firstName || 'Carlos')}
+                  {messageIdea.replace(/\[Nombre\]/g, previewFirstName)}
                 </div>
                 <div className="text-right text-[10px] text-[#8696a0] mt-2 font-mono">
-                  Entregado &bull; Néstor Pizzas Caniles
+                  Enviado mediante Meta Cloud API &bull; Caniles
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Contacts in Active Batch */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Contactos en {currentBatch.title} ({currentBatch.contacts.length}):
-              </h4>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCopyPhones}
-                  className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white transition-all flex items-center gap-1.5"
-                >
-                  <span>📋</span> {copiedBatch ? '¡Copiados al portapapeles!' : 'Copiar Teléfonos'}
-                </button>
-                <button
-                  onClick={handleExportCSV}
-                  className="px-3 py-1.5 rounded-xl bg-green-600 hover:bg-green-500 text-xs font-bold text-white transition-all flex items-center gap-1.5"
-                >
-                  <span>📥</span> Exportar CSV
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-[#1A1A24] border border-zinc-800/80 rounded-2xl p-3 max-h-48 overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                {currentBatch.contacts.slice(0, 60).map((c, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-zinc-900/60 border border-zinc-800">
-                    <span className="font-medium text-white truncate max-w-[120px]">{c.name}</span>
-                    <span className="font-mono text-zinc-400">{c.formattedPhone}</span>
-                  </div>
-                ))}
-              </div>
-              {currentBatch.contacts.length > 60 && (
-                <p className="text-center text-xs text-zinc-500 mt-2">
-                  ... y {currentBatch.contacts.length - 60} contactos más en este lote.
-                </p>
-              )}
+          {/* Footer inside form */}
+          <div className="pt-4 border-t border-zinc-800 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <p className="text-xs text-zinc-400">
+              Al solicitar la campaña, el equipo técnico de DKitchen preparará la plantilla oficial en Meta Business Tools.
+            </p>
+            <div className="flex gap-3 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 sm:flex-none px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold text-sm transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none px-6 py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:opacity-50"
+              >
+                {isSubmitting ? 'Registrando...' : '🚀 Enviar Solicitud a DKitchen'}
+              </button>
             </div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 bg-[#0E0E16] border-t border-zinc-800 flex justify-between items-center">
-          <p className="text-xs text-zinc-400">
-            Listo para usar mañana a partir de las <strong>19:30</strong> según el horario nocturno.
-          </p>
-          <button
-            onClick={onClose}
-            className="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold text-sm"
-          >
-            Cerrar
-          </button>
-        </div>
+        </form>
       </div>
     </div>
   );

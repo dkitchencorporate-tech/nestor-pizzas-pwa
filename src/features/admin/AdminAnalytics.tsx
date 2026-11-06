@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import { MarketingCampaignModal } from './components/MarketingCampaignModal';
 import { useI18nStore } from '../../store/i18nStore';
@@ -49,6 +49,12 @@ export default function AdminAnalytics() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMarketingModal, setShowMarketingModal] = useState(false);
   const [selectedUserForHistory, setSelectedUserForHistory] = useState<any>(null);
+
+  // Filtros, Búsqueda y Paginación de Clientes en Analítica
+  const [clientSearch, setClientSearch] = useState('');
+  const [segmentFilter, setSegmentFilter] = useState<'all' | 'vip' | 'inactive' | 'high_spend'>('all');
+  const [pageSize, setPageSize] = useState<number>(25);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Tráfico de la web (visitas + categorías más vistas)
   const [siteVisits, setSiteVisits] = useState<any[]>([]);
@@ -268,9 +274,12 @@ export default function AdminAnalytics() {
     
     const allUsers = Array.from(usersMap.values());
     
-    // Ordenar pedidos internamente por fecha y usuarios por fecha
+    // Ordenar pedidos internamente por fecha y enriquecer métricas por cliente
     allUsers.forEach(u => {
       u.orderHistory.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      u.orderCount = u.orderHistory.length;
+      u.totalSpent = u.orderHistory.reduce((sum: number, o: any) => sum + (o.status !== 'cancelled' ? Number(o.total_amount || 0) : 0), 0);
+      u.lastOrderDate = u.orderHistory[0]?.created_at || null;
     });
     
     allUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -353,6 +362,62 @@ export default function AdminAnalytics() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  // Segmented & Searched Users
+  const filteredUsers = useMemo(() => {
+    let list = [...users];
+
+    // 1. Segment filter
+    if (segmentFilter === 'vip') {
+      list = list.filter(u => (u.orderCount || 0) >= 2);
+    } else if (segmentFilter === 'inactive') {
+      list = list.filter(u => (u.orderCount || 0) === 0);
+    } else if (segmentFilter === 'high_spend') {
+      list = list.filter(u => (u.totalSpent || 0) > 0);
+      list.sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0));
+    }
+
+    // 2. Search query filter
+    const q = clientSearch.toLowerCase().trim();
+    if (q) {
+      list = list.filter(u => {
+        const matchName = (u.full_name || '').toLowerCase().includes(q);
+        const matchEmail = (u.email || '').toLowerCase().includes(q);
+        const matchPhone = (u.phone || '').includes(q);
+        return matchName || matchEmail || matchPhone;
+      });
+    }
+
+    return list;
+  }, [users, segmentFilter, clientSearch]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (safeCurrentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, safeCurrentPage, pageSize]);
+
+  // Counts for Segment Badges
+  const vipCount = useMemo(() => users.filter(u => (u.orderCount || 0) >= 2).length, [users]);
+  const inactiveCount = useMemo(() => users.filter(u => (u.orderCount || 0) === 0).length, [users]);
+  const highSpendCount = useMemo(() => users.filter(u => (u.totalSpent || 0) > 0).length, [users]);
+
+  const handleSearchChange = (val: string) => {
+    setClientSearch(val);
+    setCurrentPage(1);
+  };
+
+  const handleSegmentChange = (seg: 'all' | 'vip' | 'inactive' | 'high_spend') => {
+    setSegmentFilter(seg);
+    setCurrentPage(1);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
   };
 
   return (
@@ -548,8 +613,20 @@ export default function AdminAnalytics() {
       </div>
 
       <div className="bg-[#14141E] border border-zinc-800 rounded-2xl p-6 flex-1 flex flex-col">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="font-bold text-white text-lg">Base de Datos de Clientes</h3>
+        {/* Header bar: Title, badge, and Export actions */}
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+          <div>
+            <div className="flex items-center gap-3">
+              <h3 className="font-bold text-white text-lg">Base de Datos y Analítica de Clientes</h3>
+              <span className="bg-zinc-800 border border-zinc-700 text-xs px-2.5 py-1 rounded-full text-zinc-300 font-mono font-bold">
+                {filteredUsers.length} de {users.length}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-1">
+              Supervisión de consumo, recurrencia de pedidos y fidelización de clientes de Caniles.
+            </p>
+          </div>
+
           <div className="flex gap-2 relative">
             <button
               onClick={() => setShowMarketingModal(true)}
@@ -583,21 +660,71 @@ export default function AdminAnalytics() {
             )}
           </div>
         </div>
+
+        {/* Segmentation Filters and Live Search */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-1.5 p-1 bg-[#101018] border border-zinc-800 rounded-2xl overflow-x-auto">
+            <button
+              onClick={() => handleSegmentChange('all')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap ${segmentFilter === 'all' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+            >
+              Todos ({users.length})
+            </button>
+            <button
+              onClick={() => handleSegmentChange('vip')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-1.5 ${segmentFilter === 'vip' ? 'bg-amber-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+            >
+              <span>🔥</span> Frecuentes / VIP ({vipCount})
+            </button>
+            <button
+              onClick={() => handleSegmentChange('inactive')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-1.5 ${segmentFilter === 'inactive' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+            >
+              <span>💤</span> Inactivos 0 Pedidos ({inactiveCount})
+            </button>
+            <button
+              onClick={() => handleSegmentChange('high_spend')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-1.5 ${segmentFilter === 'high_spend' ? 'bg-green-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+            >
+              <span>💰</span> Top por Gasto ({highSpendCount})
+            </button>
+          </div>
+
+          <div className="relative w-full lg:w-80">
+            <input
+              type="text"
+              value={clientSearch}
+              onChange={e => handleSearchChange(e.target.value)}
+              placeholder="Buscar nombre, teléfono, email..."
+              className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500 transition-colors"
+            />
+            {clientSearch && (
+              <button
+                onClick={() => handleSearchChange('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
         
+        {/* Table */}
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left text-sm text-gray-400">
             <thead className="text-xs text-gray-500 uppercase bg-zinc-800/50">
               <tr>
                 <th className="px-4 py-3">ID / Auth</th>
-                <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Teléfono</th>
-                <th className="px-4 py-3">Puntos</th>
-                <th className="px-4 py-3">Registro</th>
+                <th className="px-4 py-3">Cliente</th>
+                <th className="px-4 py-3">Contacto</th>
+                <th className="px-4 py-3">Pedidos</th>
+                <th className="px-4 py-3">Total Gastado</th>
+                <th className="px-4 py-3">Puntos VIP</th>
+                <th className="px-4 py-3 text-right">Última Actividad</th>
               </tr>
             </thead>
             <tbody>
-              {users.map(u => (
+              {paginatedUsers.map(u => (
                 <tr 
                   key={u.id} 
                   onClick={() => setSelectedUserForHistory(u)}
@@ -605,27 +732,117 @@ export default function AdminAnalytics() {
                 >
                   <td className="px-4 py-3 font-mono text-[10px]">{u.id.slice(0,8)}...</td>
                   <td className="px-4 py-3 text-white font-bold">
-                    {u.full_name || t('no_name')}
-                    {u.is_kiosk && <span className="ml-2 text-[9px] bg-zinc-700 px-1 rounded uppercase text-zinc-300">Kiosko</span>}
-                    {u.is_ghost && <span className="ml-2 text-[9px] bg-zinc-700 px-1 rounded uppercase text-zinc-300">Kiosko</span>}
+                    <div className="flex items-center gap-2">
+                      <span>{u.full_name || t('no_name')}</span>
+                      {u.is_app && <span className="text-[9px] bg-green-500/20 text-green-400 border border-green-500/40 px-1.5 py-0.5 rounded font-mono uppercase">App</span>}
+                      {u.is_kiosk && <span className="text-[9px] bg-blue-500/20 text-blue-400 border border-blue-500/40 px-1.5 py-0.5 rounded font-mono uppercase">TPV</span>}
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-400">{u.email || t('no_email')}</td>
-                  <td className="px-4 py-3">{u.phone || t('no_phone')}</td>
-                  <td className="px-4 py-3 text-green-400 font-bold">{u.points} pts</td>
-                  <td className="px-4 py-3 text-xs flex justify-between items-center">
-                    <span>{new Date(u.created_at).toLocaleDateString()}</span>
-                    <span className="text-[10px] bg-zinc-800 px-2 py-1 rounded text-zinc-400">{u.orderHistory?.length || 0} pedidos &rarr;</span>
+                  <td className="px-4 py-3">
+                    <p className="text-white font-mono text-xs">{u.phone || t('no_phone')}</p>
+                    {u.email && <p className="text-zinc-500 text-[11px] truncate max-w-[150px]">{u.email}</p>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                      (u.orderCount || 0) >= 2 
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                        : (u.orderCount || 0) === 1
+                        ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                        : 'bg-zinc-800 text-zinc-500'
+                    }`}>
+                      {u.orderCount || 0} {(u.orderCount || 0) === 1 ? 'pedido' : 'pedidos'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-mono font-bold text-green-400 text-sm">
+                    {Number(u.totalSpent || 0).toFixed(2)}€
+                  </td>
+                  <td className="px-4 py-3 text-amber-400 font-bold font-mono">
+                    {u.points || 0} pts
+                  </td>
+                  <td className="px-4 py-3 text-xs text-right">
+                    <span className="text-zinc-400">
+                      {u.lastOrderDate ? new Date(u.lastOrderDate).toLocaleDateString('es-ES') : new Date(u.created_at).toLocaleDateString('es-ES')}
+                    </span>
+                    <span className="ml-2 text-zinc-500 font-mono">&rarr;</span>
                   </td>
                 </tr>
               ))}
-              {users.length === 0 && (
+              {paginatedUsers.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="text-center py-8">No hay usuarios registrados aún.</td>
+                  <td colSpan={7} className="text-center py-12 text-zinc-500">
+                    <p className="text-base font-bold text-zinc-400">Ningún cliente coincide con la búsqueda o segmento seleccionado.</p>
+                    <p className="text-xs text-zinc-500 mt-1">Prueba a limpiar el buscador o seleccionar la pestaña "Todos".</p>
+                  </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Bar */}
+        {filteredUsers.length > 0 && (
+          <div className="pt-4 mt-2 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
+            <div className="flex items-center gap-3">
+              <span>
+                Mostrando <strong className="text-white">{(safeCurrentPage - 1) * pageSize + 1}</strong> a <strong className="text-white">{Math.min(safeCurrentPage * pageSize, filteredUsers.length)}</strong> de <strong className="text-white">{filteredUsers.length}</strong> clientes
+              </span>
+              <div className="flex items-center gap-1.5 ml-2">
+                <span className="text-zinc-500">Filas:</span>
+                {[25, 50, 100].map(size => (
+                  <button
+                    key={size}
+                    onClick={() => handlePageSizeChange(size)}
+                    className={`px-2 py-1 rounded-lg text-xs font-bold transition-all ${
+                      pageSize === size 
+                        ? 'bg-green-500 text-black font-black' 
+                        : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={safeCurrentPage === 1}
+                className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                title="Primera página"
+              >
+                « Primera
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={safeCurrentPage === 1}
+                className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                title="Página anterior"
+              >
+                ‹ Anterior
+              </button>
+              <span className="px-3 py-1 font-mono text-zinc-300 font-bold">
+                Pág. {safeCurrentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={safeCurrentPage === totalPages}
+                className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                title="Página siguiente"
+              >
+                Siguiente ›
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={safeCurrentPage === totalPages}
+                className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                title="Última página"
+              >
+                Última »
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       
       </div>
