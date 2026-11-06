@@ -4,6 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 // documentación exige no fiarse del payload y siempre reconfirmar llamando
 // a su API. Este handler hace exactamente eso antes de tocar nada.
 export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    return res.redirect(302, '/');
+  }
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end();

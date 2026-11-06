@@ -9,7 +9,7 @@ import { useI18nStore } from '../store/i18nStore';
 // true  → la web pública muestra solo esta pantalla (carta, registro, seguimiento).
 // false → la web vuelve a funcionar con normalidad.
 // Para el lanzamiento: cambiar a false y desplegar (o revertir este cambio).
-export const PRELAUNCH_ACTIVE = true;
+export const PRELAUNCH_ACTIVE = false;
 
 const WHATSAPP_URL = 'https://wa.me/34679761987';
 const PHONE_LABEL = '+34 679 76 19 87';

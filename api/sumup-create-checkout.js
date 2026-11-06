@@ -210,7 +210,7 @@ export default async function handler(req, res) {
         merchant_code: process.env.SUMUP_MERCHANT_CODE,
         description: `Pedido Néstor Pizzas - ${clientName}`,
         redirect_url: `${origin}/pago-verificando?ref=${checkoutReference}`,
-        return_url: `${origin}/api/sumup-webhook`,
+        return_url: `${origin}/pago-verificando?ref=${checkoutReference}`,
         hosted_checkout: { enabled: true }
       })
     });

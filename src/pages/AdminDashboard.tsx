@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const { activeTab, setActiveTab } = useAdminUiStore();
   const [isSaturated, setIsSaturated] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
+  const [isPrelaunchActive, setIsPrelaunchActive] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { promptToInstall } = usePWAInstall();
 
@@ -36,12 +37,14 @@ export default function AdminDashboard() {
     
     // Fetch initial state
     const fetchMode = async () => {
-      const { data } = await supabase.from('app_settings').select('*').in('key', ['saturation_mode', 'store_closed']);
+      const { data } = await supabase.from('app_settings').select('*').in('key', ['saturation_mode', 'store_closed', 'prelaunch_active']);
       if (data) {
         const sat = data.find(s => s.key === 'saturation_mode');
         const closed = data.find(s => s.key === 'store_closed');
+        const pre = data.find(s => s.key === 'prelaunch_active');
         if (sat && sat.value === 'true') setIsSaturated(true);
         if (closed && closed.value === 'true') setIsStoreClosed(true);
+        if (pre && pre.value === 'true') setIsPrelaunchActive(true);
       }
     };
     fetchMode();
@@ -57,6 +60,12 @@ export default function AdminDashboard() {
     const newStatus = !isStoreClosed;
     setIsStoreClosed(newStatus);
     await supabase.from('app_settings').upsert({ key: 'store_closed', value: newStatus ? 'true' : 'false' });
+  };
+
+  const togglePrelaunch = async () => {
+    const newStatus = !isPrelaunchActive;
+    setIsPrelaunchActive(newStatus);
+    await supabase.from('app_settings').upsert({ key: 'prelaunch_active', value: newStatus ? 'true' : 'false' });
   };
 
   const handleLogout = async () => {
@@ -317,6 +326,16 @@ export default function AdminDashboard() {
         </nav>
 
         <div className="p-4 border-t border-zinc-800 space-y-3">
+          <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Modo Prelanzamiento</h4>
+            <button
+              onClick={togglePrelaunch}
+              className={`w-full py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border shadow-lg ${isPrelaunchActive ? 'bg-amber-600 text-white border-amber-500 animate-pulse' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'}`}
+            >
+              {isPrelaunchActive ? 'Pausado (Aviso Activo)' : 'Web Pública Abierta'}
+            </button>
+          </div>
+
           <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
             <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('emergency_closure')}</h4>
             <button 

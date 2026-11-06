@@ -4,9 +4,9 @@
   "description": "App Oficial de Pedidos, Carta Digital Interactiva y PWA de Néstor Pizzas (Caniles) por Architect.Sys",
   "scripts": {
     "dev": "vite",
+    "start": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "test": "node test_urls.js"
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
