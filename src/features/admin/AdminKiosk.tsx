@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useKioskCartStore, KioskClientInfo } from '../../store/kioskCartStore';
 import { useAdminUiStore } from '../../store/adminUiStore';
@@ -137,21 +137,54 @@ export default function AdminKiosk() {
     }
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  const executeSearch = useCallback(async (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
 
     setIsSearching(true);
     try {
-      const { data, error } = await supabase.rpc('search_client', { p_query: searchQuery });
+      const { data, error } = await supabase.rpc('search_client', { p_query: trimmed });
       if (error) throw error;
-      setSearchResults(data || []);
+      
+      // Desduplicar resultados por número de teléfono priorizando usuarios registrados en la App
+      const seenPhones = new Set<string>();
+      const deduplicated: KioskClientInfo[] = [];
+
+      (data || []).forEach((c: KioskClientInfo) => {
+        const cleanPhone = (c.phone || '').trim().replace(/[^0-9]/g, '');
+        if (cleanPhone && cleanPhone !== '000000000') {
+          if (!seenPhones.has(cleanPhone)) {
+            seenPhones.add(cleanPhone);
+            deduplicated.push(c);
+          }
+        } else {
+          deduplicated.push(c);
+        }
+      });
+
+      setSearchResults(deduplicated);
     } catch (error) {
-      console.error('Error searching client:', error);
-      alert('Error buscando cliente.');
+      console.error('Error buscando cliente en Kiosko:', error);
     } finally {
       setIsSearching(false);
     }
+  }, []);
+
+  // Búsqueda reactiva con retardo (debounce) de 250ms mientras se escribe
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      executeSearch(searchQuery);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery, executeSearch]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    executeSearch(searchQuery);
   };
 
   const handleOpenCreateModal = () => {
@@ -411,15 +444,22 @@ export default function AdminKiosk() {
               <div className="w-full bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl">
                 <h3 className="font-bold text-sm text-gray-400 uppercase tracking-widest mb-4 text-center">Asignar Cliente</h3>
                 <form onSubmit={handleSearch} className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Buscar por Teléfono, Nombre o Dirección..."
-                    className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-lg focus:outline-none focus:border-green-500 transition-colors"
-                  />
-                  <button type="submit" disabled={isSearching} className="bg-green-600 hover:bg-green-500 text-white px-6 rounded-xl font-bold transition-all">
-                    🔍 Buscar
+                  <div className="relative flex-1">
+                    <input 
+                      type="text" 
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Buscar por Teléfono, Nombre o Calle..."
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-lg focus:outline-none focus:border-green-500 transition-colors"
+                    />
+                    {isSearching && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-400 animate-pulse font-mono">
+                        Buscando...
+                      </span>
+                    )}
+                  </div>
+                  <button type="submit" disabled={isSearching} className="bg-green-600 hover:bg-green-500 text-white px-5 rounded-xl font-bold transition-all flex items-center gap-1.5">
+                    <span>🔍</span> <span className="hidden sm:inline">Buscar</span>
                   </button>
                 </form>
 
@@ -434,12 +474,18 @@ export default function AdminKiosk() {
                         </div>
                         <div className="flex flex-col items-end">
                           {c.is_registered ? (
-                            <span className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full font-bold">USUARIO APP</span>
+                            <span className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
+                              <span>📱</span> USUARIO APP
+                            </span>
                           ) : (
-                            <span className="bg-gray-500/20 text-gray-400 text-xs px-3 py-1 rounded-full font-bold">MOSTRADOR</span>
+                            <span className="bg-zinc-700/50 text-zinc-300 text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
+                              <span>🏪</span> MOSTRADOR
+                            </span>
                           )}
                           {c.is_registered && ((c as any).points) !== undefined && (
-                            <span className="text-yellow-400 text-xs font-bold mt-2 font-mono">{((c as any).points)} pts</span>
+                            <span className="text-yellow-400 text-xs font-bold mt-2 font-mono flex items-center gap-1">
+                              <span>⭐</span> {((c as any).points)} pts
+                            </span>
                           )}
                         </div>
                       </div>

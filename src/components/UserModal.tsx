@@ -112,6 +112,18 @@ export default function UserModal() {
       setErrorMsg(error.message);
     } else {
       if (data.user) {
+        // Invocar sincronización segura de perfil, herencia de dirección histórica de Iavanza
+        // y asignación garantizada de los 4 puntos VIP de bienvenida acordados.
+        fetch('/api/link-legacy-customer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: data.user.id,
+            phone: registerPhone,
+            fullName: name
+          })
+        }).catch(err => console.error('Error linking legacy customer profile:', err));
+
         // Best-effort: si hubiera sesion activa, esto sincroniza el email
         // igual. Si no la hay, no hace nada -- el trigger ya dejo el dato
         // correcto guardado.
