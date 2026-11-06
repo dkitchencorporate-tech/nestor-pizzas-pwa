@@ -134,8 +134,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // 3) Recargo por pedido pequeño — mismo umbral/importe configurados en
-  //    Ajustes (store_settings), leídos en vivo, igual que process_checkout.
+  // 3) Verificación estricta de pedido mínimo para domicilio configurado en Ajustes (store_settings)
   const { data: storeSettings } = await supabase
     .from('store_settings')
     .select('delivery_fee, min_order_delivery')
@@ -143,29 +142,29 @@ export default async function handler(req, res) {
     .single();
 
   const minOrderDelivery = Number(storeSettings?.min_order_delivery ?? 10);
-  const deliveryFee = Number(storeSettings?.delivery_fee ?? 1);
-
   const afterDiscount = Math.max(0, subtotal - discount);
-  let smallOrderFee = 0;
-  if (afterDiscount < minOrderDelivery && acceptSmallOrderFee) {
-    smallOrderFee = deliveryFee;
+
+  if (afterDiscount < minOrderDelivery) {
+    return res.status(400).json({
+      error: `El pedido mínimo para envíos a domicilio en Caniles es de ${minOrderDelivery.toFixed(2)} €. Te faltan ${(minOrderDelivery - afterDiscount).toFixed(2)} €.`
+    });
   }
 
-  const amount = Math.round((afterDiscount + smallOrderFee) * 100) / 100;
+  const amount = Math.round(afterDiscount * 100) / 100;
 
   if (amount < 0.50) {
     return res.status(400).json({ error: 'El importe del pedido es demasiado bajo para procesar el pago.' });
   }
 
   // 4) Guardamos el pedido "pendiente de pago" — el pedido real en `orders`
-  //    NO se crea aquí, solo cuando el webhook confirme el pago con SumUp.
+  //    se crea al confirmar el pago de forma síncrona en sumup-verify-order (o vía webhook).
   const checkoutReference = randomUUID();
   const orderPayload = {
     p_user_id: verifiedUserId,
     p_client_name: clientName,
     p_client_phone: clientPhone,
     p_delivery_address: deliveryAddress,
-    p_delivery_method: deliveryMethod,
+    p_delivery_method: 'delivery',
     p_items: items.map((item, index) => ({
       product_id: item.productId,
       quantity: item.quantity,
@@ -174,7 +173,7 @@ export default async function handler(req, res) {
       customization_details: item.customization_details || { name: item.name, notes: item.notes, extras: item.extras }
     })),
     p_points_redeemed: !!discount,
-    p_small_order_fee_accepted: !!acceptSmallOrderFee,
+    p_small_order_fee_accepted: false,
     p_ip_address: 'client',
     p_notes: notes || null,
     p_payment_method: 'online'

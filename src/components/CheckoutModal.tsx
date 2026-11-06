@@ -18,7 +18,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const { t, tDynamic } = useI18nStore();
   const { items, getTotal, removeItem, kioskClientInfo, setKioskClientInfo } = useCartStore();
   const { user, profile, updateProfile } = useAuthStore();
-  const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>('delivery');
+  const deliveryMethod = 'delivery' as const;
+  const paymentMethod = 'online' as const;
   const [clientName, setClientName] = useState(kioskClientInfo?.name || profile?.full_name || '');
   const [clientPhone, setClientPhone] = useState(kioskClientInfo?.phone || profile?.phone || '');
   let initStreet = '';
@@ -49,12 +50,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const [geofenceError, setGeofenceError] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [minimumOrderError, setMinimumOrderError] = useState(false);
-  const [acceptSmallOrderFee, setAcceptSmallOrderFee] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'online' | 'physical'>('online');
   const [scheduledTime, setScheduledTime] = useState<string>(isStoreOpen() ? 'asap' : (generateAvailableTimeSlots(15)[0] || 'asap'));
-  // Pantalla de éxito para recogida (reemplaza la pantalla de tracking)
-  const [isPickupSuccess, setIsPickupSuccess] = useState(false);
-  const [pickupOrderId, setPickupOrderId] = useState<string | null>(null);
 
   const isOpen = isStoreOpen();
   const availableSlots = generateAvailableTimeSlots(15);
@@ -74,9 +70,9 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   const discount = pointsRedeemed && eligibleDiscount > 0 ? eligibleDiscount : 0;
   
-  const needsSmallOrderFee = deliveryMethod === 'delivery' && (subtotal - discount) < minOrderDelivery;
-  const smallOrderFee = needsSmallOrderFee && acceptSmallOrderFee ? deliveryFee : 0;
-  const finalTotal = Math.max(0, subtotal - discount) + smallOrderFee;
+  const isUnderMinimum = (subtotal - discount) < minOrderDelivery;
+  const missingAmount = Math.max(0, minOrderDelivery - (subtotal - discount));
+  const finalTotal = Math.max(0, subtotal - discount);
   
   const userPoints = profile?.points || 0;
   const canRedeem = userPoints >= 25 && eligibleDiscount > 0;
@@ -129,7 +125,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   const handleCheckoutClick = async () => {
     setPaymentError(null);
-    if (needsSmallOrderFee && !acceptSmallOrderFee) {
+    if (isUnderMinimum) {
+      setPaymentError(`El pedido mínimo para envíos a domicilio en Caniles es de ${minOrderDelivery.toFixed(2)} €. Te faltan ${missingAmount.toFixed(2)} €.`);
       return;
     }
 
@@ -141,14 +138,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       return;
     }
 
-    // ✅ FIX 2: Recogida NUNCA abre SumUp — procesa directamente
-    // Domicilio con pago online → SumUp (redirige a la pasarela)
-    // Domicilio con pago físico → procesa directo
-    if (deliveryMethod === 'delivery' && paymentMethod === 'online') {
-      initiateOnlinePayment();
-    } else {
-      processOrder();
-    }
+    initiateOnlinePayment();
   };
 
   const initiateOnlinePayment = async () => {
@@ -192,7 +182,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           deliveryAddress: finalDeliveryAddress,
           notes: finalOrderNotes || null,
           pointsRedeemed,
-          acceptSmallOrderFee,
+          acceptSmallOrderFee: false,
           userId: user?.id || null
         })
       });
@@ -308,42 +298,6 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   return (
     <div className="fixed inset-0 z-[1100] bg-black/85 backdrop-blur-md flex items-start sm:items-center justify-center p-4 pt-16 sm:pt-4 overflow-y-auto no-scrollbar">
-
-      {/* ✅ FIX 3: Pantalla de confirmación de recogida */}
-      {isPickupSuccess && (
-        <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-green-500 to-emerald-400"></div>
-            {/* Ícono check animado */}
-            <div className="w-24 h-24 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-5 border-2 border-green-500/40 animate-scale-in">
-              <svg className="w-12 h-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
-              </svg>
-            </div>
-            <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest block mb-1">Pedido Confirmado</span>
-            <h2 className="font-display font-black text-2xl text-white uppercase mb-3">🍕 ¡Listo!
-            </h2>
-            <p className="text-zinc-400 text-sm leading-relaxed mb-6">
-              Tu pedido ha sido recibido. <strong className="text-white">Ven a recogerlo al local</strong> en unos <strong className="text-green-400">20–25 minutos</strong>.
-            </p>
-            {/* Dirección del local */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-6 text-left space-y-1">
-              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Dónde recoger</p>
-              <p className="text-white font-bold text-sm">🏍 Néstor Pizzas</p>
-              <p className="text-zinc-400 text-xs">Calle Alcalde Felip, 9 — Caniles</p>
-              <a href="tel:+34679761987" className="text-green-400 text-xs font-bold flex items-center gap-1 mt-1">
-                <span>📞</span> 679 761 987
-              </a>
-            </div>
-            <button
-              onClick={() => { setIsPickupSuccess(false); onSuccess({ id: pickupOrderId, total_amount: finalTotal, clientName: clientName }, !user); }}
-              className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl uppercase tracking-wider text-sm transition-all shadow-[0_0_25px_rgba(34,197,94,0.3)] hover:scale-105"
-            >
-              Perfecto, ¡gracias!
-            </button>
-          </div>
-        </div>
-      )}
       
       {geofenceError && (
         <div className="absolute inset-0 z-[1200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
@@ -492,28 +446,18 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             </div>
           )}
 
-          {/* Método Entrega */}
+          {/* Método Entrega: Exclusivo Domicilio Caniles */}
           <div className="space-y-2.5 sm:space-y-3">
             <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">{t('delivery_mode')}</span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 font-medium">
-              <label onClick={() => setDeliveryMethod('delivery')} className={`flex items-center justify-between p-3.5 sm:p-4 rounded-2xl cursor-pointer shadow transition-all ${deliveryMethod === 'delivery' ? 'border-2 border-green-500 bg-green-500/15' : 'border border-zinc-700 bg-zinc-800 hover:border-green-500'}`}>
-                <div className="flex items-center gap-3">
-                  <input type="radio" checked={deliveryMethod === 'delivery'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
-                  <div>
-                    <span className="font-bold text-white block text-sm sm:text-sm">{t('delivery_caniles')}</span>
-                    <span className="text-[10px] sm:text-[11px] text-green-400 font-bold">{t('free_delivery')}</span>
-                  </div>
+            <div className="p-3.5 sm:p-4 rounded-2xl border-2 border-green-500 bg-green-500/15 flex items-center justify-between shadow">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🛵</span>
+                <div>
+                  <span className="font-bold text-white block text-sm sm:text-sm">{t('delivery_caniles')}</span>
+                  <span className="text-[10px] sm:text-[11px] text-green-400 font-bold">Servicio exclusivo a domicilio en Caniles (CP 18810)</span>
                 </div>
-              </label>
-              <label onClick={() => setDeliveryMethod('pickup')} className={`flex items-center justify-between p-3.5 sm:p-4 rounded-2xl cursor-pointer transition-all ${deliveryMethod === 'pickup' ? 'border-2 border-green-500 bg-green-500/15' : 'border border-zinc-700 bg-zinc-800 hover:border-green-500'}`}>
-                <div className="flex items-center gap-3">
-                  <input type="radio" checked={deliveryMethod === 'pickup'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
-                  <div>
-                    <span className="font-bold text-white block text-sm sm:text-sm">Para Recoger en Caniles</span>
-                    <span className="text-[10px] sm:text-[11px] text-zinc-400">C. Alcalde Felip, 9 (18810 Caniles)</span>
-                  </div>
-                </div>
-              </label>
+              </div>
+              <span className="text-[10px] font-bold bg-green-500/20 text-green-400 px-2.5 py-1 rounded-full border border-green-500/30 uppercase tracking-wider">Activo</span>
             </div>
           </div>
 
@@ -633,58 +577,26 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                   <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
                     {t('sumup_redirect')}
                   </p>
-                </>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <label onClick={() => setPaymentMethod('online')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${paymentMethod === 'online' ? 'bg-blue-500/10 border border-blue-500/50' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
-                    <input type="radio" checked={paymentMethod === 'online'} readOnly className="text-blue-500 w-4 h-4 shrink-0" />
-                    <div>
-                      <span className="font-bold text-white text-sm block">{t('pay_card_online')}</span>
-                      <span className="text-xs text-zinc-400">{t('pay_now_pickup')}</span>
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">VISA</span>
-                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">MASTER</span>
-                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">G Pay</span>
-                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Apple Pay</span>
-                      </div>
-                    </div>
-                  </label>
-                  <label onClick={() => setPaymentMethod('physical')} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${paymentMethod === 'physical' ? 'bg-green-500/10 border border-green-500/50' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
-                    <input type="radio" checked={paymentMethod === 'physical'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
-                    <div>
-                      <span className="font-bold text-white text-sm block">{t('pay_physical')}</span>
-                      <span className="text-xs text-zinc-400">{t('pay_physical_desc')}</span>
-                    </div>
-                  </label>
-                  <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
-                    {t('instant_confirm')}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>
 
         <div className="p-6 bg-zinc-950 text-white border-t border-zinc-800">
-          {needsSmallOrderFee && (
-            <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4 space-y-3 mb-6">
+          {isUnderMinimum && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 space-y-2 mb-6">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <p className="text-sm text-orange-400/90 leading-relaxed">
-                  El pedido mínimo para envíos a domicilio gratuitos es de <strong className="text-orange-400">{minOrderDelivery.toFixed(2).replace('.', ',')} €</strong>.
-                </p>
+                <div>
+                  <p className="text-sm font-bold text-red-400">
+                    Pedido mínimo para reparto a domicilio: {minOrderDelivery.toFixed(2).replace('.', ',')} €
+                  </p>
+                  <p className="text-xs text-zinc-300 mt-1">
+                    Te faltan <strong className="text-white">{missingAmount.toFixed(2).replace('.', ',')} €</strong> en productos para poder tramitar tu pedido a domicilio en Caniles.
+                  </p>
+                </div>
               </div>
-              <label className="flex items-center gap-3 p-3 bg-[#0A0A0E]/50 rounded-xl cursor-pointer hover:bg-white/5 transition-colors border border-white/5">
-                <input
-                  type="checkbox"
-                  checked={acceptSmallOrderFee}
-                  onChange={(e) => setAcceptSmallOrderFee(e.target.checked)}
-                  className="w-5 h-5 rounded bg-zinc-900 border-zinc-700 text-orange-500 focus:ring-orange-500/50 focus:ring-offset-0 transition-all"
-                />
-                <span className="text-sm text-gray-300">Aceptar recargo de {deliveryFee.toFixed(2).replace('.', ',')} € por pedido pequeño</span>
-              </label>
             </div>
           )}
 
@@ -694,16 +606,14 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               <span className="font-display font-black text-2xl sm:text-3xl text-white">{finalTotal.toFixed(2)} €</span>
             </div>
             <button 
-              disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber || !addressCP)) || (needsSmallOrderFee && !acceptSmallOrderFee) || (!isOpen && availableSlots.length === 0)}
+              disabled={isProcessing || !clientName || !clientPhone || !addressStreet || !addressNumber || !addressCP || isUnderMinimum || (!isOpen && availableSlots.length === 0)}
               onClick={handleCheckoutClick} 
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
             >
               {isProcessing ? t('processing') : (
-                deliveryMethod === 'pickup'
-                  ? t('confirm_order_btn')  // Recogida: siempre "Confirmar"
-                  : paymentMethod === 'online'
-                  ? t('pay_online_btn')     // Domicilio online: "Pagar online"
-                  : t('confirm_order_btn')  // Domicilio físico: "Confirmar"
+                isUnderMinimum 
+                  ? `Mínimo ${minOrderDelivery.toFixed(2).replace('.', ',')} €`
+                  : t('pay_online_btn')
               )}
             </button>
           </div>
