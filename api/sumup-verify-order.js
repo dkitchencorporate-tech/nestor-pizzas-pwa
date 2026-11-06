@@ -119,7 +119,10 @@ export default async function handler(req, res) {
           status: 'paid',
           orderId: freshCheckout.order_id,
           amount: freshCheckout.amount,
-          clientName: freshCheckout.order_payload?.p_client_name
+          clientName: freshCheckout.order_payload?.p_client_name,
+          deliveryMethod: freshCheckout.order_payload?.p_delivery_method || 'delivery',
+          deliveryAddress: freshCheckout.order_payload?.p_delivery_address || '',
+          items: freshCheckout.order_payload?.p_items || []
         });
       }
 
@@ -171,7 +174,10 @@ export default async function handler(req, res) {
       status: 'paid',
       orderId,
       amount: checkoutAmount,
-      clientName: orderPayload.p_client_name
+      clientName: orderPayload.p_client_name,
+      deliveryMethod: orderPayload.p_delivery_method || 'delivery',
+      deliveryAddress: orderPayload.p_delivery_address || '',
+      items: orderPayload.p_items || []
     });
   } catch (globalErr) {
     console.error('Error no controlado en sumup-verify-order:', globalErr);

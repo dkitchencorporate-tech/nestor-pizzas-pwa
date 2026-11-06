@@ -94,6 +94,16 @@ function App() {
     }
   }, [orders, guestOrders, guestOrder, user]);
 
+  const latestActiveOrder = useMemo(() => {
+    if (user) {
+      return (orders || []).find(o => ['pending', 'cooking', 'delivering', 'ready'].includes(o.status));
+    } else {
+      const list = guestOrders && guestOrders.length > 0 ? guestOrders : (guestOrder ? [guestOrder] : []);
+      return list.find(o => ['pending', 'cooking', 'delivering', 'ready'].includes(o.status));
+    }
+  }, [orders, guestOrders, guestOrder, user]);
+
+  const isPickupActive = latestActiveOrder?.delivery_method === 'pickup';
   const hasActiveOrder = activeOrdersCount > 0;
 
   // Check if URL is /admin or /registro on load
@@ -353,9 +363,14 @@ function App() {
       {hasActiveOrder && currentView !== 'tracking' && currentView !== ('admin' as any) && (
         <button
           onClick={() => setCurrentView('tracking')}
-          className="fixed bottom-24 right-4 sm:right-6 z-[900] w-14 h-14 sm:w-16 sm:h-16 bg-green-500 text-white rounded-full shadow-[0_0_20px_rgba(34,197,94,0.5)] flex items-center justify-center animate-bounce transition-transform hover:scale-110"
+          title={isPickupActive ? 'Ver estado de tu recogida en pizzería' : 'Ver seguimiento de tu pedido a domicilio'}
+          className={`fixed bottom-24 right-4 sm:right-6 z-[900] w-14 h-14 sm:w-16 sm:h-16 text-white rounded-full flex items-center justify-center animate-bounce transition-transform hover:scale-110 ${
+            isPickupActive
+              ? 'bg-gradient-to-tr from-amber-500 to-orange-500 shadow-[0_0_20px_rgba(245,158,11,0.6)]'
+              : 'bg-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)]'
+          }`}
         >
-          <span className="text-2xl sm:text-3xl">🛵</span>
+          <span className="text-2xl sm:text-3xl">{isPickupActive ? '🛍️' : '🛵'}</span>
           {activeOrdersCount > 1 ? (
             <span className="absolute -top-1 -right-1 flex h-6 w-6">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

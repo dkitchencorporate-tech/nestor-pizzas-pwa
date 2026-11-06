@@ -12,6 +12,7 @@ const MAX_ATTEMPTS = 15; // ~30 segundos
 export default function PaymentVerification() {
   const [state, setState] = useState<VerifyState>('checking');
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>('delivery');
   const attemptsRef = useRef(0);
   const clearedRef = useRef(false);
 
@@ -34,7 +35,9 @@ export default function PaymentVerification() {
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'paid' && data.orderId) {
+          const method = data.deliveryMethod === 'pickup' ? 'pickup' : 'delivery';
           setOrderId(String(data.orderId));
+          setDeliveryMethod(method);
           setState('paid');
           if (!clearedRef.current) {
             clearedRef.current = true;
@@ -48,9 +51,17 @@ export default function PaymentVerification() {
                 id: String(data.orderId),
                 total_amount: data.amount || 0,
                 status: 'pending',
-                delivery_method: 'delivery',
+                delivery_method: method,
+                delivery_address: data.deliveryAddress || (method === 'pickup' ? 'Recogida en local (C. Alcalde Felip, 9 Caniles)' : ''),
+                payment_method: 'online',
                 created_at: new Date().toISOString(),
-                client_name: data.clientName || ''
+                client_name: data.clientName || '',
+                order_items: (data.items || []).map((it: any) => ({
+                  id: `${it.product_id}-${Date.now()}`,
+                  quantity: it.quantity,
+                  products: { name: it.name || 'Producto' },
+                  customization_details: { name: it.name || 'Producto' }
+                }))
               });
             }
           }
@@ -83,6 +94,7 @@ export default function PaymentVerification() {
                 total_amount: 0,
                 status: 'pending',
                 delivery_method: 'delivery',
+                payment_method: 'online',
                 created_at: new Date().toISOString()
               });
             }
@@ -137,7 +149,7 @@ export default function PaymentVerification() {
               Tu pedido{orderId ? ` #${orderId.slice(0, 8)}` : ''} ya está recibido y en marcha hacia la cocina.
             </p>
             <button onClick={goOrder} className="w-full bg-green-600 hover:bg-green-500 text-white font-display font-black py-4 rounded-2xl uppercase tracking-wider text-sm transition-all shadow-[0_10px_20px_rgba(22,163,74,0.3)] hover:scale-105">
-              Ver estado de mi pedido 🛵
+              {deliveryMethod === 'pickup' ? 'Ver mi recogida en pizzería 🛍️' : 'Ver estado de mi pedido 🛵'}
             </button>
             <button onClick={goHome} className="w-full mt-3 bg-zinc-800/80 hover:bg-zinc-800 text-zinc-400 hover:text-white font-bold py-3 rounded-2xl text-xs transition-all">
               Ir a la carta

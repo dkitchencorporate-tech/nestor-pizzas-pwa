@@ -320,8 +320,16 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           total_amount: finalTotal,
           status: 'pending',
           delivery_method: deliveryMethod,
+          delivery_address: finalDeliveryAddress,
+          payment_method: paymentMethod,
           created_at: new Date().toISOString(),
-          client_name: clientName
+          client_name: clientName,
+          order_items: items.map(item => ({
+            id: `${item.productId}-${Date.now()}`,
+            quantity: item.quantity,
+            products: { name: item.name },
+            customization_details: { name: item.name }
+          }))
         });
       }
 
