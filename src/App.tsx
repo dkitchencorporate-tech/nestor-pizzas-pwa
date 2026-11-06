@@ -64,6 +64,7 @@ function App() {
   const [currentView, setCurrentView] = useState<'splash' | 'catalog' | 'admin' | 'tracking' | 'registro' | 'pago-verificando'>('splash');
   const [isPreloaderFading, setIsPreloaderFading] = useState(false);
   const [isStoreClosed, setIsStoreClosed] = useState(false);
+  const [isPrelaunchActive, setIsPrelaunchActive] = useState<boolean>(PRELAUNCH_ACTIVE);
   
   // Modals state
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -151,9 +152,12 @@ function App() {
     
     // Fetch Store Status
     const fetchStoreStatus = async () => {
-      const { data } = await supabase.from('app_settings').select('value').eq('key', 'store_closed').single();
-      if (data && data.value === 'true') {
-        setIsStoreClosed(true);
+      const { data } = await supabase.from('app_settings').select('key, value').in('key', ['store_closed', 'prelaunch_active']);
+      if (data) {
+        data.forEach(item => {
+          if (item.key === 'store_closed') setIsStoreClosed(item.value === 'true');
+          if (item.key === 'prelaunch_active') setIsPrelaunchActive(item.value === 'true');
+        });
       }
     };
     fetchStoreStatus();
@@ -169,9 +173,11 @@ function App() {
 
     // Listen to Store Status changes
     const settingsChannel = supabase.channel('public:app_settings_global')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings', filter: "key=eq.store_closed" }, payload => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings' }, payload => {
         const newValue = payload.new as any;
-        setIsStoreClosed(newValue.value === 'true');
+        if (!newValue || !newValue.key) return;
+        if (newValue.key === 'store_closed') setIsStoreClosed(newValue.value === 'true');
+        if (newValue.key === 'prelaunch_active') setIsPrelaunchActive(newValue.value === 'true');
       })
       .subscribe();
 
@@ -192,7 +198,7 @@ function App() {
 
   // Prelanzamiento: no debe quedar ningún pedido a medias guardado en el navegador.
   useEffect(() => {
-    if (PRELAUNCH_ACTIVE && !window.location.pathname.startsWith('/admin')) {
+    if (isPrelaunchActive && !window.location.pathname.startsWith('/admin')) {
       useCartStore.getState().clearCart();
     }
   }, []);
@@ -213,7 +219,7 @@ function App() {
 
   // Prelanzamiento: todas las vistas públicas quedan sustituidas por la pantalla
   // completa desde el primer instante. Solo /admin sigue accesible para el negocio.
-  if (PRELAUNCH_ACTIVE && !window.location.pathname.startsWith('/admin')) {
+  if (isPrelaunchActive && !window.location.pathname.startsWith('/admin')) {
     return <PreLaunchScreen />;
   }
 
