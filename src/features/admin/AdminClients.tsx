@@ -22,7 +22,7 @@ function formatAddressLabel(address: string | null): string {
       return parts.join(', ');
     }
   } catch {
-    // No era JSON, es texto plano (p.ej. "Local").
+    // No era JSON, es texto plano
   }
   return address;
 }
@@ -31,6 +31,8 @@ export default function AdminClients() {
   const [clients, setClients] = useState<UnifiedClient[]>([]);
   const [filterType, setFilterType] = useState<'all' | 'app' | 'kiosk' | 'unified'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [pageSize, setPageSize] = useState<number>(25);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(true);
 
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -121,7 +123,7 @@ export default function AdminClients() {
 
       setClients(list);
     } catch (error: any) {
-      console.error('Error cargando directorio maestro de clientes:', error);
+      console.error('Error cargando directorio de clientes:', error);
       showNotification(error.message || 'Error cargando clientes.', 'error');
     } finally {
       setIsLoading(false);
@@ -131,6 +133,21 @@ export default function AdminClients() {
   useEffect(() => {
     fetchAllClients();
   }, [fetchAllClients]);
+
+  const handleFilterChange = (type: 'all' | 'app' | 'kiosk' | 'unified') => {
+    setFilterType(type);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
 
   // Filtrado reactivo en caliente por tipo y término de búsqueda
   const filteredClients = useMemo(() => {
@@ -154,11 +171,20 @@ export default function AdminClients() {
   const kioskCount = useMemo(() => clients.filter(c => c.source === 'kiosk').length, [clients]);
   const unifiedCount = useMemo(() => clients.filter(c => c.source === 'unified').length, [clients]);
 
+  // Paginación reactiva
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedClients = useMemo(() => {
+    const start = (safeCurrentPage - 1) * pageSize;
+    return filteredClients.slice(start, start + pageSize);
+  }, [filteredClients, safeCurrentPage, pageSize]);
+
   const doDelete = async (customer: UnifiedClient) => {
     try {
       const { error } = await supabase.rpc('admin_delete_kiosk_customer', { p_id: customer.id });
       if (error) throw error;
-      showNotification('Ficha de mostrador eliminada correctamente.', 'success');
+      showNotification('Ficha eliminada correctamente.', 'success');
       fetchAllClients();
     } catch (error: any) {
       console.error('Error eliminando cliente:', error);
@@ -175,73 +201,73 @@ export default function AdminClients() {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-4 sm:p-8 bg-[#0A0A0E] text-white">
+    <div className="h-full overflow-y-auto p-4 sm:p-6 bg-[#0A0A0E] text-white">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-display font-black uppercase tracking-wide">Directorio Maestro de Clientes 360°</h1>
-            <span className="bg-green-500/20 text-green-400 border border-green-500/40 text-xs px-2.5 py-1 rounded-full font-bold font-mono">
+            <h1 className="text-xl sm:text-2xl font-display font-black uppercase tracking-wide">Directorio de Clientes</h1>
+            <span className="bg-[#1C1C26] border border-[#262636] text-xs px-2.5 py-1 rounded-full font-mono text-zinc-300">
               {clients.length} contactos
             </span>
           </div>
-          <p className="text-sm text-zinc-400 mt-1">
-            Base integral unificada: clientes del TPV (Iavanza), usuarios registrados de la App y fidelización con puntos VIP.
+          <p className="text-xs text-zinc-400 mt-1">
+            Base integral: clientes del mostrador TPV y usuarios registrados en la App.
           </p>
         </div>
 
-        {/* Action Button: Solicitar Campaña WhatsApp Meta */}
-        <div className="flex items-center gap-3">
+        {/* Action Button: Solicitar Difusión WhatsApp */}
+        <div>
           <button
             onClick={() => setIsWhatsAppModalOpen(true)}
-            className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-5 rounded-xl text-sm flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-105"
+            className="bg-green-600 hover:bg-green-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm flex items-center gap-2 transition-colors shadow-sm"
           >
-            <span className="text-lg">📢</span>
-            <span>Solicitar Campaña Oficial WhatsApp (Meta API)</span>
+            <span>📢</span>
+            <span>Solicitar Difusión WhatsApp</span>
           </button>
         </div>
       </div>
 
       {/* Filter Tabs and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-1.5 p-1 bg-[#14141E] border border-zinc-800 rounded-2xl w-full sm:w-auto overflow-x-auto">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-1 p-1 bg-[#14141C] border border-[#262636] rounded-xl overflow-x-auto no-scrollbar">
           <button
-            onClick={() => setFilterType('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap ${filterType === 'all' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+            onClick={() => handleFilterChange('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors whitespace-nowrap ${filterType === 'all' ? 'bg-[#262636] text-white' : 'text-zinc-400 hover:text-white'}`}
           >
             Todos ({clients.length})
           </button>
           <button
-            onClick={() => setFilterType('app')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-1.5 ${filterType === 'app' ? 'bg-green-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+            onClick={() => handleFilterChange('app')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors whitespace-nowrap ${filterType === 'app' ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'}`}
           >
-            <span>📱</span> Solo App VIP ({appCount})
+            App ({appCount})
           </button>
           <button
-            onClick={() => setFilterType('unified')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-1.5 ${filterType === 'unified' ? 'bg-blue-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+            onClick={() => handleFilterChange('unified')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors whitespace-nowrap ${filterType === 'unified' ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-white'}`}
           >
-            <span>🔄</span> Unificados ({unifiedCount})
+            Unificados ({unifiedCount})
           </button>
           <button
-            onClick={() => setFilterType('kiosk')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-1.5 ${filterType === 'kiosk' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+            onClick={() => handleFilterChange('kiosk')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors whitespace-nowrap ${filterType === 'kiosk' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}
           >
-            <span>🏪</span> Mostrador ({kioskCount})
+            Mostrador ({kioskCount})
           </button>
         </div>
 
-        <div className="relative w-full sm:w-80">
+        <div className="relative w-full sm:w-72">
           <input
             type="text"
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Buscar nombre, teléfono, calle..."
-            className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500 transition-colors"
+            onChange={e => handleSearchChange(e.target.value)}
+            placeholder="Buscar por nombre, teléfono o calle..."
+            className="w-full bg-[#14141C] border border-[#262636] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-green-500 transition-colors"
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery('')}
+              onClick={() => handleSearchChange('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs"
             >
               ✕
@@ -251,7 +277,7 @@ export default function AdminClients() {
       </div>
 
       {notification && (
-        <div className={`mb-4 p-4 rounded-xl text-sm font-medium ${notification.type === 'success' ? 'bg-green-500/10 border border-green-500/30 text-green-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'}`}>
+        <div className={`mb-4 p-3 rounded-xl text-xs font-medium ${notification.type === 'success' ? 'bg-green-500/10 border border-green-500/30 text-green-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'}`}>
           {notification.message}
         </div>
       )}
@@ -259,111 +285,111 @@ export default function AdminClients() {
       {/* Clients Table */}
       {isLoading ? (
         <div className="text-center py-20 text-zinc-500">
-          <div className="inline-block animate-spin text-2xl mb-2">🔄</div>
-          <p>Cargando directorio unificado de clientes...</p>
+          <div className="inline-block animate-spin text-xl mb-2">🔄</div>
+          <p className="text-xs">Cargando directorio de clientes...</p>
         </div>
       ) : filteredClients.length === 0 ? (
-        <div className="text-center py-20 text-zinc-500 bg-[#14141E] rounded-2xl border border-zinc-800 p-8">
-          <p className="text-base font-bold text-zinc-400">Ningún cliente coincide con los filtros actuales.</p>
+        <div className="text-center py-16 text-zinc-500 bg-[#14141C] rounded-2xl border border-[#262636] p-6">
+          <p className="text-sm font-semibold text-zinc-400">Ningún cliente coincide con los filtros actuales.</p>
           <p className="text-xs text-zinc-500 mt-1">Prueba a limpiar el buscador o cambiar de pestaña.</p>
         </div>
       ) : (
-        <div className="bg-[#14141E] border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-[#14141C] border border-[#262636] rounded-2xl overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-zinc-800 text-left text-zinc-400 uppercase text-xs tracking-wider bg-zinc-900/60">
-                  <th className="px-4 py-3.5">Cliente</th>
-                  <th className="px-4 py-3.5">Teléfono / WhatsApp</th>
-                  <th className="px-4 py-3.5">Estado / Fidelización</th>
-                  <th className="px-4 py-3.5">Dirección en Caniles</th>
-                  <th className="px-4 py-3.5">Fecha</th>
-                  <th className="px-4 py-3.5 text-right">Acciones</th>
+                <tr className="border-b border-[#262636] text-left text-zinc-400 uppercase text-[11px] tracking-wider bg-[#0E0E16]">
+                  <th className="px-4 py-3">Cliente</th>
+                  <th className="px-4 py-3">Teléfono / WhatsApp</th>
+                  <th className="px-4 py-3">Fidelización</th>
+                  <th className="px-4 py-3">Dirección en Caniles</th>
+                  <th className="px-4 py-3">Fecha</th>
+                  <th className="px-4 py-3 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {filteredClients.map(c => {
+              <tbody className="divide-y divide-[#262636]/60">
+                {paginatedClients.map(c => {
                   const cleanPhone = (c.phone || '').replace(/[^0-9]/g, '');
                   const hasValidPhone = cleanPhone.length >= 9;
 
                   return (
-                    <tr key={c.id} className="hover:bg-zinc-800/30 transition-colors">
+                    <tr key={c.id} className="hover:bg-zinc-800/20 transition-colors">
                       {/* Name + Source Tag */}
-                      <td className="px-4 py-3.5">
-                        <div className="font-bold text-white text-base">{c.full_name}</div>
+                      <td className="px-4 py-3">
+                        <div className="font-bold text-white text-sm truncate max-w-[180px]">{c.full_name}</div>
                         <div className="mt-1 flex items-center gap-1.5">
                           {c.source === 'unified' && (
-                            <span className="bg-blue-500/20 text-blue-400 border border-blue-500/40 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                              🔄 UNIFICADO
+                            <span className="bg-blue-500/10 text-blue-400 border border-blue-500/30 text-[10px] px-1.5 py-0.5 rounded font-mono font-medium">
+                              Unificado
                             </span>
                           )}
                           {c.source === 'app' && (
-                            <span className="bg-green-500/20 text-green-400 border border-green-500/40 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                              📱 APP VIP
+                            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] px-1.5 py-0.5 rounded font-mono font-medium">
+                              App
                             </span>
                           )}
                           {c.source === 'kiosk' && (
-                            <span className="bg-zinc-700/50 text-zinc-300 border border-zinc-600/40 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                              🏪 MOSTRADOR
+                            <span className="bg-zinc-800 text-zinc-400 border border-zinc-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-medium">
+                              Mostrador
                             </span>
                           )}
                         </div>
                       </td>
 
                       {/* Phone + WhatsApp Link */}
-                      <td className="px-4 py-3.5 font-mono">
-                        <div className="text-zinc-300">{c.phone}</div>
+                      <td className="px-4 py-3 font-mono whitespace-nowrap">
+                        <div className="text-zinc-300">
+                          {c.phone && c.phone !== 'Sin Teléfono' ? c.phone : <span className="text-zinc-600 font-sans italic text-xs">Sin teléfono</span>}
+                        </div>
                         {hasValidPhone && (
                           <a
                             href={`https://wa.me/34${cleanPhone}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-green-400 hover:text-green-300 hover:underline mt-1 font-sans"
+                            className="inline-flex items-center gap-1 text-[11px] text-green-400 hover:underline mt-0.5 font-sans"
                           >
-                            <span>💬 Abrir WhatsApp</span>
+                            <span>💬 WhatsApp</span>
                           </a>
                         )}
                       </td>
 
-                      {/* VIP Points */}
-                      <td className="px-4 py-3.5">
+                      {/* Loyalty Points */}
+                      <td className="px-4 py-3 whitespace-nowrap">
                         {c.is_app ? (
-                          <span className="inline-flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs px-2.5 py-1 rounded-xl font-bold font-mono">
-                            <span>⭐</span> {c.points} puntos VIP
+                          <span className="inline-flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded font-mono font-bold">
+                            {c.points} pts
                           </span>
                         ) : (
-                          <span className="text-xs text-zinc-500 italic">Sin cuenta App</span>
+                          <span className="text-zinc-600 text-xs">—</span>
                         )}
                       </td>
 
                       {/* Address */}
-                      <td className="px-4 py-3.5 text-zinc-300 max-w-[260px] truncate" title={formatAddressLabel(c.address)}>
+                      <td className="px-4 py-3 text-zinc-300 max-w-[220px] truncate" title={formatAddressLabel(c.address)}>
                         {formatAddressLabel(c.address) || <span className="text-zinc-600 italic">Sin dirección</span>}
                       </td>
 
                       {/* Date */}
-                      <td className="px-4 py-3.5 text-zinc-500 text-xs">
+                      <td className="px-4 py-3 text-zinc-500 text-xs whitespace-nowrap">
                         {c.created_at ? new Date(c.created_at).toLocaleDateString('es-ES') : '—'}
                       </td>
 
-                      {/* Actions */}
-                      <td className="px-4 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      {/* Actions: Always available to edit! */}
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setEditModal({ isOpen: true, customer: c })}
+                            className="px-2.5 py-1 rounded bg-[#1C1C26] hover:bg-[#262636] text-zinc-300 hover:text-white text-xs font-semibold border border-[#262636] transition-colors"
+                          >
+                            Editar
+                          </button>
                           {c.is_kiosk && (
-                            <>
-                              <button
-                                onClick={() => setEditModal({ isOpen: true, customer: c })}
-                                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold uppercase tracking-wider transition-colors"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                onClick={() => deleteCustomer(c)}
-                                className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider transition-colors border border-red-500/30"
-                              >
-                                Borrar
-                              </button>
-                            </>
+                            <button
+                              onClick={() => deleteCustomer(c)}
+                              className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold border border-red-500/20 transition-colors"
+                            >
+                              Borrar
+                            </button>
                           )}
                         </div>
                       </td>
@@ -373,6 +399,67 @@ export default function AdminClients() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Bar */}
+          {filteredClients.length > 0 && (
+            <div className="p-3 bg-[#0E0E16] border-t border-[#262636] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
+              <div className="flex items-center gap-3">
+                <span>
+                  Mostrando <strong className="text-white">{(safeCurrentPage - 1) * pageSize + 1}</strong> a <strong className="text-white">{Math.min(safeCurrentPage * pageSize, filteredClients.length)}</strong> de <strong className="text-white">{filteredClients.length}</strong> contactos
+                </span>
+                <div className="flex items-center gap-1 ml-2">
+                  <span className="text-zinc-500">Filas:</span>
+                  {[25, 50, 100].map(size => (
+                    <button
+                      key={size}
+                      onClick={() => handlePageSizeChange(size)}
+                      className={`px-2 py-0.5 rounded text-xs font-bold transition-colors ${
+                        pageSize === size 
+                          ? 'bg-green-600 text-white' 
+                          : 'bg-[#1C1C26] text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={safeCurrentPage === 1}
+                  className="px-2.5 py-1 rounded bg-[#1C1C26] hover:bg-[#262636] text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  « Primera
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={safeCurrentPage === 1}
+                  className="px-2.5 py-1 rounded bg-[#1C1C26] hover:bg-[#262636] text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  ‹ Anterior
+                </button>
+                <span className="px-2 py-1 font-mono text-zinc-300 font-bold">
+                  {safeCurrentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={safeCurrentPage === totalPages}
+                  className="px-2.5 py-1 rounded bg-[#1C1C26] hover:bg-[#262636] text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  Siguiente ›
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={safeCurrentPage === totalPages}
+                  className="px-2.5 py-1 rounded bg-[#1C1C26] hover:bg-[#262636] text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  Última »
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -383,12 +470,12 @@ export default function AdminClients() {
           onClose={() => setIsWhatsAppModalOpen(false)}
           onSuccess={() => {
             setIsWhatsAppModalOpen(false);
-            showNotification('¡Solicitud de campaña WhatsApp registrada con éxito! El equipo de DKitchen la revisará y activará en Meta Cloud API.', 'success');
+            showNotification('¡Solicitud de difusión WhatsApp registrada correctamente!', 'success');
           }}
         />
       )}
 
-      {/* Modal de Edición de Cliente de Mostrador */}
+      {/* Modal de Edición de Cliente (App / Mostrador / Unificado) */}
       {editModal.isOpen && editModal.customer && (
         <EditClientModal
           customer={editModal.customer}
@@ -405,18 +492,18 @@ export default function AdminClients() {
       {/* Confirm Modal */}
       {confirmModal?.isOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[4000] flex items-center justify-center p-4">
-          <div className="bg-[#14141E] border border-zinc-800 rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-fade-in">
-            <div className="p-6 text-center">
-              <div className="w-14 h-14 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          <div className="bg-[#14141C] border border-[#262636] rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-fade-in">
+            <div className="p-5 text-center">
+              <div className="w-12 h-12 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               </div>
-              <h3 className="font-black text-white text-lg uppercase tracking-wide mb-2">{confirmModal.title}</h3>
-              <p className="text-zinc-400 text-sm">{confirmModal.message}</p>
+              <h3 className="font-bold text-white text-base uppercase tracking-wide mb-1">{confirmModal.title}</h3>
+              <p className="text-zinc-400 text-xs">{confirmModal.message}</p>
             </div>
-            <div className="p-4 bg-zinc-900/50 flex gap-3 border-t border-zinc-800">
+            <div className="p-3 bg-[#0E0E16] flex gap-2 border-t border-[#262636]">
               <button
                 onClick={() => setConfirmModal(null)}
-                className="flex-1 py-3 text-white font-bold rounded-xl hover:bg-zinc-800 transition-colors"
+                className="flex-1 py-2 text-zinc-400 hover:text-white font-medium rounded-xl text-xs transition-colors"
               >
                 Cancelar
               </button>
@@ -426,7 +513,7 @@ export default function AdminClients() {
                   setConfirmModal(null);
                   action();
                 }}
-                className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl py-3 transition-colors shadow-lg shadow-red-600/20"
+                className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl py-2 text-xs transition-colors"
               >
                 Confirmar
               </button>
@@ -438,7 +525,7 @@ export default function AdminClients() {
   );
 }
 
-// Modal de Solicitud de Campaña Oficial WhatsApp (Meta Cloud API & MCP)
+// Modal de Solicitud de Difusión WhatsApp (Diseño sobrio y limpio PWA)
 function WhatsAppCampaignRequestModal({ clients, onClose, onSuccess }: {
   clients: UnifiedClient[];
   onClose: () => void;
@@ -460,13 +547,13 @@ function WhatsAppCampaignRequestModal({ clients, onClose, onSuccess }: {
   }, [clients]);
 
   const [campaignType, setCampaignType] = useState('apertura_domicilio');
-  const [targetAudience, setTargetAudience] = useState('todos');
+  const [targetAudience, setTargetAudience] = useState('lote_1');
   const [preferredSchedule, setPreferredSchedule] = useState('horario_noche');
   const [messageIdea, setMessageIdea] = useState(
     `🍕 ¡Hola, [Nombre]! Te escribimos de NÉSTOR PIZZAS en Caniles.\n\n` +
     `¡Ya puedes pedir tus pizzas y comida favorita A DOMICILIO directamente desde tu móvil sin esperas! 🛵✨\n\n` +
     `👉 Haz tu pedido aquí: https://nestorpizzas.es?utm_source=whatsapp&utm_campaign=apertura_domicilio\n\n` +
-    `🎁 ¡Además, en cada pedido acumulas PUNTOS VIP para canjear por pizzas y hamburguesas gratis!\n\n` +
+    `🎁 ¡Además, en cada pedido acumulas PUNTOS para canjear por pizzas gratis!\n\n` +
     `Te esperamos en el horno. 🔥\nCalle Alcalde Felip, 9 — Caniles\nTel: +34 679 76 19 87\n\n` +
     `(Responde BAJA si no deseas recibir más avisos de Néstor Pizzas)`
   );
@@ -514,162 +601,130 @@ function WhatsAppCampaignRequestModal({ clients, onClose, onSuccess }: {
   const previewFirstName = validContacts[0]?.firstName || 'Carlos';
 
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="bg-[#14141E] border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[94vh] shadow-2xl flex flex-col overflow-hidden">
-        {/* Header Bar */}
-        <div className="h-1.5 bg-gradient-to-r from-green-500 via-emerald-400 to-green-600"></div>
-
-        <div className="p-5 sm:p-6 border-b border-zinc-800 flex justify-between items-center bg-[#0E0E16]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-green-500/20 border border-green-500/40 flex items-center justify-center text-xl">
-              📢
-            </div>
-            <div>
-              <h3 className="font-display font-black text-xl text-white uppercase tracking-wider">
-                Solicitar Campaña Oficial WhatsApp (Meta Cloud API)
-              </h3>
-              <p className="text-xs text-zinc-400">
-                Difusión masiva oficial supervisada &bull; <strong className="text-green-400">{validContacts.length} teléfonos móviles válidos</strong>
-              </p>
-            </div>
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+      <div className="bg-[#14141C] border border-[#262636] rounded-2xl w-full max-w-xl max-h-[85vh] shadow-2xl flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="p-4 sm:p-5 border-b border-[#262636] flex justify-between items-center bg-[#0F0F16]">
+          <div>
+            <h3 className="font-display font-bold text-base sm:text-lg text-white uppercase tracking-wide">
+              Campaña de Difusión WhatsApp
+            </h3>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              {validContacts.length} teléfonos móviles disponibles en Caniles
+            </p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white">✕</button>
+          <button onClick={onClose} className="p-1.5 rounded-lg bg-[#1E1E28] text-zinc-400 hover:text-white transition-colors text-xs">
+            ✕
+          </button>
         </div>
 
         {/* Content Form */}
-        <form onSubmit={handleSubmitRequest} className="p-6 overflow-y-auto flex-1 space-y-6">
+        <form onSubmit={handleSubmitRequest} className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4 text-xs">
           {errorMsg && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
               {errorMsg}
             </div>
           )}
 
-          {/* Transparent Meta Pricing & Quota Banner */}
-          <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-2xl p-4.5 text-xs text-emerald-200/90 leading-relaxed space-y-2">
-            <div className="flex items-center gap-2 font-bold text-emerald-300 uppercase tracking-wider text-xs">
-              <span>ℹ️</span> Gobernanza y Cuotas Oficiales de Meta Cloud API
-            </div>
-            <p>
-              • <strong>1.000 conversaciones gratuitas:</strong> Meta concede mensualmente 1.000 conversaciones de servicio/atención al cliente sin coste para el número de Néstor Pizzas.
-            </p>
-            <p>
-              • <strong>Campañas de Marketing masivas:</strong> Los envíos proactivos de marketing fuera de ventana tienen una tarificación de Meta de ~0.03€ a 0.05€ por mensaje entregado.
-            </p>
-            <p>
-              • <strong>Bonificación de lanzamiento:</strong> La <strong>1ª campaña de apertura a domicilio está 100% bonificada por DKitchen</strong>. Campañas posteriores o el agente conversacional de IA por WhatsApp se gestionarán con liquidación transparente según consumo oficial de Meta.
+          {/* Sutil aviso de tandas de cortesía */}
+          <div className="bg-[#181822] border border-[#262636] rounded-xl p-3 text-zinc-400 leading-relaxed">
+            <p className="text-zinc-300 font-medium">
+              💡 Las 2 primeras difusiones (hasta 400 clientes, en 2 tandas de 200) están incluidas en la puesta en marcha.
             </p>
           </div>
 
-          {/* Grid: Type + Audience + Schedule */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Tipo de Campaña */}
+          {/* Selectores */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Objetivo de la Campaña:
+              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+                Objetivo:
               </label>
               <select
                 value={campaignType}
                 onChange={e => setCampaignType(e.target.value)}
-                className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-green-500"
+                className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-green-500"
               >
-                <option value="apertura_domicilio">🛵 Apertura Servicio a Domicilio</option>
-                <option value="ofertas_combos">🍕 Oferta / Combos de Fin de Semana</option>
-                <option value="reactivacion">💤 Reactivación de Clientes</option>
-                <option value="evento_horario">🎉 Horario Especial o Festivo</option>
+                <option value="apertura_domicilio">Apertura Servicio a Domicilio</option>
+                <option value="ofertas_combos">Oferta o Menú Especial</option>
+                <option value="reactivacion">Reactivación de Clientes</option>
+                <option value="evento_horario">Horario Especial / Festivos</option>
               </select>
             </div>
 
-            {/* Audiencia Objetivo */}
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
                 Audiencia Destino:
               </label>
               <select
                 value={targetAudience}
                 onChange={e => setTargetAudience(e.target.value)}
-                className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-green-500"
+                className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-green-500"
               >
+                <option value="lote_1">Tanda 1 (Primeros 200 contactos)</option>
+                <option value="lote_2">Tanda 2 (Siguientes 200 contactos)</option>
                 <option value="todos">Todos los contactos ({validContacts.length})</option>
-                <option value="vip">Clientes VIP / Frecuentes (2+ pedidos)</option>
-                <option value="inactivos">Clientes de Mostrador no registrados en App</option>
-              </select>
-            </div>
-
-            {/* Horario Preferente */}
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Franja Horaria Preferida:
-              </label>
-              <select
-                value={preferredSchedule}
-                onChange={e => setPreferredSchedule(e.target.value)}
-                className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-green-500"
-              >
-                <option value="horario_noche">🌙 Noche (19:30 a 22:00 en tandas)</option>
-                <option value="horario_mediodia">☀️ Mediodía (12:30 a 14:00)</option>
-                <option value="inmediato">⚡ Lo antes posible tras validación</option>
+                <option value="vip">Clientes frecuentes (2+ pedidos)</option>
               </select>
             </div>
           </div>
 
-          {/* Template Textarea & WhatsApp Live Preview */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Propuesta de Mensaje o Promoción:
-              </label>
-              <textarea
-                value={messageIdea}
-                onChange={e => setMessageIdea(e.target.value)}
-                rows={11}
-                className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-2xl p-4 text-white text-sm focus:outline-none focus:border-green-500 font-sans leading-relaxed resize-none custom-scrollbar"
-                placeholder="Escribe el texto o la oferta que quieres comunicar..."
-              />
-              <p className="text-[11px] text-zinc-500 mt-1.5">
-                💡 La etiqueta <code className="text-green-400">[Nombre]</code> se personalizará de forma dinámica para cada cliente.
-              </p>
-            </div>
+          <div>
+            <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+              Horario Preferido:
+            </label>
+            <select
+              value={preferredSchedule}
+              onChange={e => setPreferredSchedule(e.target.value)}
+              className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-green-500"
+            >
+              <option value="horario_noche">🌙 Noche (19:30 a 22:00 en tandas)</option>
+              <option value="horario_mediodia">☀️ Mediodía (12:30 a 14:00)</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                Simulación Visual en WhatsApp Oficial:
-              </label>
-              <div className="bg-[#0b141a] border border-[#202c33] rounded-2xl p-4 text-sm text-[#e9edef] leading-relaxed shadow-inner">
-                <div className="text-[11px] text-[#8696a0] mb-2 font-mono flex items-center justify-between border-b border-[#202c33] pb-1.5">
-                  <span>Cuenta Comercial Verificada</span>
-                  <span className="text-green-400 font-bold">✓ Néstor Pizzas</span>
-                </div>
-                <div className="bg-[#005c4b] p-3.5 rounded-2xl rounded-tl-none shadow-md inline-block max-w-full whitespace-pre-wrap">
-                  {messageIdea.replace(/\[Nombre\]/g, previewFirstName)}
-                </div>
-                <div className="text-right text-[10px] text-[#8696a0] mt-2 font-mono">
-                  Enviado mediante Meta Cloud API &bull; Caniles
-                </div>
+          <div>
+            <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+              Propuesta de Mensaje:
+            </label>
+            <textarea
+              value={messageIdea}
+              onChange={e => setMessageIdea(e.target.value)}
+              rows={5}
+              className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl p-3 text-white text-xs focus:outline-none focus:border-green-500 font-sans leading-relaxed resize-none"
+            />
+            <p className="text-[10px] text-zinc-500 mt-1">
+              La etiqueta <code className="text-zinc-400">[Nombre]</code> se reemplaza por el nombre de cada contacto.
+            </p>
+          </div>
+
+          {/* Vista Previa WhatsApp discreta */}
+          <div>
+            <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+              Vista Previa:
+            </label>
+            <div className="bg-[#0A0A0E] border border-[#262636] rounded-xl p-3 text-xs text-zinc-200">
+              <div className="bg-[#1E2C24] border border-[#2B4034] p-3 rounded-xl rounded-tl-none inline-block max-w-full whitespace-pre-wrap text-[11px] leading-relaxed">
+                {messageIdea.replace(/\[Nombre\]/g, previewFirstName)}
               </div>
             </div>
           </div>
 
-          {/* Footer inside form */}
-          <div className="pt-4 border-t border-zinc-800 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <p className="text-xs text-zinc-400">
-              Al solicitar la campaña, el equipo técnico de DKitchen preparará la plantilla oficial en Meta Business Tools.
-            </p>
-            <div className="flex gap-3 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 sm:flex-none px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold text-sm transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 sm:flex-none px-6 py-3 bg-green-500 hover:bg-green-400 text-black font-black rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:opacity-50"
-              >
-                {isSubmitting ? 'Registrando...' : '🚀 Enviar Solicitud a DKitchen'}
-              </button>
-            </div>
+          {/* Footer Buttons */}
+          <div className="pt-3 border-t border-[#262636] flex justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-[#1E1E28] hover:bg-[#262636] text-zinc-300 rounded-xl font-medium text-xs transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-5 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl text-xs transition-colors disabled:opacity-50"
+            >
+              {isSubmitting ? 'Enviando...' : 'Solicitar Difusión'}
+            </button>
           </div>
         </form>
       </div>
@@ -677,7 +732,7 @@ function WhatsAppCampaignRequestModal({ clients, onClose, onSuccess }: {
   );
 }
 
-// Modal de Edición de Cliente de Mostrador
+// Modal de Edición de Cliente (Universal: App / Mostrador / Unificado)
 function EditClientModal({ customer, onClose, onSuccess, onError }: {
   customer: UnifiedClient;
   onClose: () => void;
@@ -702,7 +757,8 @@ function EditClientModal({ customer, onClose, onSuccess, onError }: {
   }
 
   const [fullName, setFullName] = useState(customer.full_name);
-  const [phone, setPhone] = useState(customer.phone);
+  const [phone, setPhone] = useState(customer.phone === 'Sin Teléfono' ? '' : customer.phone);
+  const [points, setPoints] = useState<number>(customer.points || 0);
   const [street, setStreet] = useState(initStreet);
   const [number, setNumber] = useState(initNumber);
   const [cp, setCp] = useState(initCP);
@@ -712,8 +768,8 @@ function EditClientModal({ customer, onClose, onSuccess, onError }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !phone.trim()) {
-      setError('Nombre y teléfono son obligatorios.');
+    if (!fullName.trim()) {
+      setError('El nombre es obligatorio.');
       return;
     }
     setIsSubmitting(true);
@@ -721,87 +777,121 @@ function EditClientModal({ customer, onClose, onSuccess, onError }: {
     try {
       const hasAddressData = street.trim() || number.trim() || notes.trim();
       const addressJson = hasAddressData
-        ? JSON.stringify({ street, number, cp, notes })
+        ? JSON.stringify({ street: street.trim(), number: number.trim(), cp: cp.trim(), notes: notes.trim() })
         : null;
 
-      const { error: rpcError } = await supabase.rpc('admin_update_kiosk_customer', {
-        p_id: customer.id,
-        p_full_name: fullName.trim(),
-        p_phone: phone.trim(),
-        p_address: addressJson
+      const res = await fetch('/api/admin-update-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: customer.id,
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+          address: addressJson,
+          points: customer.is_app ? Number(points) : customer.points,
+          source: customer.source,
+          isApp: customer.is_app,
+          isKiosk: customer.is_kiosk
+        })
       });
-      if (rpcError) throw rpcError;
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al actualizar el cliente');
+
       onSuccess();
     } catch (err: any) {
       console.error('Error actualizando cliente:', err);
-      if (err.code === '23505') {
-        setError('Ya existe otro cliente con ese teléfono.');
-      } else {
-        const message = err.message || 'Error al actualizar el cliente.';
-        setError(message);
-        onError(message);
-      }
+      const message = err.message || 'Error al actualizar el cliente.';
+      setError(message);
+      onError(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-[#14141E] border border-zinc-800 rounded-3xl p-6 w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-display font-black text-white uppercase">Editar Ficha de Cliente</h2>
-          <button onClick={onClose} className="p-2 rounded-full bg-zinc-800/50 hover:bg-zinc-700 text-gray-400 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <div className="fixed inset-0 z-[4000] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+      <div className="bg-[#14141C] border border-[#262636] rounded-2xl p-5 w-full max-w-md shadow-2xl overflow-y-auto max-h-[85vh] no-scrollbar">
+        <div className="flex justify-between items-center mb-4 pb-3 border-b border-[#262636]">
+          <div>
+            <h2 className="text-base font-display font-bold text-white uppercase tracking-wide">Editar Cliente</h2>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Origen: {customer.source === 'app' ? 'Registrado en App' : customer.source === 'unified' ? 'Unificado (App + Mostrador)' : 'Mostrador'}
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg bg-[#1E1E28] text-zinc-400 hover:text-white transition-colors text-xs">
+            ✕
           </button>
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl mb-6 text-sm">
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl mb-4 text-xs">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nombre</label>
+            <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Nombre</label>
             <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} required
-              className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Teléfono</label>
-            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} required
-              className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Calle o Avenida</label>
-              <input type="text" value={street} onChange={e => setStreet(e.target.value)}
-                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Número</label>
-              <input type="text" value={number} onChange={e => setNumber(e.target.value)}
-                className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Código Postal</label>
-            <input type="text" value={cp} onChange={e => setCp(e.target.value)}
-              className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Notas (Piso, puerta, etc.)</label>
-            <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ej: Puerta verde, frente a la farmacia"
-              className="w-full bg-[#1A1A24] border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition-colors" />
+              className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-green-500" />
           </div>
 
-          <div className="pt-4 flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 py-4 rounded-2xl font-bold bg-zinc-800 text-white hover:bg-zinc-700 transition-colors">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Teléfono</label>
+              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Ej: 612345678"
+                className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-green-500" />
+            </div>
+
+            {customer.is_app ? (
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Puntos Fidelización</label>
+                <input type="number" min="0" value={points} onChange={e => setPoints(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                  className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl px-3 py-2 text-amber-400 font-mono text-xs focus:outline-none focus:border-green-500" />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Puntos</label>
+                <div className="w-full bg-[#0A0A0E] border border-[#262636]/60 rounded-xl px-3 py-2 text-zinc-600 text-xs italic">
+                  Sin cuenta App
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Calle</label>
+              <input type="text" value={street} onChange={e => setStreet(e.target.value)} placeholder="Ej: Calle Real"
+                className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-green-500" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Nº</label>
+              <input type="text" value={number} onChange={e => setNumber(e.target.value)} placeholder="12"
+                className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-green-500" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Cód. Postal</label>
+              <input type="text" value={cp} onChange={e => setCp(e.target.value)}
+                className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-green-500" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Piso / Notas</label>
+              <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="2º B"
+                className="w-full bg-[#0A0A0E] border border-[#262636] rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-green-500" />
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-[#262636] flex gap-2 justify-end">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl font-medium bg-[#1E1E28] text-zinc-300 hover:text-white transition-colors">
               Cancelar
             </button>
-            <button type="submit" disabled={isSubmitting} className="flex-1 py-4 rounded-2xl font-bold bg-green-500 text-black hover:bg-green-400 transition-colors disabled:opacity-50">
-              {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+            <button type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-xl font-bold bg-green-600 hover:bg-green-500 text-white transition-colors disabled:opacity-50">
+              {isSubmitting ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
         </form>

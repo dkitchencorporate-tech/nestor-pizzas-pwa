@@ -18,7 +18,12 @@ const OrderHistoryModal = ({ user, onClose, orders }: { user: any, onClose: () =
         </div>
         <div className="p-6 overflow-y-auto flex-1">
           {orders.length === 0 ? (
-            <p className="text-zinc-500 text-center py-4">No hay pedidos registrados para este cliente.</p>
+            <div className="text-center py-8 text-zinc-500">
+              <p className="text-sm font-semibold text-zinc-400">Sin pedidos tramitados en la PWA</p>
+              <p className="text-xs text-zinc-500 mt-1 max-w-md mx-auto">
+                Este contacto procede del histórico de mostrador y aún no tiene pedidos realizados a través de la aplicación online.
+              </p>
+            </div>
           ) : (
             <div className="space-y-4">
               {orders.map(order => (
@@ -662,41 +667,41 @@ export default function AdminAnalytics() {
         </div>
 
         {/* Segmentation Filters and Live Search */}
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-1.5 p-1 bg-[#101018] border border-zinc-800 rounded-2xl overflow-x-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-1 p-1 bg-[#101018] border border-zinc-800 rounded-xl overflow-x-auto no-scrollbar">
             <button
               onClick={() => handleSegmentChange('all')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap ${segmentFilter === 'all' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors whitespace-nowrap ${segmentFilter === 'all' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
             >
               Todos ({users.length})
             </button>
             <button
               onClick={() => handleSegmentChange('vip')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-1.5 ${segmentFilter === 'vip' ? 'bg-amber-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors whitespace-nowrap ${segmentFilter === 'vip' ? 'bg-amber-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
             >
-              <span>🔥</span> Frecuentes / VIP ({vipCount})
+              Frecuentes ({vipCount})
             </button>
             <button
               onClick={() => handleSegmentChange('inactive')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-1.5 ${segmentFilter === 'inactive' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors whitespace-nowrap ${segmentFilter === 'inactive' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
             >
-              <span>💤</span> Inactivos 0 Pedidos ({inactiveCount})
+              Inactivos ({inactiveCount})
             </button>
             <button
               onClick={() => handleSegmentChange('high_spend')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-1.5 ${segmentFilter === 'high_spend' ? 'bg-green-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors whitespace-nowrap ${segmentFilter === 'high_spend' ? 'bg-green-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
             >
-              <span>💰</span> Top por Gasto ({highSpendCount})
+              Top Gasto ({highSpendCount})
             </button>
           </div>
 
-          <div className="relative w-full lg:w-80">
+          <div className="relative w-full sm:w-72">
             <input
               type="text"
               value={clientSearch}
               onChange={e => handleSearchChange(e.target.value)}
-              placeholder="Buscar nombre, teléfono, email..."
-              className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500 transition-colors"
+              placeholder="Buscar cliente..."
+              className="w-full bg-[#1A1A24] border border-zinc-700/60 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-green-500 transition-colors"
             />
             {clientSearch && (
               <button
