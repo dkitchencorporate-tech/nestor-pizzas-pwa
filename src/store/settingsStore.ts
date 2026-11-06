@@ -96,6 +96,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     if (key === 'allow_pickup') set({ allowPickup: isTrue });
     if (key === 'pickup_allow_card') set({ pickupAllowCard: isTrue });
     if (key === 'pickup_allow_cash') set({ pickupAllowCash: isTrue });
+    if (key === 'min_order_delivery') {
+      const num = Number(value);
+      if (!isNaN(num) && num >= 0) set({ minOrderDelivery: num });
+    }
+    if (key === 'delivery_fee') {
+      const num = Number(value);
+      if (!isNaN(num) && num >= 0) set({ deliveryFee: num });
+    }
   },
 
   updateSettings: async (newSettings) => {

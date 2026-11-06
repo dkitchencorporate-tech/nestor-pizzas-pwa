@@ -7,6 +7,7 @@ import DOMPurify from 'dompurify';
 import { formatAddress } from '../../utils/addressUtils';
 import { useAdminUiStore } from '../../store/adminUiStore';
 import { armAlarm, startAlarm, stopAlarm, isArmed } from '../../utils/orderAlarm';
+import { useStoreHoursStore, DEFAULT_STORE_HOURS } from '../../store/storeHoursStore';
 
 export default function AdminOrders() {
   const { startEditingOrder } = useAdminUiStore();
@@ -43,16 +44,15 @@ export default function AdminOrders() {
       })
       .subscribe();
 
-    // Opening time interval
+    // Opening time interval sincronizado con store_hours dinámico
     const interval = setInterval(() => {
       const now = new Date();
       const day = now.getDay();
       
-      const hoursMap: Record<number, string | null> = {
-        0: '20:00', 1: null, 2: null, 3: '20:30', 4: '20:00', 5: '20:00', 6: '20:00'
-      };
+      const currentHours = useStoreHoursStore.getState().hours;
+      const todaySchedule = currentHours[day] !== undefined ? currentHours[day] : DEFAULT_STORE_HOURS[day];
       
-      const openTime = hoursMap[day];
+      const openTime = todaySchedule?.open;
       if (openTime) {
         const [openHour, openMin] = openTime.split(':').map(Number);
         if (now.getHours() === openHour && now.getMinutes() === openMin) {

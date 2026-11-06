@@ -199,11 +199,27 @@ function App() {
       })
       .subscribe();
 
+    // Listen to Store Settings changes en vivo (min_order_delivery, delivery_fee)
+    const storeSettingsChannel = supabase.channel('public:store_settings_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, payload => {
+        const row = payload.new as any;
+        if (row) {
+          if (row.min_order_delivery !== undefined) {
+            useSettingsStore.setState({ minOrderDelivery: Number(row.min_order_delivery) });
+          }
+          if (row.delivery_fee !== undefined) {
+            useSettingsStore.setState({ deliveryFee: Number(row.delivery_fee) });
+          }
+        }
+      })
+      .subscribe();
+
     return () => {
       window.removeEventListener('open-tracking', handleOpenTracking);
       window.removeEventListener('order-delivered', handleOrderDelivered as EventListener);
       supabase.removeChannel(settingsChannel);
       supabase.removeChannel(hoursChannel);
+      supabase.removeChannel(storeSettingsChannel);
     };
   }, []);
 

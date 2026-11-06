@@ -367,7 +367,7 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                             </p>
                             <p className="text-xs text-zinc-400 mt-1 flex items-center gap-1.5">
                               <span>📞</span>
-                              <span>Teléfono cocina: <strong className="text-zinc-200">680 91 19 69</strong></span>
+                              <span>Teléfono cocina: <strong className="text-zinc-200">+34 679 76 19 87</strong></span>
                             </p>
                           </div>
                           <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0 text-2xl">
@@ -386,7 +386,7 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                             <span>Cómo Llegar</span>
                           </a>
                           <a
-                            href="tel:680911969"
+                            href="tel:+34679761987"
                             className="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-colors border border-zinc-700 text-center"
                           >
                             <span>📞</span>

@@ -96,6 +96,22 @@ export default async function handler(req, res) {
     }
   }
 
+  // Sincronización en tiempo real para importes numéricos (espejo reactivo en app_settings)
+  if (typeof min_order_delivery === 'number' && min_order_delivery >= 0) {
+    appSettingsRows.push({
+      key: 'min_order_delivery',
+      value: String(Math.round(min_order_delivery * 100) / 100),
+      updated_at: new Date().toISOString()
+    });
+  }
+  if (typeof delivery_fee === 'number' && delivery_fee >= 0) {
+    appSettingsRows.push({
+      key: 'delivery_fee',
+      value: String(Math.round(delivery_fee * 100) / 100),
+      updated_at: new Date().toISOString()
+    });
+  }
+
   if (appSettingsRows.length > 0) {
     const { error: appErr } = await supabaseService
       .from('app_settings')
