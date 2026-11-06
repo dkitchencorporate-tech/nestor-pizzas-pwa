@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'El carrito está vacío.' });
   }
-  if (!clientName || !clientPhone || !deliveryAddress || deliveryMethod !== 'delivery') {
+  if (!clientName || !clientPhone || !deliveryAddress || (deliveryMethod !== 'delivery' && deliveryMethod !== 'pickup')) {
     return res.status(400).json({ error: 'Faltan datos del pedido.' });
   }
 
@@ -144,7 +144,7 @@ export default async function handler(req, res) {
   const minOrderDelivery = Number(storeSettings?.min_order_delivery ?? 10);
   const afterDiscount = Math.max(0, subtotal - discount);
 
-  if (afterDiscount < minOrderDelivery) {
+  if (deliveryMethod === 'delivery' && afterDiscount < minOrderDelivery) {
     return res.status(400).json({
       error: `El pedido mínimo para envíos a domicilio en Caniles es de ${minOrderDelivery.toFixed(2)} €. Te faltan ${(minOrderDelivery - afterDiscount).toFixed(2)} €.`
     });
@@ -164,7 +164,7 @@ export default async function handler(req, res) {
     p_client_name: clientName,
     p_client_phone: clientPhone,
     p_delivery_address: deliveryAddress,
-    p_delivery_method: 'delivery',
+    p_delivery_method: deliveryMethod,
     p_items: items.map((item, index) => ({
       product_id: item.productId,
       quantity: item.quantity,

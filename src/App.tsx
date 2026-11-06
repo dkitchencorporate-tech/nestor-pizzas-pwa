@@ -171,13 +171,14 @@ function App() {
       }
     });
 
-    // Listen to Store Status changes
+    // Listen to Store Status and Delivery Policy changes
     const settingsChannel = supabase.channel('public:app_settings_global')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings' }, payload => {
         const newValue = payload.new as any;
         if (!newValue || !newValue.key) return;
         if (newValue.key === 'store_closed') setIsStoreClosed(newValue.value === 'true');
         if (newValue.key === 'prelaunch_active') setIsPrelaunchActive(newValue.value === 'true');
+        useSettingsStore.getState().applyRealtimePolicy(newValue.key, String(newValue.value));
       })
       .subscribe();
 

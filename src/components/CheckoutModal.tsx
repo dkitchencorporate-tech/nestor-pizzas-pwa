@@ -18,8 +18,47 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const { t, tDynamic } = useI18nStore();
   const { items, getTotal, removeItem, kioskClientInfo, setKioskClientInfo } = useCartStore();
   const { user, profile, updateProfile } = useAuthStore();
-  const deliveryMethod = 'delivery' as const;
-  const paymentMethod = 'online' as const;
+  const {
+    deliveryFee,
+    minOrderDelivery,
+    allowDelivery,
+    deliveryAllowCard,
+    deliveryAllowCash,
+    allowPickup,
+    pickupAllowCard,
+    pickupAllowCash
+  } = useSettingsStore();
+
+  const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>(() => {
+    if (allowDelivery) return 'delivery';
+    if (allowPickup) return 'pickup';
+    return 'delivery';
+  });
+
+  const canPayCard = deliveryMethod === 'delivery' ? deliveryAllowCard : pickupAllowCard;
+  const canPayCash = deliveryMethod === 'delivery' ? deliveryAllowCash : pickupAllowCash;
+
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'physical'>(() => {
+    return canPayCard ? 'online' : 'physical';
+  });
+
+  useEffect(() => {
+    if (deliveryMethod === 'delivery') {
+      if (!deliveryAllowCard && deliveryAllowCash) setPaymentMethod('physical');
+      else if (deliveryAllowCard && !deliveryAllowCash) setPaymentMethod('online');
+    } else {
+      if (!pickupAllowCard && pickupAllowCash) setPaymentMethod('physical');
+      else if (pickupAllowCard && !pickupAllowCash) setPaymentMethod('online');
+    }
+  }, [deliveryMethod, deliveryAllowCard, deliveryAllowCash, pickupAllowCard, pickupAllowCash]);
+
+  useEffect(() => {
+    if (deliveryMethod === 'delivery' && !allowDelivery && allowPickup) {
+      setDeliveryMethod('pickup');
+    } else if (deliveryMethod === 'pickup' && !allowPickup && allowDelivery) {
+      setDeliveryMethod('delivery');
+    }
+  }, [deliveryMethod, allowDelivery, allowPickup]);
   const [clientName, setClientName] = useState(kioskClientInfo?.name || profile?.full_name || '');
   const [clientPhone, setClientPhone] = useState(kioskClientInfo?.phone || profile?.phone || '');
   let initStreet = '';
@@ -55,7 +94,6 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const isOpen = isStoreOpen();
   const availableSlots = generateAvailableTimeSlots(15);
 
-  const { deliveryFee, minOrderDelivery } = useSettingsStore();
   const subtotal = getTotal();
   
   // Productos elegibles para el descuento VIP (Pizza o Burger). El cliente elige a cuál lo aplica —
@@ -70,7 +108,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   const discount = pointsRedeemed && eligibleDiscount > 0 ? eligibleDiscount : 0;
   
-  const isUnderMinimum = (subtotal - discount) < minOrderDelivery;
+  const isUnderMinimum = deliveryMethod === 'delivery' && (subtotal - discount) < minOrderDelivery;
   const missingAmount = Math.max(0, minOrderDelivery - (subtotal - discount));
   const finalTotal = Math.max(0, subtotal - discount);
   
@@ -130,22 +168,30 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       return;
     }
 
-    setIsProcessing(true);
-    const isWithinRange = await validateGeofence();
-    setIsProcessing(false);
+    if (deliveryMethod === 'delivery') {
+      setIsProcessing(true);
+      const isWithinRange = await validateGeofence();
+      setIsProcessing(false);
 
-    if (!isWithinRange) {
-      return;
+      if (!isWithinRange) {
+        return;
+      }
     }
 
-    initiateOnlinePayment();
+    if (paymentMethod === 'online') {
+      initiateOnlinePayment();
+    } else {
+      processOrder();
+    }
   };
 
   const initiateOnlinePayment = async () => {
     setIsProcessing(true);
     setPaymentError(null);
 
-    const finalDeliveryAddress = `${addressStreet}, Nº ${addressNumber}, CP ${addressCP} Caniles${addressNotes ? '. Notas: ' + addressNotes : ''}`;
+    const finalDeliveryAddress = deliveryMethod === 'delivery'
+      ? `${addressStreet}, Nº ${addressNumber}, CP ${addressCP} Caniles${addressNotes ? '. Notas: ' + addressNotes : ''}`
+      : 'Recogida en local (C. Alcalde Felip, 9 Caniles)';
     const finalOrderNotes = [
       scheduledTime !== 'asap' ? `⏰ Programado: ${scheduledTime}` : '',
       addressNotes ? `Dir/Mesa: ${addressNotes}` : '',
@@ -193,8 +239,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         throw new Error(result.error || 'No se pudo iniciar el pago.');
       }
 
-      // Redirige a la página de pago alojada por SumUp — el pago ocurre
-      // fuera de nuestro dominio, nunca vemos datos de tarjeta.
+      // Redirige a la página de pago alojada por SumUp
       window.location.href = result.hostedCheckoutUrl;
     } catch (err: any) {
       setIsProcessing(false);
@@ -237,7 +282,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         p_delivery_method: deliveryMethod,
         p_items: orderItems,
         p_points_redeemed: pointsRedeemed,
-        p_small_order_fee_accepted: acceptSmallOrderFee,
+        p_small_order_fee_accepted: false,
         p_ip_address: 'client',
         p_notes: finalOrderNotes || null,
         p_payment_method: paymentMethod
@@ -268,19 +313,19 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       if (user?.email) emailService.sendOrderConfirmation(user.email, orderDataForEmail);
       emailService.sendOrderToAdmin(orderDataForEmail);
 
-      // ✅ FIX 3: Para recogida mostramos pantalla de confirmación interna
-      // Para domicilio llamamos onSuccess directamente (va a tracking)
-      if (deliveryMethod === 'pickup') {
-        setPickupOrderId(String(orderId));
-        setIsPickupSuccess(true);
-        useCartStore.getState().clearCart();
-        if (user) {
-          useAuthStore.getState().fetchProfile(user.id);
-          useAuthStore.getState().fetchOrders();
-        }
-      } else {
-        onSuccess({ id: orderId }, !user);
+      useCartStore.getState().clearCart();
+      if (!user) {
+        useGuestOrderStore.getState().addGuestOrder({
+          id: String(orderId),
+          total_amount: finalTotal,
+          status: 'pending',
+          delivery_method: deliveryMethod,
+          created_at: new Date().toISOString(),
+          client_name: clientName
+        });
       }
+
+      onSuccess({ id: orderId, total_amount: finalTotal, clientName: clientName }, !user);
     } catch (error: any) {
       console.error('Error procesando pedido:', error);
       const friendlyMsg = error?.message?.includes('Manipulación') 
@@ -446,19 +491,58 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             </div>
           )}
 
-          {/* Método Entrega: Exclusivo Domicilio Caniles */}
+          {/* Método Entrega (Configurado en vivo por el Admin) */}
           <div className="space-y-2.5 sm:space-y-3">
             <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">{t('delivery_mode')}</span>
-            <div className="p-3.5 sm:p-4 rounded-2xl border-2 border-green-500 bg-green-500/15 flex items-center justify-between shadow">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🛵</span>
-                <div>
-                  <span className="font-bold text-white block text-sm sm:text-sm">{t('delivery_caniles')}</span>
-                  <span className="text-[10px] sm:text-[11px] text-green-400 font-bold">Servicio exclusivo a domicilio en Caniles (CP 18810)</span>
-                </div>
+            
+            {allowDelivery && allowPickup ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 font-medium">
+                <label onClick={() => setDeliveryMethod('delivery')} className={`flex items-center justify-between p-3.5 sm:p-4 rounded-2xl cursor-pointer shadow transition-all ${deliveryMethod === 'delivery' ? 'border-2 border-green-500 bg-green-500/15' : 'border border-zinc-700 bg-zinc-800 hover:border-green-500'}`}>
+                  <div className="flex items-center gap-3">
+                    <input type="radio" checked={deliveryMethod === 'delivery'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
+                    <div>
+                      <span className="font-bold text-white block text-sm sm:text-sm">{t('delivery_caniles')}</span>
+                      <span className="text-[10px] sm:text-[11px] text-green-400 font-bold">{t('free_delivery')}</span>
+                    </div>
+                  </div>
+                </label>
+                <label onClick={() => setDeliveryMethod('pickup')} className={`flex items-center justify-between p-3.5 sm:p-4 rounded-2xl cursor-pointer transition-all ${deliveryMethod === 'pickup' ? 'border-2 border-amber-500 bg-amber-500/15' : 'border border-zinc-700 bg-zinc-800 hover:border-amber-500'}`}>
+                  <div className="flex items-center gap-3">
+                    <input type="radio" checked={deliveryMethod === 'pickup'} readOnly className="text-amber-500 w-4 h-4 shrink-0" />
+                    <div>
+                      <span className="font-bold text-white block text-sm sm:text-sm">Para Recoger en Caniles</span>
+                      <span className="text-[10px] sm:text-[11px] text-zinc-400">C. Alcalde Felip, 9 (18810 Caniles)</span>
+                    </div>
+                  </div>
+                </label>
               </div>
-              <span className="text-[10px] font-bold bg-green-500/20 text-green-400 px-2.5 py-1 rounded-full border border-green-500/30 uppercase tracking-wider">Activo</span>
-            </div>
+            ) : allowDelivery ? (
+              <div className="p-3.5 sm:p-4 rounded-2xl border-2 border-green-500 bg-green-500/15 flex items-center justify-between shadow">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🛵</span>
+                  <div>
+                    <span className="font-bold text-white block text-sm sm:text-sm">{t('delivery_caniles')}</span>
+                    <span className="text-[10px] sm:text-[11px] text-green-400 font-bold">Servicio exclusivo a domicilio en Caniles (CP 18810)</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold bg-green-500/20 text-green-400 px-2.5 py-1 rounded-full border border-green-500/30 uppercase tracking-wider">Activo</span>
+              </div>
+            ) : allowPickup ? (
+              <div className="p-3.5 sm:p-4 rounded-2xl border-2 border-amber-500 bg-amber-500/15 flex items-center justify-between shadow">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🛍️</span>
+                  <div>
+                    <span className="font-bold text-white block text-sm sm:text-sm">Para Recoger en Local</span>
+                    <span className="text-[10px] sm:text-[11px] text-amber-400 font-bold">C. Alcalde Felip, 9 — Caniles (Listo en ~20-25 min)</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full border border-amber-500/30 uppercase tracking-wider">Activo</span>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl border border-red-500/40 bg-red-500/10 text-red-400 text-center font-bold text-sm">
+                ⛔ No se aceptan pedidos en este momento por decisión del establecimiento.
+              </div>
+            )}
           </div>
 
           {/* Datos de Envío */}
@@ -551,20 +635,45 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             )}
           </div>
 
-          {/* Forma de Pago */}
+          {/* Forma de Pago (Dinámica según Ajustes de Néstor) */}
           <div className="space-y-3 border-t border-zinc-800 pt-4 sm:pt-5">
             <span className="font-display font-bold text-white text-sm uppercase tracking-wider block">{t('payment_form')}</span>
 
             <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 space-y-3">
-              {deliveryMethod === 'delivery' ? (
+              {canPayCard && canPayCash ? (
+                <div className="flex flex-col gap-2.5">
+                  <label onClick={() => setPaymentMethod('online')} className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all ${paymentMethod === 'online' ? 'bg-blue-500/10 border-2 border-blue-500/60 shadow-lg shadow-blue-500/10' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
+                    <input type="radio" checked={paymentMethod === 'online'} readOnly className="text-blue-500 w-4 h-4 shrink-0" />
+                    <div>
+                      <span className="font-bold text-white text-sm block">Pago con Tarjeta Online</span>
+                      <span className="text-xs text-zinc-400">{deliveryMethod === 'delivery' ? 'Cobro online por adelantado vía SumUp' : 'Pagar online antes de recoger'}</span>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">VISA</span>
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">MASTERCARD</span>
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">G Pay</span>
+                        <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Apple Pay</span>
+                      </div>
+                    </div>
+                  </label>
+                  <label onClick={() => setPaymentMethod('physical')} className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all ${paymentMethod === 'physical' ? 'bg-green-500/10 border-2 border-green-500/60 shadow-lg shadow-green-500/10' : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'}`}>
+                    <input type="radio" checked={paymentMethod === 'physical'} readOnly className="text-green-500 w-4 h-4 shrink-0" />
+                    <div>
+                      <span className="font-bold text-white text-sm block">
+                        {deliveryMethod === 'delivery' ? 'Efectivo al Repartidor' : 'Efectivo al Recoger en Mostrador'}
+                      </span>
+                      <span className="text-xs text-zinc-400">Pagar en mano en el momento de la entrega</span>
+                    </div>
+                  </label>
+                </div>
+              ) : canPayCard ? (
                 <>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-600/30 flex items-center justify-center shrink-0">
                       <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                     </div>
                     <div>
-                      <span className="font-bold text-white text-sm block">{t('pay_card')}</span>
-                      <span className="text-xs text-zinc-400">{t('online_payment_delivery')}</span>
+                      <span className="font-bold text-white text-sm block">Pago Seguro con Tarjeta / Apple Pay / G Pay</span>
+                      <span className="text-xs text-zinc-400">Pasarela oficial y cifrada SumUp</span>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">VISA</span>
                         <span className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">MASTERCARD</span>
@@ -573,10 +682,27 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                       </div>
                     </div>
                   </div>
-
                   <p className="text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 mt-1">
                     {t('sumup_redirect')}
                   </p>
+                </>
+              ) : canPayCash ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-600/20 border border-green-600/30 flex items-center justify-center shrink-0">
+                    <span className="text-xl">💵</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-white text-sm block">
+                      {deliveryMethod === 'delivery' ? 'Pago en Efectivo al Repartidor' : 'Pago en Efectivo al Recoger'}
+                    </span>
+                    <span className="text-xs text-zinc-400">Pagar en mano en el momento de la entrega</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-red-400 text-center font-bold">
+                  No hay formas de pago habilitadas para este método.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -606,14 +732,16 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               <span className="font-display font-black text-2xl sm:text-3xl text-white">{finalTotal.toFixed(2)} €</span>
             </div>
             <button 
-              disabled={isProcessing || !clientName || !clientPhone || !addressStreet || !addressNumber || !addressCP || isUnderMinimum || (!isOpen && availableSlots.length === 0)}
+              disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber || !addressCP)) || isUnderMinimum || (!allowDelivery && !allowPickup) || (!isOpen && availableSlots.length === 0)}
               onClick={handleCheckoutClick} 
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-orange-600 hover:to-orange-700 text-white font-display font-bold px-8 py-4 rounded-2xl shadow-[0_15px_30px_-5px_rgba(22,163,74,0.4)] uppercase tracking-wider text-sm sm:text-sm transition-all hover:scale-105 shrink-0 disabled:opacity-50"
             >
               {isProcessing ? t('processing') : (
                 isUnderMinimum 
                   ? `Mínimo ${minOrderDelivery.toFixed(2).replace('.', ',')} €`
-                  : t('pay_online_btn')
+                  : paymentMethod === 'online'
+                  ? t('pay_online_btn')
+                  : t('confirm_order_btn')
               )}
             </button>
           </div>

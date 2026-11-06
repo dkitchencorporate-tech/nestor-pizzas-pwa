@@ -38,31 +38,78 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Acceso no autorizado' });
   }
 
-  const { min_order_delivery, delivery_fee } = req.body || {};
+  const body = req.body || {};
+  const {
+    min_order_delivery,
+    delivery_fee,
+    allow_delivery,
+    delivery_allow_card,
+    delivery_allow_cash,
+    allow_pickup,
+    pickup_allow_card,
+    pickup_allow_cash
+  } = body;
 
-  const updates = {};
+  // 1) Actualizar store_settings (numéricos)
+  const storeUpdates = {};
   if (typeof min_order_delivery === 'number' && min_order_delivery >= 0) {
-    updates.min_order_delivery = Math.round(min_order_delivery * 100) / 100;
+    storeUpdates.min_order_delivery = Math.round(min_order_delivery * 100) / 100;
   }
   if (typeof delivery_fee === 'number' && delivery_fee >= 0) {
-    updates.delivery_fee = Math.round(delivery_fee * 100) / 100;
+    storeUpdates.delivery_fee = Math.round(delivery_fee * 100) / 100;
   }
 
-  if (Object.keys(updates).length === 0) {
-    return res.status(400).json({ error: 'No se enviaron campos válidos para actualizar' });
+  let updatedStoreSettings = null;
+  if (Object.keys(storeUpdates).length > 0) {
+    const { data, error } = await supabaseService
+      .from('store_settings')
+      .update(storeUpdates)
+      .eq('id', 1)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error actualizando store_settings:', error);
+      return res.status(500).json({ error: 'Error al actualizar importes en store_settings' });
+    }
+    updatedStoreSettings = data;
   }
 
-  const { data, error } = await supabaseService
-    .from('store_settings')
-    .update(updates)
-    .eq('id', 1)
-    .select()
-    .single();
+  // 2) Actualizar políticas en app_settings (pares clave-valor)
+  const policyKeys = [
+    { key: 'allow_delivery', val: allow_delivery },
+    { key: 'delivery_allow_card', val: delivery_allow_card },
+    { key: 'delivery_allow_cash', val: delivery_allow_cash },
+    { key: 'allow_pickup', val: allow_pickup },
+    { key: 'pickup_allow_card', val: pickup_allow_card },
+    { key: 'pickup_allow_cash', val: pickup_allow_cash }
+  ];
 
-  if (error) {
-    console.error('Error actualizando store_settings:', error);
-    return res.status(500).json({ error: 'Error al guardar los ajustes' });
+  const appSettingsRows = [];
+  for (const item of policyKeys) {
+    if (typeof item.val === 'boolean') {
+      appSettingsRows.push({
+        key: item.key,
+        value: item.val ? 'true' : 'false',
+        updated_at: new Date().toISOString()
+      });
+    }
   }
 
-  return res.status(200).json({ ok: true, settings: data });
+  if (appSettingsRows.length > 0) {
+    const { error: appErr } = await supabaseService
+      .from('app_settings')
+      .upsert(appSettingsRows, { onConflict: 'key' });
+
+    if (appErr) {
+      console.error('Error actualizando app_settings:', appErr);
+      return res.status(500).json({ error: 'Error al actualizar políticas en app_settings' });
+    }
+  }
+
+  return res.status(200).json({
+    ok: true,
+    storeSettings: updatedStoreSettings,
+    policiesUpdated: appSettingsRows.length
+  });
 }
