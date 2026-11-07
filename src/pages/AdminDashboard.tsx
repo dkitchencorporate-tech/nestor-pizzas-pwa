@@ -238,8 +238,11 @@ export default function AdminDashboard() {
 
 
       {/* Sidebar Menú con dimensiones fijadas para evitar FOUC */}
-      <aside className={`${isSidebarOpen ? 'w-full md:w-64 md:shrink-0' : 'hidden'} bg-[#14141E] border-r border-zinc-800 flex flex-col transition-all duration-300 relative z-40 shrink-0 print:hidden`}>
-        <div className="p-6 border-b border-zinc-800 flex items-center justify-between gap-3">
+      <aside 
+        style={{ minWidth: isSidebarOpen ? '16rem' : undefined }}
+        className={`admin-sidebar ${isSidebarOpen ? 'w-full md:w-64 md:shrink-0 h-full' : 'hidden'} bg-[#14141E] border-r border-zinc-800 flex flex-col transition-all duration-300 relative z-40 shrink-0 print:hidden`}
+      >
+        <div className="p-6 border-b border-zinc-800 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center border border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.3)] p-0.5 shrink-0">
               <img src="./assets/brand/logo_black_exact_2k.png" alt="Nestor Pizzas" className="w-full h-full object-contain" />
@@ -258,7 +261,7 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col min-h-0">
           <nav className="p-4 space-y-2 flex-1">
             {/* 1. Pedidos */}
             <button 
@@ -334,7 +337,7 @@ export default function AdminDashboard() {
           </div>
         </nav>
 
-        <div className="p-4 border-t border-zinc-800 space-y-3">
+        <div className="p-4 border-t border-zinc-800 space-y-3 shrink-0">
           <div className="bg-[#1A1A24] rounded-xl p-3 border border-zinc-700/50">
             <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Modo Prelanzamiento</h4>
             <button
