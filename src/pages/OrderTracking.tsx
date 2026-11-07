@@ -2,20 +2,87 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useGuestOrderStore } from '../store/guestOrderStore';
 import { useI18nStore } from '../store/i18nStore';
+import { supabase } from '../lib/supabase';
 
-// Instancia global compartida de AudioContext para evitar que iOS Safari / Android Chrome
-// suspendan el audio cuando el cambio de estado llega por WebSocket/polling en segundo plano.
+// Instancia global compartida de AudioContext + HTML5 Audio WAV para que iOS Safari / Android
+// reproduzcan el timbre por el canal Multimedia ('playback'), sonando incluso si el iPhone
+// tiene el modo Silencio (🔕) activado.
 let sharedAudioCtx: AudioContext | null = null;
+let sharedHtmlAudio: HTMLAudioElement | null = null;
+let cachedWavUrl: string | null = null;
+
+function buildWavChimeUrl(): string {
+  if (cachedWavUrl) return cachedWavUrl;
+  const sampleRate = 22050;
+  const durationSec = 1.35;
+  const numSamples = Math.floor(sampleRate * durationSec);
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+
+  const writeStr = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // Mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+
+  // Doble timbre de campana claro y potente (Do5 - Mi5 - Sol5 - Do6 x2)
+  const notes = [
+    { start: 0.0, dur: 0.14, freq: 587.33 },
+    { start: 0.13, dur: 0.14, freq: 783.99 },
+    { start: 0.26, dur: 0.16, freq: 987.77 },
+    { start: 0.40, dur: 0.28, freq: 1174.66 },
+    { start: 0.72, dur: 0.14, freq: 587.33 },
+    { start: 0.85, dur: 0.14, freq: 783.99 },
+    { start: 0.98, dur: 0.35, freq: 1174.66 }
+  ];
+
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    let sample = 0;
+    for (const n of notes) {
+      if (t >= n.start && t <= n.start + n.dur) {
+        const localT = t - n.start;
+        const env = Math.exp(-localT * 6.5) * Math.min(1, localT / 0.008);
+        sample += (Math.sin(2 * Math.PI * n.freq * localT) * 0.65 + Math.sin(4 * Math.PI * n.freq * localT) * 0.25) * env;
+      }
+    }
+    const clamped = Math.max(-1, Math.min(1, sample));
+    view.setInt16(44 + i * 2, clamped * 32767, true);
+  }
+
+  const blob = new Blob([buffer], { type: 'audio/wav' });
+  cachedWavUrl = URL.createObjectURL(blob);
+  return cachedWavUrl;
+}
+
+function forcePlaybackAudioSession() {
+  try {
+    if (typeof navigator !== 'undefined' && (navigator as any).audioSession) {
+      (navigator as any).audioSession.type = 'playback';
+    }
+  } catch {
+    // Ignorar en navegadores sin audioSession API
+  }
+}
 
 function getOrUnlockAudioCtx(): AudioContext | null {
   try {
+    forcePlaybackAudioSession();
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return null;
     if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
       sharedAudioCtx = new AudioCtx();
-    }
-    if (sharedAudioCtx.state === 'suspended') {
-      sharedAudioCtx.resume().catch(() => {});
     }
     return sharedAudioCtx;
   } catch {
@@ -23,46 +90,86 @@ function getOrUnlockAudioCtx(): AudioContext | null {
   }
 }
 
-export function unlockAudio(): boolean {
+export async function unlockAudio(playConfirmBeep = true): Promise<boolean> {
+  forcePlaybackAudioSession();
   const ctx = getOrUnlockAudioCtx();
-  if (!ctx) return false;
   try {
-    // Reproducir pulso silencioso de 1 sample para desbloquear el canal de hardware en iOS
-    const buffer = ctx.createBuffer(1, 1, 22050);
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(ctx.destination);
-    source.start(0);
-    playStatusChime(false);
+    if (!sharedHtmlAudio) {
+      sharedHtmlAudio = new Audio(buildWavChimeUrl());
+      sharedHtmlAudio.preload = 'auto';
+      (sharedHtmlAudio as any).playsInline = true;
+    }
+    if (ctx && ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+    if (ctx) {
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+    }
+    if (playConfirmBeep) {
+      await playStatusChime(false);
+    } else if (sharedHtmlAudio) {
+      sharedHtmlAudio.volume = 0.01;
+      sharedHtmlAudio.currentTime = 0;
+      sharedHtmlAudio.play().then(() => {
+        if (sharedHtmlAudio) {
+          sharedHtmlAudio.pause();
+          sharedHtmlAudio.currentTime = 0;
+          sharedHtmlAudio.volume = 1.0;
+        }
+      }).catch(() => {});
+    }
     return true;
   } catch {
     return false;
   }
 }
 
-// Sonido nativo Web Audio sintetizado (acorde mayor C5-E5-G5-C6 + vibración háptica)
-function playStatusChime(doubleRing = true) {
+// Sonido híbrido (Canal Multimedia HTML5 WAV + Web Audio API + Vibración)
+export async function playStatusChime(doubleRing = true): Promise<void> {
   try {
+    forcePlaybackAudioSession();
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(doubleRing ? [250, 120, 250, 120, 400] : [150]);
     }
+
+    // 1) Reproducir por canal Multimedia HTML5 <audio> (suena en iPhone aunque tenga el modo silencio 🔕)
+    try {
+      if (!sharedHtmlAudio) {
+        sharedHtmlAudio = new Audio(buildWavChimeUrl());
+      }
+      sharedHtmlAudio.volume = 1.0;
+      sharedHtmlAudio.currentTime = 0;
+      void sharedHtmlAudio.play().catch(() => {});
+    } catch {
+      // Fallback a Web Audio
+    }
+
+    // 2) Refuerzo simultáneo por Web Audio API (despertando el contexto si estaba suspendido)
     const ctx = getOrUnlockAudioCtx();
     if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      try { await ctx.resume(); } catch { return; }
+    }
 
     const playChordSequence = (offsetSec: number) => {
-      const notes = [523.25, 659.25, 783.99, 1046.5]; // Do5, Mi5, Sol5, Do6
+      const notes = [587.33, 783.99, 987.77, 1174.66];
       notes.forEach((freq, i) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'triangle';
-        const start = ctx.currentTime + offsetSec + i * 0.09;
+        const start = ctx.currentTime + offsetSec + i * 0.11;
         osc.frequency.setValueAtTime(freq, start);
-        gain.gain.setValueAtTime(0.35, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.linearRampToValueAtTime(0.85, start + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.38);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(start);
-        osc.stop(start + 0.46);
+        osc.stop(start + 0.40);
       });
     };
 
@@ -135,20 +242,42 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
 
   const activeOrder = activeOrders[selectedOrderIndex] || activeOrders[0] || null;
 
-  // Refresco activo cada 8s para usuarios logueados mientras están en la pantalla de seguimiento
+  // Desbloqueo silencioso en el primer toque de pantalla + suscripción Realtime directa + polling cada 4s
+  useEffect(() => {
+    const handleFirstGesture = () => {
+      void unlockAudio(false);
+    };
+    window.addEventListener('touchstart', handleFirstGesture, { once: true, passive: true });
+    window.addEventListener('click', handleFirstGesture, { once: true, passive: true });
+    return () => {
+      window.removeEventListener('touchstart', handleFirstGesture);
+      window.removeEventListener('click', handleFirstGesture);
+    };
+  }, []);
+
   useEffect(() => {
     if (!user) return;
+    fetchOrders();
     const poll = setInterval(() => {
       fetchOrders();
-    }, 8000);
-    return () => clearInterval(poll);
+    }, 4000);
+    const channel = supabase
+      .channel(`tracking_orders_${user.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, () => {
+        fetchOrders();
+      })
+      .subscribe();
+    return () => {
+      clearInterval(poll);
+      supabase.removeChannel(channel);
+    };
   }, [user, fetchOrders]);
 
   // Alarma acústica y notificación local para el cliente cuando el pedido cambia de estado
   useEffect(() => {
     if (!activeOrder?.status) return;
     if (prevStatusRef.current && prevStatusRef.current !== activeOrder.status) {
-      playStatusChime(true);
+      void playStatusChime(true);
       if ('Notification' in window && Notification.permission === 'granted') {
         const statusMsg =
           activeOrder.status === 'cooking'
@@ -363,7 +492,17 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
 
                         {activeOrder.client_phone && (
                           pushStatus === 'subscribed' ? (
-                            <p className="text-xs text-green-400 font-bold mt-2.5 flex items-center gap-1">🔔 Te avisaremos cuando cambie el estado</p>
+                            <div className="mt-2.5 flex items-center gap-3 flex-wrap">
+                              <p className="text-xs text-green-400 font-bold flex items-center gap-1">🔔 Te avisaremos cuando cambie el estado</p>
+                              <button
+                                type="button"
+                                onClick={() => void unlockAudio(true)}
+                                className="text-[11px] bg-green-500/15 hover:bg-green-500/25 text-green-300 border border-green-500/30 font-bold px-2.5 py-1 rounded-lg transition-all flex items-center gap-1"
+                              >
+                                <span>🔊</span>
+                                <span>Probar sonido</span>
+                              </button>
+                            </div>
                           ) : pushStatus === 'denied' ? (
                             <p className="text-xs text-zinc-500 mt-2.5">Notificaciones bloqueadas por el navegador</p>
                           ) : pushStatus !== 'unsupported' && (
