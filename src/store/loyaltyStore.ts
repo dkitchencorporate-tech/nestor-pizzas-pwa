@@ -117,13 +117,13 @@ export const useLoyaltyStore = create<LoyaltyState>((set) => ({
       const token = sessionData.session?.access_token;
 
       if (token) {
-        const res = await fetch('/api/update-loyalty-settings', {
+        const res = await fetch('/api/update-store-settings', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(newConfig),
+          body: JSON.stringify({ loyalty_config: newConfig }),
         });
         if (!res.ok) {
           const errJson = await res.json().catch(() => ({}));

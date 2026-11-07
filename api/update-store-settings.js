@@ -47,8 +47,49 @@ export default async function handler(req, res) {
     delivery_allow_cash,
     allow_pickup,
     pickup_allow_card,
-    pickup_allow_cash
+    pickup_allow_cash,
+    loyalty_config
   } = body;
+
+  // 0) Si viene loyalty_config (Promociones y Puntos VIP), sanitizar y guardar en app_settings
+  if (loyalty_config && typeof loyalty_config === 'object') {
+    const cleanLoyalty = {
+      enabled: loyalty_config.enabled !== false,
+      points_per_10_eur: Math.max(0, Math.min(100, Number(loyalty_config.points_per_10_eur ?? 2))),
+      min_order_to_redeem: Math.max(0, Math.min(200, Math.round(Number(loyalty_config.min_order_to_redeem ?? 15) * 100) / 100)),
+      rewards: Array.isArray(loyalty_config.rewards)
+        ? loyalty_config.rewards.map((r, idx) => ({
+            id: String(r.id || `reward-${idx + 1}`).slice(0, 64),
+            title: String(r.title || 'Recompensa VIP').slice(0, 120),
+            description: String(r.description || '').slice(0, 300),
+            points_cost: Math.max(1, Math.min(500, Math.round(Number(r.points_cost || 20)))),
+            min_order: Math.max(0, Math.min(200, Math.round(Number(r.min_order ?? loyalty_config.min_order_to_redeem ?? 15) * 100) / 100)),
+            target_type: r.target_type === 'product' ? 'product' : 'pizzas_sugerencia',
+            product_id: r.product_id ? Number(r.product_id) : null,
+            product_name: String(r.product_name || 'Cualquier Pizza Sugerencia').slice(0, 120),
+            active: r.active !== false
+          }))
+        : []
+    };
+
+    const { error: loyaltyErr } = await supabaseService
+      .from('app_settings')
+      .upsert(
+        {
+          key: 'loyalty_config',
+          value: JSON.stringify(cleanLoyalty),
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'key' }
+      );
+
+    if (loyaltyErr) {
+      console.error('Error actualizando loyalty_config:', loyaltyErr);
+      return res.status(500).json({ error: 'Error al guardar la configuración de puntos VIP' });
+    }
+
+    return res.status(200).json({ ok: true, config: cleanLoyalty });
+  }
 
   // 1) Actualizar store_settings (numéricos)
   const storeUpdates = {};
