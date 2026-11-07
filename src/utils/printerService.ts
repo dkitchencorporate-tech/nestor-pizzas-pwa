@@ -31,9 +31,10 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     text += `--------------------------------
 `;
     
-    const isMesa = order.delivery_method === 'local';
-    const isDelivery = order.delivery_method === 'delivery';
-    const isPickup = order.delivery_method === 'pickup';
+    const rawAddr = typeof order.delivery_address === 'string' ? order.delivery_address : '';
+    const isMesa = order.delivery_method === 'local' || order.delivery_method === 'dine_in';
+    const isPickup = !isMesa && (order.delivery_method === 'pickup' || rawAddr.toLowerCase().includes('recogida'));
+    const isDelivery = !isMesa && !isPickup;
 
     // Clasificación explícita de pago
     // Nota: en CheckoutModal, 'physical' significa pago en efectivo en mano (al repartidor o al recoger)
@@ -49,15 +50,21 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     }
     
     if (isMesa) {
+      text += `SERVICIO: SALA / MESA
+`;
       text += `TIPO:   *** SALA / MESA ***
 `;
       text += `MESA:   ${(order.client_name || 'MESA LOCAL').toUpperCase()}
 `;
     } else if (isDelivery) {
+      text += `SERVICIO: A DOMICILIO
+`;
       text += `TIPO:   *** A DOMICILIO ***
 `;
     } else {
-      text += `TIPO:   *** PARA RECOGER ***
+      text += `SERVICIO: RECOGIDA EN LOCAL
+`;
+      text += `TIPO:   *** RECOGIDA EN LOCAL ***
 `;
     }
 
@@ -175,8 +182,13 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
 
 `; // Espacio para el corte térmico
 
+    const serviceLabel = isMesa ? 'SALA / MESA' : (isPickup ? 'RECOGIDA EN LOCAL' : 'A DOMICILIO');
     const normalizedOrder = {
       ...order,
+      delivery_method: isMesa ? 'dine_in' : (isPickup ? 'pickup' : 'delivery'),
+      delivery_address: isDelivery ? order.delivery_address : '',
+      servicio: serviceLabel,
+      zona: serviceLabel,
       payment_method: isPaid ? 'online' : (isTpv ? 'tpv' : 'cash'),
       payment_status: isPaid ? 'PAID' : (order.payment_status || 'PENDING')
     };
