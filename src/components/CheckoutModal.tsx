@@ -122,7 +122,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   
   const isUnderMinimum = deliveryMethod === 'delivery' && (subtotal - discount) < minOrderDelivery;
   const missingAmount = Math.max(0, minOrderDelivery - (subtotal - discount));
-  const finalTotal = Math.max(0, subtotal - discount);
+  const activeDeliveryFee = deliveryMethod === 'delivery' ? Math.max(0, Number(deliveryFee || 0)) : 0;
+  const finalTotal = Math.max(0, subtotal - discount) + activeDeliveryFee;
   
   const userPoints = profile?.points || 0;
   const canRedeem = userPoints >= 20 && eligibleDiscount > 0;
@@ -136,7 +137,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   }, [canRedeem]);
 
   const validateGeofence = async (): Promise<boolean> => {
-    // 1. Domicilio estrictamente en Caniles (CP 18810)
+    // Domicilio estrictamente en Caniles (CP 18810) sin bloqueo por antenas GPS móviles
     if (deliveryMethod === 'delivery') {
       const cleanCP = addressCP.trim();
       if (cleanCP !== '18810') {
@@ -144,40 +145,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         return false;
       }
     }
-
-    // 2. Si el dispositivo tiene geolocalización activa, verificar radio de Caniles
-    return new Promise<boolean>((resolve) => {
-      if (!navigator.geolocation) {
-        resolve(true);
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat1 = position.coords.latitude;
-          const lon1 = position.coords.longitude;
-          const lat2 = 37.4346; // Caniles Center
-          const lon2 = -2.7350;
-          
-          const R = 6371; // Earth radius km
-          const dLat = (lat2 - lat1) * (Math.PI / 180);
-          const dLon = (lon2 - lon1) * (Math.PI / 180);
-          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-          const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-          
-          if (distance > 12) {
-            setGeofenceError(`Te encuentras a ${distance.toFixed(1)} km de Caniles. Néstor Pizzas opera de forma exclusiva y presencial para Caniles (Granada).`);
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        },
-        () => {
-          resolve(true);
-        },
-        { enableHighAccuracy: false, timeout: 4000, maximumAge: 60000 }
-      );
-    });
+    return true;
   };
 
   const handleCheckoutClick = async () => {
@@ -737,6 +705,11 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         </div>
 
         <div className="p-6 bg-zinc-950 text-white border-t border-zinc-800">
+          {paymentError && (
+            <div className="bg-red-500/15 border border-red-500/40 rounded-2xl p-3.5 text-center mb-4 animate-fade-in">
+              <p className="text-red-400 font-bold text-xs sm:text-sm">⚠️ {paymentError}</p>
+            </div>
+          )}
           {isUnderMinimum && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 space-y-2 mb-6">
               <div className="flex items-start gap-3">

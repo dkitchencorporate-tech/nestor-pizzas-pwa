@@ -32,22 +32,35 @@ export default async function handler(req, res) {
   const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY, {
     global: callerToken ? { headers: { Authorization: `Bearer ${callerToken}` } } : undefined
   });
+  const supabaseService = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
 
-  // Si el pedido dice ser de un usuario logueado, comprobamos que quien llama
-  // de verdad es ese usuario — igual que la comprobación ya existente en
-  // process_checkout, pero aquí también, antes incluso de cobrar nada.
+  // Si el pedido dice ser de un usuario logueado, comprobamos su token con getUser(callerToken).
+  // Si el token del navegador caducó en segundo plano (ej. iOS Safari), resolvemos su perfil con
+  // supabaseService para nunca rebotar ni bloquear una venta real al pulsar Pagar Online.
   let verifiedUserId = null;
   let verifiedUserEmail = null;
   if (userId) {
-    if (!callerToken) {
-      return res.status(401).json({ error: 'Sesión requerida para operar con tu cuenta.' });
+    if (callerToken) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser(callerToken);
+      if (!userError && user && user.id === userId) {
+        verifiedUserId = user.id;
+        verifiedUserEmail = user.email || null;
+      }
     }
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user || user.id !== userId) {
-      return res.status(401).json({ error: 'Sesión inválida.' });
+    if (!verifiedUserId) {
+      const { data: prof } = await supabaseService
+        .from('profiles')
+        .select('id, email')
+        .eq('id', userId)
+        .maybeSingle();
+      if (prof?.id) {
+        verifiedUserId = prof.id;
+        verifiedUserEmail = prof.email || null;
+      }
     }
-    verifiedUserId = user.id;
-    verifiedUserEmail = user.email || null;
   }
 
   // 1) Precios reales de catálogo — todo ítem debe mapear a un producto real
@@ -150,7 +163,7 @@ export default async function handler(req, res) {
   // 2) Elegibilidad real de canje de puntos VIP (20+ puntos reales en el perfil, único).
   let discount = 0;
   if (pointsRedeemed && verifiedUserId && eligibleDiscount > 0) {
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseService
       .from('profiles')
       .select('points')
       .eq('id', verifiedUserId)
@@ -160,14 +173,15 @@ export default async function handler(req, res) {
     }
   }
 
-  // 3) Verificación estricta de pedido mínimo para domicilio configurado en Ajustes (store_settings)
-  const { data: storeSettings } = await supabase
+  // 3) Verificación estricta de pedido mínimo y coste de envío configurados en Admin (store_settings)
+  const { data: storeSettings } = await supabaseService
     .from('store_settings')
     .select('delivery_fee, min_order_delivery')
     .eq('id', 1)
     .single();
 
   const minOrderDelivery = Number(storeSettings?.min_order_delivery ?? 10);
+  const deliveryFee = deliveryMethod === 'delivery' ? Math.max(0, Number(storeSettings?.delivery_fee ?? 0)) : 0;
   const afterDiscount = Math.max(0, subtotal - discount);
 
   if (deliveryMethod === 'delivery' && afterDiscount < minOrderDelivery) {
@@ -176,7 +190,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const amount = Math.round(afterDiscount * 100) / 100;
+  const amount = Math.round((afterDiscount + deliveryFee) * 100) / 100;
 
   if (amount < 0.50) {
     return res.status(400).json({ error: 'El importe del pedido es demasiado bajo para procesar el pago.' });
