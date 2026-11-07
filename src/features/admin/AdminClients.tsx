@@ -182,10 +182,11 @@ export default function AdminClients() {
 
   const doDelete = async (customer: UnifiedClient) => {
     try {
-      const res = await fetch('/api/admin-delete-customer', {
+      const res = await fetch('/api/admin-customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'delete',
           id: customer.id,
           phone: customer.phone,
           isApp: customer.is_app,
@@ -788,10 +789,11 @@ function EditClientModal({ customer, onClose, onSuccess, onError }: {
         ? JSON.stringify({ street: street.trim(), number: number.trim(), cp: cp.trim(), notes: notes.trim() })
         : null;
 
-      const res = await fetch('/api/admin-update-customer', {
+      const res = await fetch('/api/admin-customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'update',
           id: customer.id,
           fullName: fullName.trim(),
           phone: phone.trim(),
