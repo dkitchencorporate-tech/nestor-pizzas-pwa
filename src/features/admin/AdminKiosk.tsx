@@ -269,7 +269,7 @@ export default function AdminKiosk() {
   const skipClientAssignment = () => {
     setClientInfo({
       full_name: tableName.trim() ? tableName.trim() : 'Mesa / Local',
-      phone: '000000000',
+      phone: '',
       address: 'Local',
       is_registered: false
     });
@@ -303,10 +303,11 @@ export default function AdminKiosk() {
 
 
       let rpcName = 'process_checkout';
+      const cleanKioskPhone = clientInfo?.phone && clientInfo.phone !== 'Sin Teléfono' && !clientInfo.phone.includes('00000') ? clientInfo.phone.trim() : null;
       let rpcParams: any = {
         p_user_id: clientInfo?.id || null,
         p_client_name: deliveryMethod === 'local' ? (tableName.trim() || clientInfo?.full_name || 'Mesa / Local') : (clientInfo?.full_name || 'Sin Nombre'),
-        p_client_phone: deliveryMethod === 'local' ? '000000000' : (clientInfo?.phone || '000000000'),
+        p_client_phone: cleanKioskPhone,
         p_delivery_address: deliveryMethod === 'local' ? (tableName.trim() ? `Mesa: ${tableName.trim()}` : 'Local') : (clientInfo?.address || 'Local'),
         p_delivery_method: deliveryMethod,
         p_items: formattedItems,

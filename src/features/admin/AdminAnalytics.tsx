@@ -278,7 +278,13 @@ export default function AdminAnalytics() {
       const cp = cleanPhone(order.client_phone);
       let user: any = null;
 
-      if (cp && cp !== '000000000') {
+      // Prioridad 1: Vincular por user_id directo
+      if (order.user_id) {
+        user = Array.from(usersMap.values()).find(u => u.id === order.user_id);
+      }
+
+      // Prioridad 2: Vincular por teléfono limpio válido (que no sea 000000000)
+      if (!user && cp && cp !== '000000000' && !cp.includes('00000')) {
         const key = `phone:${cp}`;
         if (usersMap.has(key)) {
           user = usersMap.get(key);
@@ -295,10 +301,8 @@ export default function AdminAnalytics() {
           };
           usersMap.set(key, user);
         }
-      } else if (order.user_id) {
-        user = Array.from(usersMap.values()).find(u => u.id === order.user_id);
-      } else if (order.client_name && order.client_name.trim() !== '' && !['fuera', 'mesa', 'mostrador', 'kiosko', 'anonimo'].some(t => (order.client_name || '').toLowerCase().includes(t))) {
-        // Named counter ticket (e.g. "Juan de Dios", "Alejandro martinez", "Juliana")
+      } else if (!user && order.client_name && order.client_name.trim() !== '' && !['fuera', 'mesa', 'mostrador', 'kiosko', 'anonimo'].some(t => (order.client_name || '').toLowerCase().includes(t))) {
+        // Prioridad 3: Ticket con nombre pero sin teléfono
         const key = `name:${order.client_name.trim().toLowerCase()}`;
         if (usersMap.has(key)) {
           user = usersMap.get(key);
@@ -306,7 +310,7 @@ export default function AdminAnalytics() {
           user = {
             id: 'ticket-' + order.id,
             full_name: order.client_name.trim(),
-            phone: order.client_phone || 'Mostrador / Local',
+            phone: null,
             clean_phone: null,
             points: 0,
             is_ghost: true,
@@ -330,6 +334,11 @@ export default function AdminAnalytics() {
       u.orderCount = u.orderHistory.length;
       u.totalSpent = u.orderHistory.reduce((sum: number, o: any) => sum + (o.status !== 'cancelled' ? Number(o.total_amount || 0) : 0), 0);
       u.lastOrderDate = u.orderHistory[0]?.created_at || null;
+
+      // Calcular puntos VIP ganados si la cuenta aún no los tenía sincronizados (4 pts por cada 10€)
+      if ((!u.points || u.points === 0) && u.totalSpent > 0) {
+        u.points = Math.max(0, Math.round((u.totalSpent / 10) * 4));
+      }
     });
 
     // Ordenar: Clientes con pedidos reales van primero por última compra; luego el resto por fecha de registro
@@ -789,14 +798,15 @@ export default function AdminAnalytics() {
                   className="border-b border-zinc-800 hover:bg-zinc-800/40 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3 font-mono text-[10px] text-zinc-500 whitespace-nowrap">{u.id.slice(0,8)}...</td>
-                  <td className="px-4 py-3 text-white font-bold">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate max-w-[200px]">{u.full_name || t('no_name')}</span>
-                      {u.is_app && <span className="text-[9px] bg-green-500/20 text-green-400 border border-green-500/40 px-1.5 py-0.5 rounded font-mono uppercase whitespace-nowrap">App</span>}
-                    </div>
+                  <td className="px-4 py-3 text-white font-bold whitespace-nowrap">
+                    <span className="truncate max-w-[220px] block">{u.full_name || t('no_name')}</span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <p className="text-white font-mono text-xs">{u.phone || t('no_phone')}</p>
+                    {u.phone && !u.phone.includes('00000') && u.phone.trim() !== '' && u.phone !== 'Sin Teléfono' ? (
+                      <p className="text-white font-mono text-xs">{u.phone}</p>
+                    ) : (
+                      <p className="text-zinc-600 text-xs italic">Sin teléfono</p>
+                    )}
                     {u.email && <p className="text-zinc-500 text-[11px] truncate max-w-[150px]">{u.email}</p>}
                   </td>
                   <td className="px-4 py-3 text-center whitespace-nowrap min-w-[115px]">

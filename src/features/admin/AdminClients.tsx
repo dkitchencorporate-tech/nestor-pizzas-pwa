@@ -182,9 +182,19 @@ export default function AdminClients() {
 
   const doDelete = async (customer: UnifiedClient) => {
     try {
-      const { error } = await supabase.rpc('admin_delete_kiosk_customer', { p_id: customer.id });
-      if (error) throw error;
-      showNotification('Ficha eliminada correctamente.', 'success');
+      const res = await fetch('/api/admin-delete-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: customer.id,
+          phone: customer.phone,
+          isApp: customer.is_app,
+          isKiosk: customer.is_kiosk
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al eliminar el cliente.');
+      showNotification('Cliente eliminado correctamente.', 'success');
       fetchAllClients();
     } catch (error: any) {
       console.error('Error eliminando cliente:', error);
@@ -194,8 +204,8 @@ export default function AdminClients() {
 
   const deleteCustomer = (customer: UnifiedClient) => {
     askConfirm(
-      'Eliminar ficha',
-      `¿Eliminar a "${customer.full_name}" del listado de mostrador? Los pedidos históricos se conservan.`,
+      'Eliminar cliente',
+      `¿Deseas eliminar a "${customer.full_name}" del directorio de clientes? Los pedidos históricos se conservan por motivos fiscales.`,
       () => doDelete(customer)
     );
   };
@@ -383,14 +393,12 @@ export default function AdminClients() {
                           >
                             Editar
                           </button>
-                          {c.is_kiosk && (
-                            <button
-                              onClick={() => deleteCustomer(c)}
-                              className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold border border-red-500/20 transition-colors"
-                            >
-                              Borrar
-                            </button>
-                          )}
+                          <button
+                            onClick={() => deleteCustomer(c)}
+                            className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold border border-red-500/20 transition-colors"
+                          >
+                            Borrar
+                          </button>
                         </div>
                       </td>
                     </tr>
