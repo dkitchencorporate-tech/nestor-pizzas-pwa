@@ -8,6 +8,7 @@ import { emailService } from '../lib/emailService';
 import { useI18nStore } from '../store/i18nStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { getCachedCatalogData } from '../lib/catalogPreload';
+import { useLoyaltyStore } from '../store/loyaltyStore';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -95,11 +96,20 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const isOpen = isStoreOpen();
   const availableSlots = generateAvailableTimeSlots(15);
 
+  const { config: loyaltyConfig, fetchLoyaltyConfig } = useLoyaltyStore();
+  useEffect(() => {
+    fetchLoyaltyConfig();
+  }, [fetchLoyaltyConfig]);
+
   const subtotal = getTotal();
-  
-  // Productos elegibles para el descuento VIP (Solo Pizzas Sugerencia: NUESTRAS PIZZAS y PIZZAS BLANCAS, nunca hamburguesas ni postres).
+  const userPoints = profile?.points || 0;
+  const activeRewards = (loyaltyConfig.rewards || []).filter(r => r.active !== false);
+  const globalMinRedeemOrder = Number(loyaltyConfig.min_order_to_redeem || 15);
+  const pointsPer10Eur = Number(loyaltyConfig.points_per_10_eur ?? 2);
+
+  // Productos elegibles para el descuento VIP según recompensas activas en Admin (Pizzas Sugerencia o productos específicos)
   const catalogProducts = getCachedCatalogData()?.products || [];
-  const eligibleItems = items.filter(item => {
+  const isPizzaSugerenciaItem = (item: any) => {
     const nameLower = String(item.name || '').toLowerCase();
     if (nameLower.includes('(promo jueves)') || nameLower.includes('dulce') || nameLower.includes('burguer')) {
       return false;
@@ -113,21 +123,54 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       return true;
     }
     return nameLower.includes('pizza');
-  });
+  };
+
+  const getMatchingRewardForItem = (item: any) => {
+    // 1. Coincidencia por producto específico creado en Admin
+    const prodReward = activeRewards.find(
+      r => r.target_type === 'product' && Number(r.product_id) === Number(item.productId)
+    );
+    if (prodReward) return prodReward;
+    // 2. Coincidencia con Pizza Sugerencia
+    const pizzaReward = activeRewards.find(r => r.target_type === 'pizzas_sugerencia');
+    if (pizzaReward && isPizzaSugerenciaItem(item)) return pizzaReward;
+    return null;
+  };
+
+  const eligibleItems = loyaltyConfig.enabled
+    ? items.filter(item => {
+        const reward = getMatchingRewardForItem(item);
+        return reward !== null;
+      })
+    : [];
+
   const selectedRedeemItem = eligibleItems.find(i => i.id === redeemItemId)
     || (eligibleItems.length > 0 ? eligibleItems.reduce((cheapest, i) => i.price < cheapest.price ? i : cheapest) : null);
+  const selectedReward = selectedRedeemItem ? getMatchingRewardForItem(selectedRedeemItem) : activeRewards[0] || null;
+  const requiredPointsCost = Number(selectedReward?.points_cost || 20);
+  const requiredMinOrder = Math.max(globalMinRedeemOrder, Number(selectedReward?.min_order || globalMinRedeemOrder));
   const eligibleDiscount = selectedRedeemItem ? selectedRedeemItem.price : 0;
 
-  const discount = pointsRedeemed && eligibleDiscount > 0 ? eligibleDiscount : 0;
-  
-  const isUnderMinimum = deliveryMethod === 'delivery' && (subtotal - discount) < minOrderDelivery;
-  const missingAmount = Math.max(0, minOrderDelivery - (subtotal - discount));
+  const hasEnoughPoints = userPoints >= requiredPointsCost;
+  const meetsRedeemMinOrder = subtotal >= requiredMinOrder;
+  const missingForRedeem = Math.max(0, requiredMinOrder - subtotal);
+  const canRedeem = loyaltyConfig.enabled && hasEnoughPoints && eligibleDiscount > 0 && meetsRedeemMinOrder;
+
+  // Si el usuario quita productos de la cesta y baja de 15,00 €, desactivar el canje automáticamente
+  useEffect(() => {
+    if (pointsRedeemed && !canRedeem) {
+      setPointsRedeemed(false);
+    }
+  }, [pointsRedeemed, canRedeem]);
+
+  const discount = pointsRedeemed && canRedeem && eligibleDiscount > 0 ? eligibleDiscount : 0;
+
+  // El pedido mínimo de reparto (10€) se evalúa sobre el subtotal real de la cesta antes del regalo VIP
+  const isUnderMinimum = deliveryMethod === 'delivery' && subtotal < minOrderDelivery;
+  const missingAmount = Math.max(0, minOrderDelivery - subtotal);
   const activeDeliveryFee = deliveryMethod === 'delivery' ? Math.max(0, Number(deliveryFee || 0)) : 0;
   const finalTotal = Math.max(0, subtotal - discount) + activeDeliveryFee;
-  
-  const userPoints = profile?.points || 0;
-  const canRedeem = userPoints >= 20 && eligibleDiscount > 0;
-  const pointsEarned = Math.floor(finalTotal / 10) * 2;
+  const pointsEarned = loyaltyConfig.enabled ? Math.floor(finalTotal / 10) * pointsPer10Eur : 0;
 
   useEffect(() => {
     if (canRedeem && sessionStorage.getItem('nestor_auto_redeem_vip') === 'true') {
@@ -185,20 +228,28 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       orderNotes.trim() ? `📝 ${orderNotes.trim()}` : ''
     ].filter(Boolean).join(' | ');
 
-    const orderItems = items.map(item => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      price: item.price,
-      unit_price: item.price,
-      name: item.name,
-      redeem_target: !!(pointsRedeemed && selectedRedeemItem && item.id === selectedRedeemItem.id),
-      customization_details: {
+    const orderItems = items.map(item => {
+      const isRedeemedTarget = !!(pointsRedeemed && canRedeem && selectedRedeemItem && item.id === selectedRedeemItem.id);
+      return {
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+        unit_price: item.price,
         name: item.name,
-        notes: item.notes,
-        extras: item.extras,
-        size: item.size
-      }
-    }));
+        redeem_target: isRedeemedTarget,
+        customization_details: {
+          name: item.name,
+          notes: item.notes,
+          extras: item.extras,
+          size: item.size,
+          ...(isRedeemedTarget ? {
+            is_vip_reward: true,
+            vip_points_redeemed: requiredPointsCost,
+            vip_discount: item.price
+          } : {})
+        }
+      };
+    });
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -244,18 +295,26 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       : addressNotes ? `Recogida Caniles (C. Alcalde Felip, 9). Notas: ${addressNotes}` : 'Recogida en local Caniles (C. Alcalde Felip, 9 — 18810)';
 
     try {
-      const orderItems = items.map(item => ({
-        product_id: typeof item.productId === 'number' && item.productId < 100000 ? item.productId : null,
-        quantity: item.quantity,
-        unit_price: item.price,
-        redeem_target: !!(pointsRedeemed && selectedRedeemItem && item.id === selectedRedeemItem.id),
-        customization_details: {
-          name: item.name,
-          notes: item.notes,
-          extras: item.extras,
-          size: item.size
-        }
-      }));
+      const orderItems = items.map(item => {
+        const isRedeemedTarget = !!(pointsRedeemed && canRedeem && selectedRedeemItem && item.id === selectedRedeemItem.id);
+        return {
+          product_id: typeof item.productId === 'number' && item.productId < 100000 ? item.productId : null,
+          quantity: item.quantity,
+          unit_price: item.price,
+          redeem_target: isRedeemedTarget,
+          customization_details: {
+            name: item.name,
+            notes: item.notes,
+            extras: item.extras,
+            size: item.size,
+            ...(isRedeemedTarget ? {
+              is_vip_reward: true,
+              vip_points_redeemed: requiredPointsCost,
+              vip_discount: item.price
+            } : {})
+          }
+        };
+      });
 
       const finalOrderNotes = [
         scheduledTime !== 'asap' ? `⏰ Programado: ${scheduledTime}` : '',
@@ -392,10 +451,19 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
               </span>
             </div>
             <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1 no-scrollbar">
-              {items.map((item, index) => (
-                <div key={index} className="flex items-center justify-between bg-zinc-950 p-3 rounded-xl border border-zinc-800 group">
+              {items.map((item, index) => {
+                const isRedeemedTarget = !!(pointsRedeemed && canRedeem && selectedRedeemItem && item.id === selectedRedeemItem.id);
+                return (
+                <div key={index} className={`flex items-center justify-between bg-zinc-950 p-3 rounded-xl border group ${isRedeemedTarget ? 'border-amber-500/60 bg-amber-500/10' : 'border-zinc-800'}`}>
                   <div className="flex flex-col flex-1 min-w-0 mr-2">
-                    <span className="font-bold text-white text-sm truncate">{item.quantity}x {tDynamic(item.name)}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-white text-sm truncate">{item.quantity}x {tDynamic(item.name)}</span>
+                      {isRedeemedTarget && (
+                        <span className="bg-amber-500 text-black text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">
+                          🎁 CANJEADO CON {requiredPointsCost} PTOS (-{item.price.toFixed(2)} €)
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs text-zinc-400">{item.size === 'maxi' ? t('size_maxi') : t('size_normal')}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -409,12 +477,13 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           {/* Puntos Club VIP */}
-          {user ? (
+          {user && loyaltyConfig.enabled ? (
             <>
             <div className="bg-gradient-to-r from-zinc-950 to-zinc-900 border border-yellow-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
               <div className="flex items-center gap-3">
@@ -422,10 +491,16 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                 <div>
                   <span className="font-bold text-white block text-sm sm:text-sm">{t('vip_club')} <span className="text-yellow-400 font-display font-extrabold">{userPoints}</span> {t('points')}</span>
                   <span className="text-[11px] sm:text-sm text-zinc-400 leading-tight block">
-                    {eligibleDiscount > 0 ? (
-                      <>{t('redeem_25')} <strong className="text-green-400">-{eligibleDiscount.toFixed(2)} €</strong></>
+                    {pointsRedeemed && selectedRedeemItem ? (
+                      <>🎁 Canjeando <strong>{requiredPointsCost} ptos</strong> por <strong className="text-amber-300">{selectedRedeemItem.name}</strong> (<strong className="text-green-400">-{eligibleDiscount.toFixed(2)} €</strong>)</>
+                    ) : eligibleDiscount > 0 && hasEnoughPoints && !meetsRedeemMinOrder ? (
+                      <span className="text-amber-400 font-bold">
+                        ⚠️ Pedido mínimo de {requiredMinOrder.toFixed(2)} € para canjear tus puntos (te faltan {missingForRedeem.toFixed(2)} €)
+                      </span>
+                    ) : eligibleDiscount > 0 ? (
+                      <>Canjea {requiredPointsCost} ptos por <strong className="text-white">{selectedRedeemItem?.name}</strong> (<strong className="text-green-400">-{eligibleDiscount.toFixed(2)} €</strong> · Pedido mín. {requiredMinOrder.toFixed(2)} €)</>
                     ) : (
-                      <>{t('add_pizza_redeem')}</>
+                      <>{t('add_pizza_redeem')} (Pedido mín. {requiredMinOrder.toFixed(2)} €)</>
                     )}
                   </span>
                   <span className="text-[10px] text-green-400 font-bold block mt-0.5">{t('earn_points')} +{pointsEarned} {t('with_this_order')}</span>
@@ -436,7 +511,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                 disabled={!canRedeem && !pointsRedeemed}
                 className={`w-full sm:w-auto justify-center font-display font-bold px-4 py-2.5 rounded-xl text-sm uppercase tracking-wider shrink-0 transition-all border ${pointsRedeemed ? 'bg-green-600 text-white border-green-500' : (canRedeem ? 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700' : 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed')}`}
               >
-                {pointsRedeemed ? t('redeemed_btn') : t('redeem_btn')}
+                {pointsRedeemed ? `✓ CANJEADO (-${eligibleDiscount.toFixed(2)} €)` : `CANJEAR ${requiredPointsCost} PTOS`}
               </button>
             </div>
             {pointsRedeemed && eligibleItems.length > 1 && (

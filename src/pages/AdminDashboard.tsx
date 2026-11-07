@@ -10,6 +10,7 @@ import AdminHistory from '../features/admin/AdminHistory';
 import AdminPrinterSettings from '../features/admin/AdminPrinterSettings';
 import AdminSchedule from '../features/admin/AdminSchedule';
 import AdminStoreSettings from '../features/admin/AdminStoreSettings';
+import AdminPromotions from '../features/admin/AdminPromotions';
 import { supabase } from '../lib/supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useAdminUiStore } from '../store/adminUiStore';
@@ -319,6 +320,13 @@ export default function AdminDashboard() {
             >
               🖨️ <span className="uppercase tracking-wider">Impresoras</span>
             </button>
+            {/* 6.5. Promos y Puntos VIP */}
+            <button
+              onClick={() => { setActiveTab('promotions'); setIsSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'promotions' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'text-gray-400 hover:bg-zinc-800/50 hover:text-white'}`}
+            >
+              🎁 <span className="uppercase tracking-wider">Promos y Puntos VIP</span>
+            </button>
             {/* 7. Ajustes */}
             <button
               onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }}
@@ -458,6 +466,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className={activeTab === 'schedule' ? 'block h-full overflow-y-auto' : 'hidden'}><AdminSchedule /></div>
+          <div className={activeTab === 'promotions' ? 'block h-full overflow-y-auto' : 'hidden'}><AdminPromotions /></div>
           <div className={activeTab === 'settings' ? 'block h-full overflow-y-auto' : 'hidden'}><AdminStoreSettings /></div>
         </div>
       </main>

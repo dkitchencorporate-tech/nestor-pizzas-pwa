@@ -92,10 +92,37 @@ export default async function handler(req, res) {
   const isThursdayInMadrid = madridWeekday === 'Thursday';
   const JUEVES_PROMO_PRICE = 5.50;
 
+  // Cargar configuración dinámica de Club VIP / Promociones (app_settings.loyalty_config)
+  let loyaltyConfig = { enabled: true, points_per_10_eur: 2, min_order_to_redeem: 15, rewards: [] };
+  if (pointsRedeemed) {
+    try {
+      const { data: loyaltyRow } = await supabaseService
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'loyalty_config')
+        .maybeSingle();
+      if (loyaltyRow?.value) {
+        const parsed = typeof loyaltyRow.value === 'string' ? JSON.parse(loyaltyRow.value) : loyaltyRow.value;
+        loyaltyConfig = {
+          enabled: parsed.enabled !== false,
+          points_per_10_eur: Number(parsed.points_per_10_eur ?? 2),
+          min_order_to_redeem: Number(parsed.min_order_to_redeem ?? 15),
+          rewards: Array.isArray(parsed.rewards) ? parsed.rewards : []
+        };
+      }
+    } catch {
+      // use defaults
+    }
+  }
+  const activeRewards = (loyaltyConfig.rewards || []).filter(r => r.active !== false);
+
   const productsById = new Map((products || []).map(p => [p.id, p]));
   let subtotal = 0;
   let eligibleDiscount = 0;
   let redeemTargetChosen = false;
+  let redeemedItemIndex = -1;
+  let requiredPointsCost = 20;
+  let requiredMinOrder = Number(loyaltyConfig.min_order_to_redeem || 15);
   // Guardado por posición para reutilizar el mismo precio (ya con el
   // descuento de Jueves Locos aplicado si toca) al construir el pedido
   // pendiente más abajo — así el importe que cobra SumUp y el que queda
@@ -141,7 +168,7 @@ export default async function handler(req, res) {
 
     subtotal += unitPrice * qty;
 
-    if (pointsRedeemed) {
+    if (pointsRedeemed && loyaltyConfig.enabled) {
       const nameLower = (product.name || '').toLowerCase();
       const isEligiblePizza = !isJuevesPromoItem && (
         product.jueves_promo_eligible === true ||
@@ -149,31 +176,56 @@ export default async function handler(req, res) {
         product.category_id === 'PIZZAS BLANCAS' ||
         (nameLower.includes('pizza') && !nameLower.includes('dulce') && !nameLower.includes('burguer'))
       );
-      if (isEligiblePizza) {
+
+      let matchedReward = activeRewards.find(
+        r => r.target_type === 'product' && Number(r.product_id) === Number(product.id)
+      );
+      if (!matchedReward && isEligiblePizza) {
+        matchedReward = activeRewards.find(r => r.target_type === 'pizzas_sugerencia') || {
+          points_cost: 20,
+          min_order: loyaltyConfig.min_order_to_redeem || 15
+        };
+      }
+
+      if (matchedReward) {
+        const rewardCost = Math.max(1, Number(matchedReward.points_cost || 20));
+        const rewardMinOrder = Math.max(Number(loyaltyConfig.min_order_to_redeem || 15), Number(matchedReward.min_order || 15));
         if (item.redeem_target === true) {
           eligibleDiscount = unitPrice;
           redeemTargetChosen = true;
+          redeemedItemIndex = index;
+          requiredPointsCost = rewardCost;
+          requiredMinOrder = rewardMinOrder;
         } else if (!redeemTargetChosen && (eligibleDiscount === 0 || unitPrice < eligibleDiscount)) {
           eligibleDiscount = unitPrice;
+          redeemedItemIndex = index;
+          requiredPointsCost = rewardCost;
+          requiredMinOrder = rewardMinOrder;
         }
       }
     }
   }
 
-  // 2) Elegibilidad real de canje de puntos VIP (20+ puntos reales en el perfil, único).
+  // 2) Elegibilidad real de canje de puntos VIP (pedido >= 15€ y puntos reales en el perfil).
   let discount = 0;
-  if (pointsRedeemed && verifiedUserId && eligibleDiscount > 0) {
+  if (pointsRedeemed && loyaltyConfig.enabled && verifiedUserId && eligibleDiscount > 0) {
+    if (subtotal < requiredMinOrder) {
+      return res.status(400).json({
+        error: `El pedido mínimo para canjear tus puntos VIP es de ${requiredMinOrder.toFixed(2)} €. Te faltan ${(requiredMinOrder - subtotal).toFixed(2)} €.`
+      });
+    }
     const { data: profile } = await supabaseService
       .from('profiles')
       .select('points')
       .eq('id', verifiedUserId)
       .single();
-    if (profile && profile.points >= 20) {
+    if (profile && profile.points >= requiredPointsCost) {
       discount = eligibleDiscount;
     }
   }
 
   // 3) Verificación estricta de pedido mínimo y coste de envío configurados en Admin (store_settings)
+  // El pedido mínimo de reparto se comprueba sobre el subtotal real del carrito antes del descuento VIP
   const { data: storeSettings } = await supabaseService
     .from('store_settings')
     .select('delivery_fee, min_order_delivery')
@@ -184,9 +236,9 @@ export default async function handler(req, res) {
   const deliveryFee = deliveryMethod === 'delivery' ? Math.max(0, Number(storeSettings?.delivery_fee ?? 0)) : 0;
   const afterDiscount = Math.max(0, subtotal - discount);
 
-  if (deliveryMethod === 'delivery' && afterDiscount < minOrderDelivery) {
+  if (deliveryMethod === 'delivery' && subtotal < minOrderDelivery) {
     return res.status(400).json({
-      error: `El pedido mínimo para envíos a domicilio en Caniles es de ${minOrderDelivery.toFixed(2)} €. Te faltan ${(minOrderDelivery - afterDiscount).toFixed(2)} €.`
+      error: `El pedido mínimo para envíos a domicilio en Caniles es de ${minOrderDelivery.toFixed(2)} €. Te faltan ${(minOrderDelivery - subtotal).toFixed(2)} €.`
     });
   }
 
@@ -205,13 +257,24 @@ export default async function handler(req, res) {
     p_client_phone: clientPhone,
     p_delivery_address: deliveryAddress,
     p_delivery_method: deliveryMethod,
-    p_items: items.map((item, index) => ({
-      product_id: item.productId,
-      quantity: item.quantity,
-      unit_price: unitPricesByIndex[index],
-      redeem_target: !!item.redeem_target,
-      customization_details: item.customization_details || { name: item.name, notes: item.notes, extras: item.extras }
-    })),
+    p_items: items.map((item, index) => {
+      const isRedeemedTarget = discount > 0 && index === redeemedItemIndex;
+      const baseCustom = item.customization_details || { name: item.name, notes: item.notes, extras: item.extras };
+      return {
+        product_id: item.productId,
+        quantity: item.quantity,
+        unit_price: unitPricesByIndex[index],
+        redeem_target: isRedeemedTarget || !!item.redeem_target,
+        customization_details: isRedeemedTarget
+          ? {
+              ...baseCustom,
+              is_vip_reward: true,
+              vip_points_redeemed: requiredPointsCost,
+              vip_discount: discount
+            }
+          : baseCustom
+      };
+    }),
     p_points_redeemed: !!discount,
     p_small_order_fee_accepted: false,
     p_ip_address: 'client',

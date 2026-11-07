@@ -1,5 +1,6 @@
 // Servicio de Impresión Independiente a través de un Proxy Node.js Local
 // Convierte un JSON de Ticket en un payload ESC/POS (Texto Plano formateado)
+import { getOrderVipRedemptionInfo } from '../store/loyaltyStore';
 
 export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
   try {
@@ -116,12 +117,18 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     text += `--------------------------------
 `;
     
+    const vipInfo = getOrderVipRedemptionInfo(order);
+
     if (order.order_items && Array.isArray(order.order_items)) {
       order.order_items.forEach((item: any) => {
         const qty = item.quantity || 1;
         const price = item.unit_price || 0;
         const lineTotal = (qty * price).toFixed(2);
         let itemName = item.customization_details?.name || item.products?.name || 'Producto';
+        const isRedeemedItem = vipInfo.hasVipRedemption && (
+          item?.customization_details?.is_vip_reward === true ||
+          (vipInfo.redeemedItemId !== null && item.id === vipInfo.redeemedItemId)
+        );
         
         if (item.is_new) {
           itemName += ' [NUEVO]';
@@ -131,6 +138,10 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
         
         text += `${qty}x    ${itemName.padEnd(16).slice(0, 16)} ${lineTotal.padStart(6)}E
 `;
+        if (isRedeemedItem) {
+          text += `  * [CANJE VIP ${vipInfo.pointsRedeemed} PTOS: -${Number(vipInfo.discountApplied).toFixed(2)} EUR]
+`;
+        }
         
         if (item.customization_details?.extras && Array.isArray(item.customization_details.extras)) {
           item.customization_details.extras.forEach((extra: any) => {
@@ -158,11 +169,17 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
 
     text += `--------------------------------
 `;
-    if (order.discount_applied > 0) {
-      text += `DESCUENTO VIP:        -${order.discount_applied.toFixed(2)} EUR
+    const totalNum = Number(order.total_amount || 0);
+    if (vipInfo.hasVipRedemption) {
+      const subtotalNum = totalNum + Number(vipInfo.discountApplied || 0);
+      text += `SUBTOTAL:             ${subtotalNum.toFixed(2)} EUR
+`;
+      text += `CANJE VIP (${vipInfo.pointsRedeemed} PTOS):  -${Number(vipInfo.discountApplied).toFixed(2)} EUR
+`;
+      text += `PROD. VIP: ${vipInfo.redeemedProductName}
 `;
     }
-    const totalFinal = typeof order.total_amount === 'number' ? order.total_amount.toFixed(2) : '0.00';
+    const totalFinal = totalNum.toFixed(2);
     text += `TOTAL A PAGAR:        ${totalFinal} EUR
 `;
     text += `--------------------------------
@@ -183,14 +200,44 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
 `; // Espacio para el corte térmico
 
     const serviceLabel = isMesa ? 'SALA / MESA' : (isPickup ? 'RECOGIDA EN LOCAL' : 'A DOMICILIO');
+    const enrichedItems = Array.isArray(order.order_items)
+      ? order.order_items.map((item: any) => {
+          const isRedeemedItem = vipInfo.hasVipRedemption && (
+            item?.customization_details?.is_vip_reward === true ||
+            (vipInfo.redeemedItemId !== null && item.id === vipInfo.redeemedItemId)
+          );
+          if (!isRedeemedItem) return item;
+          const prevExtras = Array.isArray(item.customization_details?.extras) ? item.customization_details.extras : [];
+          const vipTag = `CANJE PUNTOS VIP (${vipInfo.pointsRedeemed} PTOS): -${Number(vipInfo.discountApplied).toFixed(2)} EUR`;
+          const hasTag = prevExtras.some((e: any) => (typeof e === 'string' ? e : e?.name || '').includes('CANJE PUNTOS VIP'));
+          return {
+            ...item,
+            is_vip_reward: true,
+            customization_details: {
+              ...(item.customization_details || {}),
+              is_vip_reward: true,
+              vip_points_redeemed: vipInfo.pointsRedeemed,
+              vip_discount: vipInfo.discountApplied,
+              extras: hasTag ? prevExtras : [vipTag, ...prevExtras]
+            }
+          };
+        })
+      : [];
+
     const normalizedOrder = {
       ...order,
+      order_items: enrichedItems,
       delivery_method: isMesa ? 'dine_in' : (isPickup ? 'pickup' : 'delivery'),
       delivery_address: isDelivery ? order.delivery_address : '',
       servicio: serviceLabel,
       zona: serviceLabel,
       payment_method: isPaid ? 'online' : (isTpv ? 'tpv' : 'cash'),
-      payment_status: isPaid ? 'PAID' : (order.payment_status || 'PENDING')
+      payment_status: isPaid ? 'PAID' : (order.payment_status || 'PENDING'),
+      vip_redeemed: vipInfo.hasVipRedemption,
+      points_redeemed: vipInfo.pointsRedeemed,
+      discount_applied: vipInfo.discountApplied,
+      subtotal_amount: Number((totalNum + Number(vipInfo.discountApplied || 0)).toFixed(2)),
+      vip_product_name: vipInfo.redeemedProductName
     };
 
     const payload = {

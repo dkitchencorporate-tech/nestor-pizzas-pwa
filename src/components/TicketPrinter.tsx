@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18nStore } from '../store/i18nStore';
 import { formatAddress } from '../utils/addressUtils';
+import { getOrderVipRedemptionInfo } from '../store/loyaltyStore';
 
 interface TicketPrinterProps {
   order: any;
@@ -24,6 +25,7 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
   const isTpv = order.payment_method === 'tpv' || order.payment_method === 'card_delivery';
   const isCash = !isPaid && !isTpv;
   const orderCleanId = (order.id ? order.id.toString().replace(/^#+/, '') : '00000000').slice(0, 8).toUpperCase();
+  const vipInfo = getOrderVipRedemptionInfo(order);
 
   return (
     <div id="ticket-printer-content" className="ticket-printer-container bg-white text-black font-mono p-2 text-xs leading-snug">
@@ -102,7 +104,12 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
             </tr>
           </thead>
           <tbody>
-            {order.order_items?.map((item: any, index: number) => (
+            {order.order_items?.map((item: any, index: number) => {
+              const isRedeemedItem = vipInfo.hasVipRedemption && (
+                item?.customization_details?.is_vip_reward === true ||
+                (vipInfo.redeemedItemId !== null && item.id === vipInfo.redeemedItemId)
+              );
+              return (
               <tr key={index} className="border-b border-dotted border-gray-400">
                 <td className="py-2 text-base font-black align-top">{item.quantity}x</td>
                 <td className="py-2 align-top">
@@ -111,6 +118,11 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
                     {item.is_new && <span className="ml-1 bg-black text-white px-1 text-[9px] uppercase inline-block">NUEVO</span>}
                     {item.is_old && <span className="ml-1 text-gray-500 italic text-[9px] uppercase inline-block">(Ya Pedido)</span>}
                   </span>
+                  {isRedeemedItem && (
+                    <span className="mt-0.5 inline-block border border-black bg-gray-100 px-1 py-0.5 text-[10px] font-black uppercase">
+                      ★ CANJE PUNTOS VIP ({vipInfo.pointsRedeemed} PTOS): -{Number(vipInfo.discountApplied).toFixed(2)}€
+                    </span>
+                  )}
                   
                   {/* Extras / Toppings */}
                   {item.customization_details?.extras && Array.isArray(item.customization_details.extras) && item.customization_details.extras.length > 0 && (
@@ -132,7 +144,8 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
                   {(item.unit_price * item.quantity).toFixed(2)}€
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -147,15 +160,19 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
 
       {/* 6. TOTALES Y FORMA DE COBRO */}
       <div className="ticket-total text-right mb-3">
-        {order.discount_applied > 0 && (
-          <>
-            <p className="text-xs font-bold uppercase">
-              Subtotal: {(order.total_amount + order.discount_applied).toFixed(2)}€
+        {vipInfo.hasVipRedemption && (
+          <div className="border border-black p-1.5 mb-2 bg-gray-50 text-left">
+            <p className="text-[10px] font-black uppercase">
+              ★ CANJE CLUB VIP ({vipInfo.pointsRedeemed} PTOS USADOS)
             </p>
-            <p className="text-xs font-bold uppercase text-gray-700">
-              Descuento Club VIP: -{order.discount_applied.toFixed(2)}€
+            <p className="text-[10px] font-bold uppercase">
+              ARTÍCULO: {vipInfo.redeemedProductName}
             </p>
-          </>
+            <div className="flex justify-between text-xs font-black uppercase mt-1 pt-1 border-t border-dotted border-black">
+              <span>SUBTOTAL: {(Number(order.total_amount || 0) + Number(vipInfo.discountApplied)).toFixed(2)}€</span>
+              <span>DTO VIP: -{Number(vipInfo.discountApplied).toFixed(2)}€</span>
+            </div>
+          </div>
         )}
 
         <div className="border-t-2 border-black pt-1 mt-1">

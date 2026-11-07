@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { useCartStore } from '../store/cartStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
 import { useI18nStore } from '../store/i18nStore';
+import { useLoyaltyStore, getOrderVipRedemptionInfo } from '../store/loyaltyStore';
 
 export default function UserModal() {
   const { isUserModalOpen, closeUserModal, userModalView, setModalView, setLegalDoc, activeLegalDoc, user, profile, logout, orders } = useAuthStore();
@@ -27,6 +28,13 @@ export default function UserModal() {
   const [editCP, setEditCP] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const { updateProfile } = useAuthStore();
+  const { config: loyaltyConfig, fetchLoyaltyConfig } = useLoyaltyStore();
+
+  useEffect(() => {
+    if (isUserModalOpen) {
+      fetchLoyaltyConfig();
+    }
+  }, [isUserModalOpen, fetchLoyaltyConfig]);
 
   const formatAddress = (addrString: string | undefined | null) => {
     if (!addrString) return '-';
@@ -481,39 +489,53 @@ export default function UserModal() {
               <div className="bg-[#14141E] border border-white/5 rounded-2xl p-4">
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{t('available_rewards')}</h4>
                 <div className="space-y-2.5">
-                  {/* Recompensa 1 */}
-                  <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-[#1A1A24] hover:border-green-500/30 transition-all">
-                    <div>
-                      <div className="text-yellow-400 font-bold text-sm">20 pts</div>
-                      <div className="text-white text-[11px] font-medium">{t('free_pizza_burger')}</div>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        if ((profile?.points || 0) >= 20) {
-                          sessionStorage.setItem('nestor_auto_redeem_vip', 'true');
-                          closeUserModal();
-                          setTimeout(() => {
-                            const el = document.getElementById('category-NUESTRAS PIZZAS') || document.querySelector('[data-catalog-section]');
-                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }, 120);
-                        }
-                      }}
-                      className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all ${(profile?.points || 0) >= 20 ? 'bg-green-600 hover:bg-green-500 text-white cursor-pointer shadow-[0_0_12px_rgba(34,197,94,0.4)]' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
-                    >
-                      {(profile?.points || 0) >= 20 ? 'Canjear' : t('locked')}
-                    </button>
-                  </div>
+                  {(loyaltyConfig.rewards || []).filter(r => r.active !== false).map(reward => {
+                    const cost = Number(reward.points_cost || 20);
+                    const minOrder = Math.max(Number(loyaltyConfig.min_order_to_redeem || 15), Number(reward.min_order || 15));
+                    const canClaimReward = (profile?.points || 0) >= cost;
+                    return (
+                      <div key={reward.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-[#1A1A24] hover:border-green-500/30 transition-all">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-yellow-400 font-bold text-sm">{cost} pts</span>
+                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                              Pedido mín. {minOrder.toFixed(2)} €
+                            </span>
+                          </div>
+                          <div className="text-white text-xs font-bold mt-0.5">{reward.title}</div>
+                          <div className="text-zinc-400 text-[11px]">{reward.description}</div>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            if (canClaimReward) {
+                              sessionStorage.setItem('nestor_auto_redeem_vip', 'true');
+                              closeUserModal();
+                              setTimeout(() => {
+                                const el = document.getElementById('category-NUESTRAS PIZZAS') || document.querySelector('[data-catalog-section]');
+                                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 120);
+                            }
+                          }}
+                          className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider shrink-0 transition-all ${canClaimReward ? 'bg-green-600 hover:bg-green-500 text-white cursor-pointer shadow-[0_0_12px_rgba(34,197,94,0.4)]' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
+                        >
+                          {canClaimReward ? 'Canjear' : t('locked')}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
                 {(profile?.points || 0) >= 20 && (
                   <p className="text-[11px] text-green-400 font-bold mt-2.5 text-center">
-                    ✨ ¡Enhorabuena! Al tramitar tu pedido podrás marcar tu pizza sugerencia como recompensa gratuita.
+                    ✨ ¡Enhorabuena! En pedidos desde {Number(loyaltyConfig.min_order_to_redeem || 15).toFixed(2)} € podrás canjear tus puntos VIP en el Checkout.
                   </p>
                 )}
               </div>
 
               <div className="text-left bg-[#1A1A24] p-4 rounded-xl border border-white/5">
                 <h4 className="text-[11px] font-bold text-white uppercase mb-1">{t('how_it_works_title')}</h4>
-                <p className="text-sm text-gray-300 leading-relaxed">{t('how_it_works_desc')}</p>
+                <p className="text-sm text-gray-300 leading-relaxed">
+                  Acumulas <strong>{loyaltyConfig.points_per_10_eur || 2} puntos por cada 10 €</strong> de compra. Al alcanzar los puntos de una promoción podrás canjearla en cualquier pedido igual o superior a <strong>{Number(loyaltyConfig.min_order_to_redeem || 15).toFixed(2)} €</strong>.
+                </p>
               </div>
 
               <button onClick={logout} className="w-full bg-transparent hover:bg-red-500/10 text-red-400 border border-red-500/30 font-bold py-3.5 rounded-xl text-sm uppercase tracking-wider transition-all mt-2">
@@ -542,14 +564,23 @@ export default function UserModal() {
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 no-scrollbar">
-                  {(orders || []).map((order: any) => (
+                  {(orders || []).map((order: any) => {
+                    const vipInfo = getOrderVipRedemptionInfo(order);
+                    return (
                     <div key={order.id} className="bg-[#14141E] border border-white/5 rounded-2xl p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider mb-1">
                             {new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                           </div>
-                          {getStatusBadge(order.status)}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {getStatusBadge(order.status)}
+                            {vipInfo.hasVipRedemption && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                🎁 Canje VIP (-{vipInfo.pointsRedeemed} ptos): {vipInfo.redeemedProductName} (-{Number(vipInfo.discountApplied).toFixed(2)}€)
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="text-right">
                           <span className="font-black text-white text-lg">{Number(order.total_amount).toFixed(2)}€</span>
@@ -557,11 +588,22 @@ export default function UserModal() {
                       </div>
                       
                       <div className="space-y-1.5 mb-4">
-                        {order.order_items?.map((item: any) => (
-                          <div key={item.id} className="text-sm text-zinc-300 flex justify-between">
-                            <span><span className="text-green-500 font-bold">{item.quantity}x</span> {item.products?.name ? tDynamic(item.products.name) : t('product')}</span>
+                        {order.order_items?.map((item: any) => {
+                          const isRedeemedItem = vipInfo.hasVipRedemption && (
+                            item?.customization_details?.is_vip_reward === true ||
+                            (vipInfo.redeemedItemId !== null && item.id === vipInfo.redeemedItemId)
+                          );
+                          return (
+                          <div key={item.id} className="text-sm text-zinc-300 flex items-center justify-between flex-wrap gap-2">
+                            <span><span className="text-green-500 font-bold">{item.quantity}x</span> {item.customization_details?.name ? tDynamic(item.customization_details.name) : (item.products?.name ? tDynamic(item.products.name) : t('product'))}</span>
+                            {isRedeemedItem && (
+                              <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase px-2 py-0.5 rounded">
+                                🎁 Canjeado con {vipInfo.pointsRedeemed} ptos (-{Number(vipInfo.discountApplied).toFixed(2)}€)
+                              </span>
+                            )}
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                       
                       {order.status === 'delivered' && (
@@ -571,7 +613,8 @@ export default function UserModal() {
                         </button>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import { useGuestOrderStore } from '../store/guestOrderStore';
 import { useI18nStore } from '../store/i18nStore';
 import { supabase } from '../lib/supabase';
+import { getOrderVipRedemptionInfo } from '../store/loyaltyStore';
 
 // Instancia global compartida de AudioContext + HTML5 Audio WAV para que iOS Safari / Android
 // reproduzcan el timbre por el canal Multimedia ('playback'), sonando incluso si el iPhone
@@ -669,16 +670,49 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
 
                   <div className="p-6">
                     <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">{t('order_summary')}</h4>
-                    <div className="space-y-3">
-                      {activeOrder.order_items?.map((item: any) => (
-                        <div key={item.id} className="flex justify-between items-center text-sm">
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 h-6 rounded bg-zinc-800 text-zinc-300 flex items-center justify-center text-xs font-bold">{item.quantity}</span>
-                            <span className="text-zinc-200">{item.customization_details?.name || item.products?.name}</span>
+                    {(() => {
+                      const vipInfo = getOrderVipRedemptionInfo(activeOrder);
+                      return (
+                        <>
+                          <div className="space-y-3">
+                            {activeOrder.order_items?.map((item: any) => {
+                              const isRedeemedItem = vipInfo.hasVipRedemption && (
+                                item?.customization_details?.is_vip_reward === true ||
+                                (vipInfo.redeemedItemId !== null && item.id === vipInfo.redeemedItemId)
+                              );
+                              return (
+                                <div key={item.id} className={`flex justify-between items-center text-sm ${isRedeemedItem ? 'bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl' : ''}`}>
+                                  <div className="flex items-center gap-3 flex-wrap">
+                                    <span className="w-6 h-6 rounded bg-zinc-800 text-zinc-300 flex items-center justify-center text-xs font-bold">{item.quantity}</span>
+                                    <span className="text-zinc-200 font-bold">{item.customization_details?.name || item.products?.name}</span>
+                                    {isRedeemedItem && (
+                                      <span className="bg-amber-500 text-black text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">
+                                        🎁 CANJEADO CON {vipInfo.pointsRedeemed} PTOS VIP (GRATIS -{Number(vipInfo.discountApplied).toFixed(2)}€)
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                          {vipInfo.hasVipRedemption && (
+                            <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs">
+                              <div>
+                                <span className="font-black text-amber-400 uppercase block">
+                                  🎁 Canje Club VIP (-{vipInfo.pointsRedeemed} ptos)
+                                </span>
+                                <span className="text-zinc-300">
+                                  Producto canjeado: <strong className="text-white">{vipInfo.redeemedProductName}</strong>
+                                </span>
+                              </div>
+                              <span className="font-black text-emerald-400 text-sm">
+                                -{Number(vipInfo.discountApplied).toFixed(2)} €
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
 
                 </div>
@@ -695,7 +729,9 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                 <p className="text-zinc-500 font-medium">{t('no_completed_orders')}</p>
               </div>
             ) : (
-              historyOrders.map((order: any) => (
+              historyOrders.map((order: any) => {
+                const vipInfo = getOrderVipRedemptionInfo(order);
+                return (
                 <div key={order.id} className="bg-[#14141E] border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700 transition-colors">
                   <div className="flex justify-between items-start mb-3">
                     <div>
@@ -709,20 +745,37 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                           <span className="text-[10px] font-bold uppercase text-red-400 bg-red-500/10 px-2 py-1 rounded">{t('status_cancelled_title')}</span>
                         )}
                         <span className="text-[10px] font-mono text-zinc-500 uppercase bg-zinc-900 px-2 py-1 rounded">ID: {order.id.slice(0,8)}</span>
+                        {vipInfo.hasVipRedemption && (
+                          <span className="text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-1 rounded">
+                            🎁 CANJE {vipInfo.pointsRedeemed} PTOS VIP: {vipInfo.redeemedProductName} (-{Number(vipInfo.discountApplied).toFixed(2)}€)
+                          </span>
+                        )}
                       </div>
                     </div>
                     <span className="text-lg font-bold text-white">{order.total_amount}€</span>
                   </div>
                   
-                  <div className="mt-4 space-y-1">
-                    {order.order_items?.map((item: any) => (
-                      <div key={item.id} className="text-sm text-zinc-400">
-                        <span className="font-bold text-zinc-300">{item.quantity}x</span> {item.customization_details?.name || item.products?.name}
-                      </div>
-                    ))}
+                  <div className="mt-4 space-y-1.5">
+                    {order.order_items?.map((item: any) => {
+                      const isRedeemedItem = vipInfo.hasVipRedemption && (
+                        item?.customization_details?.is_vip_reward === true ||
+                        (vipInfo.redeemedItemId !== null && item.id === vipInfo.redeemedItemId)
+                      );
+                      return (
+                        <div key={item.id} className="text-sm text-zinc-400 flex items-center gap-2 flex-wrap">
+                          <span><span className="font-bold text-zinc-300">{item.quantity}x</span> {item.customization_details?.name || item.products?.name}</span>
+                          {isRedeemedItem && (
+                            <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase px-2 py-0.5 rounded">
+                              🎁 Canjeado con {vipInfo.pointsRedeemed} ptos (-{Number(vipInfo.discountApplied).toFixed(2)}€)
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         )}

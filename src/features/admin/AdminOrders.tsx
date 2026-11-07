@@ -8,6 +8,7 @@ import { formatAddress } from '../../utils/addressUtils';
 import { useAdminUiStore } from '../../store/adminUiStore';
 import { armAlarm, startAlarm, stopAlarm, isArmed } from '../../utils/orderAlarm';
 import { useStoreHoursStore, DEFAULT_STORE_HOURS } from '../../store/storeHoursStore';
+import { getOrderVipRedemptionInfo } from '../../store/loyaltyStore';
 
 export default function AdminOrders() {
   const { startEditingOrder } = useAdminUiStore();
@@ -419,6 +420,7 @@ export default function AdminOrders() {
             const hasUnsentMesaItems = order.delivery_method === 'local' && order.order_items?.some((i: any) => !i.customization_details?.is_sent_to_kitchen);
             const isAlerting = order.status === 'pending' || hasUnsentMesaItems;
             const isTPV = order.order_items?.[0]?.customization_details?.is_tpv_order === true;
+            const vipInfo = getOrderVipRedemptionInfo(order);
 
             return (
               <div 
@@ -474,12 +476,16 @@ export default function AdminOrders() {
                         )}
                         <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-mono uppercase tracking-widest">#{order.id.slice(0,5)}</span>
                       </div>
-                      <div className="flex gap-3 text-xs font-medium mt-1">
+                      <div className="flex flex-wrap items-center gap-3 text-xs font-medium mt-1">
                         <span className={isDelivery ? 'text-blue-400' : (order.delivery_method === 'local' ? 'text-orange-400' : 'text-purple-400')}>
                           {isDelivery ? t('delivery_method_home') : (order.delivery_method === 'local' ? 'Mesa / Local' : t('delivery_method_pickup'))}
                         </span>
                         <span className="text-zinc-400">{new Date(order.created_at).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
-                        {order.discount_applied > 0 && <span className="text-green-500 font-bold ml-2">🎫 -{order.discount_applied}€ ({t('vip')})</span>}
+                        {vipInfo.hasVipRedemption && (
+                          <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-lg font-black uppercase tracking-wider text-[11px]">
+                            🎁 CANJE VIP (-{vipInfo.pointsRedeemed} PTOS): {vipInfo.redeemedProductName} (-{Number(vipInfo.discountApplied).toFixed(2)}€)
+                          </span>
+                        )}
                         {order.status === 'cancelled' && <span className="text-red-500 font-bold ml-2">{t('cancelled')}</span>}
                       </div>
                     </div>
@@ -506,12 +512,21 @@ export default function AdminOrders() {
                           {order.order_items?.map((item: any, index: number) => {
                             const itemTime = item.created_at ? new Date(item.created_at).getTime() : new Date(order.created_at).getTime();
                             const isNewAddition = (Date.now() - itemTime) < 15 * 60000; // Added in the last 15 minutes
+                            const isRedeemedItem = vipInfo.hasVipRedemption && (
+                              item?.customization_details?.is_vip_reward === true ||
+                              (vipInfo.redeemedItemId !== null && item.id === vipInfo.redeemedItemId)
+                            );
 
                             return (
-                            <div key={index} className={`flex items-start gap-4 ${isNewAddition ? 'bg-green-500/10 border-l-2 border-green-500 p-2 rounded-r-lg' : ''}`}>
+                            <div key={index} className={`flex items-start gap-4 ${isRedeemedItem ? 'bg-amber-500/10 border-l-2 border-amber-400 p-2.5 rounded-r-xl' : isNewAddition ? 'bg-green-500/10 border-l-2 border-green-500 p-2 rounded-r-lg' : ''}`}>
                               <span className="font-black text-white whitespace-nowrap">{item.quantity}x</span>
                               <div className="flex-1 text-zinc-300">
-                                <span>{item.customization_details?.name ? tDynamic(item.customization_details.name) : (item.products?.name ? tDynamic(item.products.name) : t('unknown_product'))}</span>
+                                <span className="font-bold text-white">{item.customization_details?.name ? tDynamic(item.customization_details.name) : (item.products?.name ? tDynamic(item.products.name) : t('unknown_product'))}</span>
+                                {isRedeemedItem && (
+                                  <span className="ml-2 inline-flex items-center gap-1 bg-amber-500 text-black text-[10px] px-2 py-0.5 rounded-md uppercase tracking-wider font-black">
+                                    🎁 CANJEADO CON {vipInfo.pointsRedeemed} PTOS VIP (-{Number(vipInfo.discountApplied).toFixed(2)}€)
+                                  </span>
+                                )}
                                 {order.delivery_method === 'local' && !item.customization_details?.is_sent_to_kitchen && (
                                   <span className="ml-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse font-black shadow-[0_0_10px_rgba(220,38,38,0.6)]">🔥 NUEVO (Sin Marchar)</span>
                                 )}
@@ -532,10 +547,15 @@ export default function AdminOrders() {
                             );
                           })}
                           
-                          {order.discount_applied > 0 && (
-                            <div className="flex justify-between text-sm border-t border-zinc-800/50 pt-2 mt-2">
-                              <span className="font-bold text-green-400">{t('vip_discount_applied')}:</span>
-                              <span className="font-bold text-green-400">-{order.discount_applied}€</span>
+                          {vipInfo.hasVipRedemption && (
+                            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 mt-3 space-y-1">
+                              <div className="flex justify-between items-center text-xs font-black text-amber-300 uppercase">
+                                <span>🎁 Canje Club VIP ({vipInfo.pointsRedeemed} ptos usados)</span>
+                                <span>-{Number(vipInfo.discountApplied).toFixed(2)}€</span>
+                              </div>
+                              <p className="text-xs text-zinc-200 font-bold">
+                                Producto canjeado: <span className="text-amber-400 uppercase">{vipInfo.redeemedProductName}</span>
+                              </p>
                             </div>
                           )}
                         </div>

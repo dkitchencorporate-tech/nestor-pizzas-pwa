@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useI18nStore } from '../../store/i18nStore';
 import { formatAddress } from '../../utils/addressUtils';
 import { useAuthStore } from '../../store/authStore';
+import { getOrderVipRedemptionInfo } from '../../store/loyaltyStore';
 
 type DateFilter = 'today' | 'yesterday' | '7days' | '30days' | 'custom';
 type ServiceFilter = 'all' | 'delivery' | 'pickup' | 'local';
@@ -541,6 +542,7 @@ export default function AdminHistory() {
             const isCash = order.payment_method === 'cash' || !order.payment_method;
             const isTpv = order.payment_method === 'tpv' || order.payment_method === 'physical' || order.payment_method === 'card_delivery';
             const isOnline = order.payment_method === 'online' || order.payment_method === 'sumup_online';
+            const vipInfo = getOrderVipRedemptionInfo(order);
 
             return (
               <div 
@@ -581,6 +583,12 @@ export default function AdminHistory() {
                         }`}>
                           {isCash ? '💵 Efectivo' : (isTpv ? '💳 TPV Físico' : '📱 App / Online')}
                         </span>
+
+                        {vipInfo.hasVipRedemption && (
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                            🎁 CANJE VIP (-{vipInfo.pointsRedeemed} PTOS): {vipInfo.redeemedProductName} (-{Number(vipInfo.discountApplied).toFixed(2)}€)
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1 font-medium">
@@ -612,14 +620,24 @@ export default function AdminHistory() {
                           <span>🍕</span> Desglose de Productos
                         </h4>
                         <div className="space-y-2">
-                          {order.order_items?.map((item: any) => (
-                            <div key={item.id} className="flex gap-3 text-sm border-b border-zinc-800/60 pb-2">
+                          {order.order_items?.map((item: any) => {
+                            const isRedeemedItem = vipInfo.hasVipRedemption && (
+                              item?.customization_details?.is_vip_reward === true ||
+                              (vipInfo.redeemedItemId !== null && item.id === vipInfo.redeemedItemId)
+                            );
+                            return (
+                            <div key={item.id} className={`flex gap-3 text-sm border-b border-zinc-800/60 pb-2 ${isRedeemedItem ? 'bg-amber-500/10 border-l-2 border-l-amber-400 p-2 rounded-r-xl' : ''}`}>
                               <span className="font-black text-green-400 w-6 shrink-0">{item.quantity}x</span>
                               <div className="flex-1 text-zinc-300">
-                                <div className="font-bold text-white flex justify-between">
+                                <div className="font-bold text-white flex justify-between items-center flex-wrap gap-2">
                                   <span>{item.customization_details?.name || item.products?.name || 'Producto'}</span>
                                   <span className="text-zinc-400 font-normal">{Number(item.unit_price || 0).toFixed(2)}€</span>
                                 </div>
+                                {isRedeemedItem && (
+                                  <span className="mt-1 inline-block bg-amber-500 text-black text-[10px] font-black uppercase px-2 py-0.5 rounded">
+                                    🎁 CANJEADO CON {vipInfo.pointsRedeemed} PTOS VIP (-{Number(vipInfo.discountApplied).toFixed(2)}€)
+                                  </span>
+                                )}
                                 {item.customization_details?.extras && item.customization_details.extras.length > 0 && (
                                   <p className="text-xs text-zinc-500 mt-0.5">
                                     Extras: {item.customization_details.extras.map((e: any) => typeof e === 'string' ? e : e.name).join(', ')}
@@ -632,7 +650,14 @@ export default function AdminHistory() {
                                 )}
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
+                          {vipInfo.hasVipRedemption && (
+                            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex justify-between items-center text-xs font-bold text-amber-300">
+                              <span>🎁 Canje Club VIP ({vipInfo.pointsRedeemed} ptos): {vipInfo.redeemedProductName}</span>
+                              <span>-{Number(vipInfo.discountApplied).toFixed(2)}€</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
