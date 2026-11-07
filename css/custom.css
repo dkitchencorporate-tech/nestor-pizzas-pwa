@@ -202,6 +202,35 @@ body {
 }
 
 /* =========================================================================
+   BLINDAJE ANTI-FOUC (FLASH DE ICONOS GRUESOS Y MENÚ DESCONFIGURADO AL INICIAR)
+   ========================================================================= */
+svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    max-width: 100%;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+svg.w-4 { width: 1rem !important; height: 1rem !important; }
+svg.w-5 { width: 1.25rem !important; height: 1.25rem !important; }
+svg.w-6 { width: 1.5rem !important; height: 1.5rem !important; }
+svg.w-8 { width: 2rem !important; height: 2rem !important; }
+svg.w-10 { width: 2.5rem !important; height: 2.5rem !important; }
+svg.w-12 { width: 3rem !important; height: 3rem !important; }
+svg.w-16 { width: 4rem !important; height: 4rem !important; }
+
+/* En pantallas de escritorio (>= 768px), el aside del panel admin está fijado a 16rem
+   para que no se expanda al 100% mientras descarga o evalúa el compilador JIT de Tailwind */
+@media (min-width: 768px) {
+    aside {
+        width: 16rem !important;
+        min-width: 16rem !important;
+        max-width: 16rem !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* =========================================================================
    DUAL PRINT ENGINE (SEPARACIÓN TOTAL: COMANDAS 80MM vs INFORMES A4)
    ========================================================================= */
 
