@@ -96,11 +96,9 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   const subtotal = getTotal();
   
-  // Productos elegibles para el descuento VIP (Pizza o Burger). El cliente elige a cuál lo aplica —
-  // por defecto se preselecciona el más económico, pero puede cambiarlo a cualquier otro elegible del carrito.
+  // Productos elegibles para el descuento VIP (Solo Pizzas Sugerencia, no hamburguesas).
   const eligibleItems = items.filter(item =>
-    item.name.toLowerCase().includes('pizza') ||
-    item.name.toLowerCase().includes('burguer')
+    item.name.toLowerCase().includes('pizza')
   );
   const selectedRedeemItem = eligibleItems.find(i => i.id === redeemItemId)
     || (eligibleItems.length > 0 ? eligibleItems.reduce((cheapest, i) => i.price < cheapest.price ? i : cheapest) : null);
@@ -113,8 +111,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const finalTotal = Math.max(0, subtotal - discount);
   
   const userPoints = profile?.points || 0;
-  const canRedeem = userPoints >= 25 && eligibleDiscount > 0;
-  const pointsEarned = Math.floor(finalTotal / 10) * 4;
+  const canRedeem = userPoints >= 20 && eligibleDiscount > 0;
+  const pointsEarned = Math.floor(finalTotal / 10) * 2;
 
   const validateGeofence = async (): Promise<boolean> => {
     // 1. Domicilio estrictamente en Caniles (CP 18810)

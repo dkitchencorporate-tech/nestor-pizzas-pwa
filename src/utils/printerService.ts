@@ -23,9 +23,10 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
 `;
     text += `================================
 `;
+    const orderCleanId = (order.id ? order.id.toString().replace(/^#+/, '') : '00000000').slice(0, 8).toUpperCase();
     text += `FECHA: ${dateStr} - ${timeStr}
 `;
-    text += `TICKET: #NP-${order.id ? order.id.slice(0, 8).toUpperCase() : '00000000'}
+    text += `TICKET: #NP-${orderCleanId}
 `;
     text += `--------------------------------
 `;
@@ -33,6 +34,18 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     const isMesa = order.delivery_method === 'local';
     const isDelivery = order.delivery_method === 'delivery';
     const isPickup = order.delivery_method === 'pickup';
+
+    // Clasificación explícita de pago
+    const pMethod = order.payment_method || 'cash';
+    const isPaid = order.payment_status === 'PAID' || pMethod === 'online' || pMethod === 'sumup_online' || pMethod === 'sumup';
+    const isTpv = pMethod === 'tpv' || pMethod === 'physical' || pMethod === 'card_delivery';
+    
+    let payBanner = '*** COBRAR EN EFECTIVO ***';
+    if (isPaid) {
+      payBanner = '*** PAGADO ONLINE (NO COBRAR) ***';
+    } else if (isTpv) {
+      payBanner = '*** COBRAR CON DATAFONO ***';
+    }
     
     if (isMesa) {
       text += `TIPO:   *** SALA / MESA ***
@@ -46,6 +59,9 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
       text += `TIPO:   *** PARA RECOGER ***
 `;
     }
+
+    text += `PAGO:   ${payBanner}
+`;
     
     if (order.estimated_ready_at) {
       const readyDate = new Date(order.estimated_ready_at);
@@ -139,18 +155,13 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
 `;
     }
     const totalFinal = typeof order.total_amount === 'number' ? order.total_amount.toFixed(2) : '0.00';
-    text += `TOTAL:                 ${totalFinal} EUR
+    text += `TOTAL A PAGAR:        ${totalFinal} EUR
 `;
-    
-    // Instrucción de pago explícita
-    const pMethod = order.payment_method || 'cash';
-    let payBanner = 'EFECTIVO (Cobrar)';
-    if (pMethod === 'tpv' || pMethod === 'physical' || pMethod === 'card_delivery') {
-      payBanner = 'DATAFONO TPV (Cobrar)';
-    } else if (pMethod === 'online' || pMethod === 'sumup_online') {
-      payBanner = 'PAGADO ONLINE (SumUp)';
-    }
-    text += `COBRO:                 ${payBanner}
+    text += `--------------------------------
+`;
+    text += `ESTADO DE PAGO:
+`;
+    text += `>> ${payBanner} <<
 `;
     
     text += `================================
@@ -166,7 +177,8 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     const payload = {
       printer_ip: config.ip || '192.168.1.200',
       printer_port: parseInt(config.port, 10) || 9100,
-      text: text
+      text: text,
+      order: order
     };
 
     const res = await fetch(config.relayUrl || 'http://localhost:8080/print', {

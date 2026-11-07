@@ -12,11 +12,12 @@ export default async function handler(req, res) {
     return res.status(405).end();
   }
 
-  const { event_type, id: sumupCheckoutId } = req.body || {};
+  const sumupCheckoutId = req.body?.id || req.body?.checkout_id;
+  const eventType = req.body?.event_type;
 
   // Eventos futuros que no conocemos: los reconocemos con 2xx y no hacemos nada,
   // tal como pide la documentación de SumUp.
-  if (event_type !== 'CHECKOUT_STATUS_CHANGED' || !sumupCheckoutId) {
+  if (eventType !== 'CHECKOUT_STATUS_CHANGED' || !sumupCheckoutId) {
     return res.status(200).json({ ok: true });
   }
 

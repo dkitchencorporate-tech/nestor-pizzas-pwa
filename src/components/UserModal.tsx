@@ -484,14 +484,28 @@ export default function UserModal() {
                   {/* Recompensa 1 */}
                   <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-[#1A1A24] hover:border-green-500/30 transition-all">
                     <div>
-                      <div className="text-yellow-400 font-bold text-sm">25 pts</div>
+                      <div className="text-yellow-400 font-bold text-sm">20 pts</div>
                       <div className="text-white text-[11px] font-medium">{t('free_pizza_burger')}</div>
                     </div>
-                    <button className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all ${(profile?.points || 0) >= 25 ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}>
-                      {(profile?.points || 0) >= 25 ? t('unlocked') : t('locked')}
+                    <button 
+                      onClick={() => {
+                        if ((profile?.points || 0) >= 20) {
+                          closeUserModal();
+                          const el = document.getElementById('category-NUESTRAS PIZZAS') || document.querySelector('[data-catalog-section]');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                      className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all ${(profile?.points || 0) >= 20 ? 'bg-green-600 hover:bg-green-500 text-white cursor-pointer shadow-[0_0_12px_rgba(34,197,94,0.4)]' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
+                    >
+                      {(profile?.points || 0) >= 20 ? 'Canjear' : t('locked')}
                     </button>
                   </div>
                 </div>
+                {(profile?.points || 0) >= 20 && (
+                  <p className="text-[11px] text-green-400 font-bold mt-2.5 text-center">
+                    ✨ ¡Enhorabuena! Al tramitar tu pedido podrás marcar tu pizza sugerencia como recompensa gratuita.
+                  </p>
+                )}
               </div>
 
               <div className="text-left bg-[#1A1A24] p-4 rounded-xl border border-white/5">

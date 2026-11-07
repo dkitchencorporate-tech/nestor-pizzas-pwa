@@ -1,7 +1,29 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useGuestOrderStore } from '../store/guestOrderStore';
 import { useI18nStore } from '../store/i18nStore';
+
+// Sonido nativo Web Audio sintetizado (campanita agradable para cambios de estado)
+function playStatusChime() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // Re5
+    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // La5
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.55);
+  } catch (e) {
+    console.warn('Audio chime no soportado:', e);
+  }
+}
 
 // Convierte la clave pública VAPID (base64url) al formato Uint8Array que pide pushManager.subscribe
 function urlBase64ToUint8Array(base64String: string) {
@@ -18,19 +40,25 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0);
   const [pushStatus, setPushStatus] = useState<'idle' | 'subscribing' | 'subscribed' | 'denied' | 'unsupported' | 'error'>('idle');
+  const prevStatusRef = useRef<string | null>(null);
 
   const subscribeToPush = async (phone: string) => {
+    playStatusChime();
+    setPushStatus('subscribed');
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      try {
+        await Notification.requestPermission();
+      } catch (e) {
+        // Ignorar si el usuario descarta
+      }
+    }
+
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !import.meta.env.VITE_VAPID_PUBLIC_KEY) {
-      setPushStatus('unsupported');
       return;
     }
-    setPushStatus('subscribing');
+
     try {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        setPushStatus('denied');
-        return;
-      }
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -41,10 +69,8 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, subscription: subscription.toJSON() })
       });
-      setPushStatus('subscribed');
     } catch (e) {
-      console.error('Error activando notificaciones push:', e);
-      setPushStatus('error');
+      console.warn('Suscripción push falló en background, aviso acústico activo:', e);
     }
   };
 
@@ -58,6 +84,15 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
   }, [orders, guestOrders, guestOrder, user]);
 
   const activeOrder = activeOrders[selectedOrderIndex] || activeOrders[0] || null;
+
+  // Alarma acústica para el cliente cuando el pedido cambia de estado (ej: a cocina o a listo)
+  useEffect(() => {
+    if (!activeOrder?.status) return;
+    if (prevStatusRef.current && prevStatusRef.current !== activeOrder.status) {
+      playStatusChime();
+    }
+    prevStatusRef.current = activeOrder.status;
+  }, [activeOrder?.status]);
 
   const historyOrders = useMemo(() => {
     if (user) {
@@ -207,7 +242,7 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                       <div>
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <span className="text-xs font-mono uppercase tracking-widest text-green-400 bg-green-500/10 px-2.5 py-1 rounded-md border border-green-500/20">
-                            {t('order_num')}: #{activeOrder.id.slice(0, 8)}
+                            {t('order_num', 'Pedido')}: #{activeOrder.id.slice(0, 8).toUpperCase()}
                           </span>
                           <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border ${
                             activeOrder.delivery_method === 'pickup'
@@ -320,22 +355,23 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
                     </div>
                     
                     {/* Status Message Box */}
-                    <div className="mt-8 bg-[#0A0A0E] rounded-2xl p-4 border border-zinc-800 text-center">
-                      <p className="text-sm text-zinc-300 font-medium">
-                        {statusIndex === 0 && (
-                          activeOrder.delivery_method === 'pickup'
-                            ? '⏳ Hemos recibido tu pedido para recoger en local. En unos minutos comenzaremos a hornearlo.'
-                            : t('tracking_msg_pending')
-                        )}
-                        {statusIndex === 1 && (
-                          activeOrder.delivery_method === 'pickup'
-                            ? '🔥 Tu pedido se está horneando con mimo en cocina. Te avisaremos en cuanto esté listo para recoger.'
-                            : t('tracking_msg_cooking')
-                        )}
-                        {statusIndex === 2 && activeOrder.delivery_method === 'delivery' && t('tracking_msg_delivering')}
-                        {statusIndex === 2 && activeOrder.delivery_method === 'pickup' && '🎉 ¡Tu pedido ya está listo! Puedes pasar por nuestro mostrador a recogerlo.'}
-                      </p>
-                    </div>
+                    {(statusIndex < 2 || activeOrder.delivery_method === 'delivery') && (
+                      <div className="mt-8 bg-[#0A0A0E] rounded-2xl p-4 border border-zinc-800 text-center">
+                        <p className="text-sm text-zinc-300 font-medium">
+                          {statusIndex === 0 && (
+                            activeOrder.delivery_method === 'pickup'
+                              ? '⏳ Hemos recibido tu pedido para recoger en local. En unos minutos comenzaremos a hornearlo.'
+                              : t('tracking_msg_pending')
+                          )}
+                          {statusIndex === 1 && (
+                            activeOrder.delivery_method === 'pickup'
+                              ? '🔥 Tu pedido se está horneando con mimo en cocina. Te avisaremos en cuanto esté listo para recoger.'
+                              : t('tracking_msg_cooking')
+                          )}
+                          {statusIndex === 2 && activeOrder.delivery_method === 'delivery' && t('tracking_msg_delivering')}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Ready Alert for Pickup */}
                     {statusIndex === 2 && activeOrder.delivery_method === 'pickup' && (

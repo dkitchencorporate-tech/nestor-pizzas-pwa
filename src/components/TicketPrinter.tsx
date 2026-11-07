@@ -20,9 +20,10 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
   const formattedTime = orderDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
   // Payment method classification
-  const isCash = order.payment_method === 'cash' || !order.payment_method;
+  const isPaid = order.payment_status === 'PAID' || order.payment_method === 'online' || order.payment_method === 'sumup_online' || order.payment_method === 'sumup';
   const isTpv = order.payment_method === 'tpv' || order.payment_method === 'physical' || order.payment_method === 'card_delivery';
-  const isOnline = order.payment_method === 'online' || order.payment_method === 'sumup_online';
+  const isCash = !isPaid && !isTpv;
+  const orderCleanId = (order.id ? order.id.toString().replace(/^#+/, '') : '00000000').slice(0, 8).toUpperCase();
 
   return (
     <div id="ticket-printer-content" className="ticket-printer-container bg-white text-black font-mono p-2 text-xs leading-snug">
@@ -35,8 +36,11 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
           {formattedDate} &bull; {formattedTime}
         </div>
         <p className="text-base font-black uppercase tracking-wider">
-          TICKET: #NP-{order.id ? order.id.slice(0, 8).toUpperCase() : '00000000'}
+          TICKET: #NP-{orderCleanId}
         </p>
+        <div className="mt-1 font-black text-xs uppercase border border-black p-1 bg-gray-100">
+          {isPaid ? '*** PAGADO ONLINE (NO COBRAR) ***' : (isTpv ? '*** COBRAR CON DATAFONO ***' : '*** COBRAR EN EFECTIVO ***')}
+        </div>
       </div>
 
       {/* 2. CANAL DE SERVICIO DESTACADO */}
@@ -161,10 +165,10 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
         </div>
 
         {/* INSTRUCCIÓN DE COBRO EN CUADRO DESTACADO */}
-        <div className="mt-2 p-1.5 border-2 border-black text-center font-black uppercase text-xs">
-          {isCash && <span>💵 COBRAR EN EFECTIVO (LLEVAR CAMBIO)</span>}
+        <div className="mt-2 p-2 border-2 border-black text-center font-black uppercase text-xs">
+          {isPaid && <span className="bg-black text-white px-2 py-0.5 inline-block">✅ PAGADO ONLINE POR APP (NO COBRAR)</span>}
           {isTpv && <span>💳 COBRAR CON DATÁFONO TPV</span>}
-          {isOnline && <span>✅ PAGADO ONLINE POR APP (SUMUP)</span>}
+          {isCash && <span>💵 COBRAR EN EFECTIVO (LLEVAR CAMBIO)</span>}
         </div>
       </div>
 

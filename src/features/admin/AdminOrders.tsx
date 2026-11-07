@@ -439,6 +439,15 @@ export default function AdminOrders() {
                             CREADO EN CAJA
                           </span>
                         )}
+                        {(order.payment_status === 'PAID' || order.payment_method === 'online' || order.payment_method === 'sumup_online' || order.payment_method === 'sumup') ? (
+                          <span className="bg-emerald-600/20 text-emerald-400 font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-widest border border-emerald-500/40 ml-2">
+                            ✅ PAGADO ONLINE
+                          </span>
+                        ) : (
+                          <span className="bg-amber-600/20 text-amber-400 font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-widest border border-amber-500/40 ml-2">
+                            💵 COBRAR
+                          </span>
+                        )}
                         {order.payment_status === 'FAILED' && (
                           <span className="bg-red-600/20 text-red-500 font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-widest border border-red-500/30 ml-2 animate-pulse">
                             PAGO FALLIDO
