@@ -36,9 +36,10 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     const isPickup = order.delivery_method === 'pickup';
 
     // Clasificación explícita de pago
+    // Nota: en CheckoutModal, 'physical' significa pago en efectivo en mano (al repartidor o al recoger)
     const pMethod = order.payment_method || 'cash';
     const isPaid = order.payment_status === 'PAID' || pMethod === 'online' || pMethod === 'sumup_online' || pMethod === 'sumup';
-    const isTpv = pMethod === 'tpv' || pMethod === 'physical' || pMethod === 'card_delivery';
+    const isTpv = pMethod === 'tpv' || pMethod === 'card_delivery';
     
     let payBanner = '*** COBRAR EN EFECTIVO ***';
     if (isPaid) {
@@ -174,11 +175,17 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
 
 `; // Espacio para el corte térmico
 
+    const normalizedOrder = {
+      ...order,
+      payment_method: isPaid ? 'online' : (isTpv ? 'tpv' : 'cash'),
+      payment_status: isPaid ? 'PAID' : (order.payment_status || 'PENDING')
+    };
+
     const payload = {
       printer_ip: config.ip || '192.168.1.200',
       printer_port: parseInt(config.port, 10) || 9100,
       text: text,
-      order: order
+      order: normalizedOrder
     };
 
     const res = await fetch(config.relayUrl || 'http://localhost:8080/print', {

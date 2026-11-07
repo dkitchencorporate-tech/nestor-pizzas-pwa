@@ -182,9 +182,13 @@ export default function AdminClients() {
 
   const doDelete = async (customer: UnifiedClient) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/admin-customers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
         body: JSON.stringify({
           action: 'delete',
           id: customer.id,
@@ -581,9 +585,13 @@ function WhatsAppCampaignRequestModal({ clients, onClose, onSuccess }: {
     setErrorMsg('');
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/request-whatsapp-campaign', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
         body: JSON.stringify({
           campaignType,
           targetAudience,
@@ -789,9 +797,13 @@ function EditClientModal({ customer, onClose, onSuccess, onError }: {
         ? JSON.stringify({ street: street.trim(), number: number.trim(), cp: cp.trim(), notes: notes.trim() })
         : null;
 
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/admin-customers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
         body: JSON.stringify({
           action: 'update',
           id: customer.id,

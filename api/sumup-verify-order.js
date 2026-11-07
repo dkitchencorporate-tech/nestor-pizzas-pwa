@@ -10,10 +10,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { checkoutReference } = req.body || {};
-  if (!checkoutReference || typeof checkoutReference !== 'string') {
-    return res.status(400).json({ error: 'Referencia de checkout inválida.' });
-  }
+  const { checkoutReference, sweepPending } = req.body || {};
 
   const supabaseAnon = createClient(
     process.env.VITE_SUPABASE_URL,
@@ -23,6 +20,98 @@ export default async function handler(req, res) {
     process.env.VITE_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
+
+  // Modo barrido automático (invocado por el TPV Admin cada 15s):
+  // Verifica cualquier checkout pendiente reciente cuyos clientes hayan bloqueado el móvil
+  // tras pagar en SumUp sin pulsar "Volver al sitio web del comerciante".
+  if (sweepPending === true) {
+    try {
+      const cutoff = new Date(Date.now() - 90 * 60 * 1000).toISOString();
+      const { data: pendings } = await supabaseService
+        .from('sumup_checkouts')
+        .select('checkout_reference, sumup_checkout_id')
+        .eq('status', 'pending')
+        .not('sumup_checkout_id', 'is', null)
+        .gte('created_at', cutoff)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (!pendings || pendings.length === 0) {
+        return res.status(200).json({ ok: true, swept: 0, recovered: [] });
+      }
+
+      const recovered = [];
+      const origin = `https://${req.headers.host}`;
+
+      for (const item of pendings) {
+        try {
+          const sRes = await fetch(`https://api.sumup.com/v0.1/checkouts/${item.sumup_checkout_id}`, {
+            headers: { Authorization: `Bearer ${process.env.SUMUP_SECRET_KEY}` }
+          });
+          if (!sRes.ok) continue;
+          const sData = await sRes.json();
+
+          if (sData.status === 'FAILED' || sData.status === 'EXPIRED') {
+            await supabaseAnon.rpc('sumup_mark_checkout_failed', {
+              p_sumup_checkout_id: item.sumup_checkout_id,
+              p_status: sData.status === 'FAILED' ? 'failed' : 'expired'
+            });
+            continue;
+          }
+
+          if (sData.status !== 'PAID') continue;
+
+          const { data: claimed } = await supabaseAnon.rpc('sumup_claim_checkout_for_processing', {
+            p_sumup_checkout_id: item.sumup_checkout_id
+          });
+          if (!claimed || claimed.length === 0) continue;
+
+          const { order_payload: orderPayload, amount: checkoutAmount, client_email: clientEmail } = claimed[0];
+          let orderId = null;
+          let success = false;
+          try {
+            const { data: createdOrderId, error: rpcError } = await supabaseService.rpc('process_checkout', orderPayload);
+            if (rpcError) throw rpcError;
+            orderId = createdOrderId;
+            success = true;
+            await supabaseService.from('orders').update({ payment_status: 'PAID' }).eq('id', orderId);
+          } catch (e) {
+            console.error('Error creando pedido en sweepPending:', e);
+          }
+
+          await supabaseAnon.rpc('sumup_finalize_checkout', {
+            p_sumup_checkout_id: item.sumup_checkout_id,
+            p_order_id: orderId,
+            p_success: success
+          });
+
+          if (success && orderId) {
+            recovered.push(orderId);
+            const emailPayload = { orderId, total: checkoutAmount, clientName: orderPayload.p_client_name };
+            const sendEmail = (body) => fetch(`${origin}/api/send-transactional-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body)
+            }).catch(() => {});
+            const sends = [sendEmail({ type: 'order_admin', ...emailPayload })];
+            if (clientEmail) sends.push(sendEmail({ type: 'order_confirmation', to: clientEmail, ...emailPayload }));
+            await Promise.allSettled(sends);
+          }
+        } catch (innerErr) {
+          console.error('Error en iteración sweepPending:', innerErr);
+        }
+      }
+
+      return res.status(200).json({ ok: true, swept: pendings.length, recovered });
+    } catch (sweepErr) {
+      console.error('Error en sweepPending:', sweepErr);
+      return res.status(500).json({ error: 'Error barriendo pagos pendientes.' });
+    }
+  }
+
+  if (!checkoutReference || typeof checkoutReference !== 'string') {
+    return res.status(400).json({ error: 'Referencia de checkout inválida.' });
+  }
 
   try {
     // 1) Buscar el checkout en sumup_checkouts

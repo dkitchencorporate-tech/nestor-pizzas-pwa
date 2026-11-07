@@ -274,7 +274,7 @@ export default function Catalog() {
           isFirst = false;
 
           return (
-            <div key={cat.id} className="w-full">
+            <div key={cat.id} id={`category-${cat.name}`} data-catalog-section={cat.name} className="w-full">
               
               {/* Tarjeta de Ingredientes (Antes de la primera sección) */}
               {renderIngredients && (

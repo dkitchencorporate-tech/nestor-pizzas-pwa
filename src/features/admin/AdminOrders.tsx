@@ -56,6 +56,25 @@ export default function AdminOrders() {
       fetchOrders();
     }, 10000);
 
+    // Barrido automático cada 15s de pagos SumUp pendientes: si el cliente paga con tarjeta
+    // y bloquea el móvil sin pulsar "Volver al sitio web del comerciante", el pedido entra solo.
+    const sweepSumup = () => {
+      fetch('/api/sumup-verify-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sweepPending: true })
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(res => {
+          if (res?.recovered?.length > 0) {
+            fetchOrders();
+          }
+        })
+        .catch(() => {});
+    };
+    sweepSumup();
+    const sumupSweepInterval = setInterval(sweepSumup, 15000);
+
     // Opening time interval sincronizado con store_hours dinámico
     const interval = setInterval(() => {
       const now = new Date();
@@ -80,6 +99,7 @@ export default function AdminOrders() {
     return () => {
       supabase.removeChannel(channel);
       clearInterval(pollInterval);
+      clearInterval(sumupSweepInterval);
       clearInterval(interval);
       stopAlarm();
     };

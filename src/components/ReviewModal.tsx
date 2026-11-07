@@ -23,7 +23,7 @@ export default function ReviewModal({ isOpen, onClose, order }: ReviewModalProps
   if (!isOpen || !order) return null;
 
   const isGuest = !user;
-  const pointsEarned = Math.floor(order.total_amount / 10) * 4;
+  const pointsEarned = Math.floor(order.total_amount / 10) * 2;
 
   const handleSubmit = async () => {
     setIsSaving(true);

@@ -335,9 +335,9 @@ export default function AdminAnalytics() {
       u.totalSpent = u.orderHistory.reduce((sum: number, o: any) => sum + (o.status !== 'cancelled' ? Number(o.total_amount || 0) : 0), 0);
       u.lastOrderDate = u.orderHistory[0]?.created_at || null;
 
-      // Calcular puntos VIP ganados si la cuenta aún no los tenía sincronizados (4 pts por cada 10€)
+      // Calcular puntos VIP ganados si la cuenta aún no los tenía sincronizados (2 pts por cada 10€)
       if ((!u.points || u.points === 0) && u.totalSpent > 0) {
-        u.points = Math.max(0, Math.round((u.totalSpent / 10) * 4));
+        u.points = Math.max(0, Math.round((u.totalSpent / 10) * 2));
       }
     });
 

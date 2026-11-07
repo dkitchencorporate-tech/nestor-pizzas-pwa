@@ -345,7 +345,7 @@ const dictionary: Translations = {
   vip_slide_badge: { es: '🎁 CLUB VIP NÉSTOR PIZZAS', en: '🎁 NESTOR PIZZAS VIP CLUB' },
   vip_slide_title: { es: 'GANA PUNTOS EN CADA PEDIDO:', en: 'EARN POINTS ON EVERY ORDER:' },
   vip_slide_subtitle: { es: '¡Y CANJEA PIZZA GRATIS!', en: 'AND REDEEM A FREE PIZZA!' },
-  vip_slide_desc: { es: 'Regístrate gratis, acumula 4 puntos por cada 10€ en tus pedidos y desde 25 puntos, tu pizza o burger favorita sale gratis.', en: 'Register for free, earn 4 points for every €10 you spend, and from 25 points your favorite pizza or burger is on us.' },
+  vip_slide_desc: { es: 'Regístrate gratis, acumula 2 puntos por cada 10€ en tus pedidos y desde 20 puntos, tu pizza sugerencia favorita sale gratis.', en: 'Register for free, earn 2 points for every €10 you spend, and from 20 points your favorite suggestion pizza is on us.' },
 
   // IngredientsModal
   custom_taste: { es: 'A TU GUSTO', en: 'CUSTOM TASTE' },
@@ -538,7 +538,7 @@ const dictionary: Translations = {
   // Landing /registro — copy de alto impacto (reutilizable para marca blanca y nuevas ubicaciones)
   landing_badge: { es: 'Club VIP Néstor Pizzas', en: 'Néstor Pizzas VIP Club' },
   landing_hero_title: { es: 'PIZZA ARTESANA.\nPEDIDO EN SEGUNDOS.\nEN TU PUERTA EN MINUTOS.', en: 'ARTISAN PIZZA.\nORDER IN SECONDS.\nAT YOUR DOOR IN MINUTES.' },
-  landing_hero_subtitle: { es: 'Regístrate gratis y entra al Club VIP: acumulas puntos con cada pedido y los canjeas por pizza o burger gratis. Sin trucos, sin letra pequeña.', en: 'Sign up for free and join the VIP Club: earn points with every order and redeem them for a free pizza or burger. No tricks, no fine print.' },
+  landing_hero_subtitle: { es: 'Regístrate gratis y entra al Club VIP: acumulas puntos con cada pedido y los canjeas por tu pizza sugerencia gratis. Sin trucos, sin letra pequeña.', en: 'Sign up for free and join the VIP Club: earn points with every order and redeem them for a free suggestion pizza. No tricks, no fine print.' },
   landing_cta_primary: { es: 'Quiero mi cuenta gratis', en: 'I want my free account' },
   landing_cta_secondary: { es: 'Ver el menú', en: 'See the menu' },
   landing_trust_1: { es: 'Pedido en menos de 2 minutos', en: 'Order in under 2 minutes' },
@@ -555,9 +555,9 @@ const dictionary: Translations = {
 
   landing_vip_title: { es: 'CLUB VIP DE PUNTOS', en: 'VIP POINTS CLUB' },
   landing_vip_rate: { es: 'Por cada 10€ en tu pedido', en: 'For every €10 in your order' },
-  landing_vip_points: { es: '+4 puntos', en: '+4 points' },
-  landing_vip_reward_label: { es: 'Desde 25 puntos acumulados', en: 'From 25 points accumulated' },
-  landing_vip_reward: { es: 'la pizza o burger que TÚ elijas de tu pedido, GRATIS', en: 'the pizza or burger YOU choose from your order, FREE' },
+  landing_vip_points: { es: '+2 puntos', en: '+2 points' },
+  landing_vip_reward_label: { es: 'Desde 20 puntos acumulados', en: 'From 20 points accumulated' },
+  landing_vip_reward: { es: 'la pizza sugerencia que TÚ elijas de tu pedido, GRATIS', en: 'the suggestion pizza YOU choose from your order, FREE' },
 
   landing_menu_title: { es: 'Nuestro menú te está esperando', en: 'Our menu is waiting for you' },
   landing_why_title: { es: 'Por qué Néstor Pizzas', en: 'Why Néstor Pizzas' },

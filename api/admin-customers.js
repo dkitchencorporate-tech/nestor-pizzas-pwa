@@ -15,10 +15,37 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'ID de cliente requerido.' });
   }
 
+  const authHeader = req.headers.authorization || '';
+  const callerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!callerToken) {
+    return res.status(401).json({ error: 'Sesión de administrador requerida.' });
+  }
+
+  const supabaseUser = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.VITE_SUPABASE_ANON_KEY,
+    { global: { headers: { Authorization: `Bearer ${callerToken}` } } }
+  );
+
+  const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+  if (userError || !user) {
+    return res.status(401).json({ error: 'Sesión inválida o expirada.' });
+  }
+
   const supabaseService = createClient(
     process.env.VITE_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
+
+  const { data: adminProfile } = await supabaseService
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  if (!adminProfile || adminProfile.is_admin !== true) {
+    return res.status(403).json({ error: 'Acceso denegado: se requieren permisos de administrador.' });
+  }
 
   // 1. ACCIÓN: ELIMINAR CLIENTE
   if (action === 'delete') {

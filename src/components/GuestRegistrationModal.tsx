@@ -24,7 +24,7 @@ export default function GuestRegistrationModal({ isOpen, order, onSkip, onSucces
 
   if (!isOpen || !order) return null;
 
-  const pointsEarned = Math.floor(order.total_amount / 10) * 4;
+  const pointsEarned = Math.floor(order.total_amount / 10) * 2;
 
   const handleSkip = () => {
     // Si saltan, se quedan como invitados. Guardamos la orden en su persistencia.

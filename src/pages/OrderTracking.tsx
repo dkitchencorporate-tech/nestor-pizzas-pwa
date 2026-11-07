@@ -3,23 +3,73 @@ import { useAuthStore } from '../store/authStore';
 import { useGuestOrderStore } from '../store/guestOrderStore';
 import { useI18nStore } from '../store/i18nStore';
 
-// Sonido nativo Web Audio sintetizado (campanita agradable para cambios de estado)
-function playStatusChime() {
+// Instancia global compartida de AudioContext para evitar que iOS Safari / Android Chrome
+// suspendan el audio cuando el cambio de estado llega por WebSocket/polling en segundo plano.
+let sharedAudioCtx: AudioContext | null = null;
+
+function getOrUnlockAudioCtx(): AudioContext | null {
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // Re5
-    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // La5
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.55);
+    if (!AudioCtx) return null;
+    if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+      sharedAudioCtx = new AudioCtx();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
+export function unlockAudio(): boolean {
+  const ctx = getOrUnlockAudioCtx();
+  if (!ctx) return false;
+  try {
+    // Reproducir pulso silencioso de 1 sample para desbloquear el canal de hardware en iOS
+    const buffer = ctx.createBuffer(1, 1, 22050);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+    playStatusChime(false);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Sonido nativo Web Audio sintetizado (acorde mayor C5-E5-G5-C6 + vibración háptica)
+function playStatusChime(doubleRing = true) {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(doubleRing ? [250, 120, 250, 120, 400] : [150]);
+    }
+    const ctx = getOrUnlockAudioCtx();
+    if (!ctx) return;
+
+    const playChordSequence = (offsetSec: number) => {
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // Do5, Mi5, Sol5, Do6
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        const start = ctx.currentTime + offsetSec + i * 0.09;
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.35, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.46);
+      });
+    };
+
+    playChordSequence(0);
+    if (doubleRing) {
+      playChordSequence(0.65);
+    }
   } catch (e) {
     console.warn('Audio chime no soportado:', e);
   }
@@ -35,7 +85,7 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export default function OrderTracking({ onBack }: { onBack: () => void }) {
   const { t } = useI18nStore();
-  const { orders, user } = useAuthStore();
+  const { orders, user, fetchOrders } = useAuthStore();
   const { guestOrders, guestOrder } = useGuestOrderStore();
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0);
@@ -43,7 +93,7 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
   const prevStatusRef = useRef<string | null>(null);
 
   const subscribeToPush = async (phone: string) => {
-    playStatusChime();
+    unlockAudio();
     setPushStatus('subscribed');
 
     if ('Notification' in window && Notification.permission === 'default') {
@@ -85,14 +135,40 @@ export default function OrderTracking({ onBack }: { onBack: () => void }) {
 
   const activeOrder = activeOrders[selectedOrderIndex] || activeOrders[0] || null;
 
-  // Alarma acústica para el cliente cuando el pedido cambia de estado (ej: a cocina o a listo)
+  // Refresco activo cada 8s para usuarios logueados mientras están en la pantalla de seguimiento
+  useEffect(() => {
+    if (!user) return;
+    const poll = setInterval(() => {
+      fetchOrders();
+    }, 8000);
+    return () => clearInterval(poll);
+  }, [user, fetchOrders]);
+
+  // Alarma acústica y notificación local para el cliente cuando el pedido cambia de estado
   useEffect(() => {
     if (!activeOrder?.status) return;
     if (prevStatusRef.current && prevStatusRef.current !== activeOrder.status) {
-      playStatusChime();
+      playStatusChime(true);
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const statusMsg =
+          activeOrder.status === 'cooking'
+            ? '🔥 ¡Tu pedido acaba de entrar al horno!'
+            : activeOrder.status === 'ready'
+            ? '🎉 ¡Tu pedido ya está listo para recoger en mostrador!'
+            : activeOrder.status === 'delivering'
+            ? '🛵 ¡Tu pedido va de camino a tu domicilio!'
+            : 'Actualización de tu pedido en Néstor Pizzas';
+        try {
+          new Notification('Néstor Pizzas Caniles', { body: statusMsg, icon: '/pwa-192x192.png' });
+        } catch {
+          navigator.serviceWorker?.ready.then(reg => {
+            reg.showNotification('Néstor Pizzas Caniles', { body: statusMsg, icon: '/pwa-192x192.png' });
+          }).catch(() => {});
+        }
+      }
     }
     prevStatusRef.current = activeOrder.status;
-  }, [activeOrder?.status]);
+  }, [activeOrder?.status, activeOrder?.delivery_method]);
 
   const historyOrders = useMemo(() => {
     if (user) {

@@ -5,24 +5,50 @@ import { createClient } from '@supabase/supabase-js';
 // a su API. Este handler hace exactamente eso antes de tocar nada.
 export default async function handler(req, res) {
   if (req.method === 'GET') {
-    return res.redirect(302, '/');
-  }
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+    const qId = req.query?.id || req.query?.checkout_id;
+    if (!qId) {
+      return res.redirect(302, '/');
+    }
+  } else if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST, GET');
     return res.status(405).end();
   }
 
-  const sumupCheckoutId = req.body?.id || req.body?.checkout_id;
-  const eventType = req.body?.event_type;
+  let bodyObj = req.body;
+  if (typeof bodyObj === 'string') {
+    try { bodyObj = JSON.parse(bodyObj); } catch { bodyObj = {}; }
+  }
+  const rawPayload = Array.isArray(bodyObj) ? (bodyObj[0] || {}) : (bodyObj || {});
 
-  // Eventos futuros que no conocemos: los reconocemos con 2xx y no hacemos nada,
-  // tal como pide la documentación de SumUp.
-  if (eventType !== 'CHECKOUT_STATUS_CHANGED' || !sumupCheckoutId) {
-    return res.status(200).json({ ok: true });
+  let sumupCheckoutId =
+    rawPayload?.id ||
+    rawPayload?.checkout_id ||
+    rawPayload?.payload?.checkout_id ||
+    rawPayload?.payload?.id ||
+    req.query?.id ||
+    req.query?.checkout_id;
+
+  const checkoutRef = rawPayload?.checkout_reference || req.query?.checkout_reference || req.query?.ref;
+
+  // Anon/Service clients
+  const supabaseAnon = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
+  const supabaseService = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  // Si SumUp envía checkout_reference pero no id directo, lo resolvemos desde sumup_checkouts
+  if (!sumupCheckoutId && checkoutRef) {
+    const { data: byRef } = await supabaseService
+      .from('sumup_checkouts')
+      .select('sumup_checkout_id')
+      .eq('checkout_reference', checkoutRef)
+      .maybeSingle();
+    if (byRef?.sumup_checkout_id) {
+      sumupCheckoutId = byRef.sumup_checkout_id;
+    }
   }
 
-  // Anon key para las funciones SECURITY DEFINER de control (no necesitan más).
-  const supabaseAnon = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
+  if (!sumupCheckoutId) {
+    return res.status(200).json({ ok: true, ignored: true });
+  }
 
   // Reverificación real e independiente contra la API de SumUp — el único
   // dato en el que confiamos para decidir si un pedido se paga o no.
@@ -75,14 +101,6 @@ export default async function handler(req, res) {
   }
 
   const { order_payload: orderPayload, amount: checkoutAmount, client_email: clientEmail } = claimed[0];
-
-  // Cliente con la service_role key — SOLO se usa aquí, para esta única
-  // llamada, después de haber confirmado el pago real con SumUp. Nunca se
-  // expone al navegador. `process_checkout` reconoce este claim (`role =
-  // service_role`, firmado por Supabase Auth, no falsificable por un
-  // cliente) como llamada de confianza, igual que ya reconoce a un admin
-  // autenticado para el flujo de Kiosko.
-  const supabaseService = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   let orderId = null;
   let success = false;

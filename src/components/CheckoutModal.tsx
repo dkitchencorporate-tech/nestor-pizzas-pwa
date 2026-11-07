@@ -7,6 +7,7 @@ import { useHardwareBack } from '../utils/useHardwareBack';
 import { emailService } from '../lib/emailService';
 import { useI18nStore } from '../store/i18nStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { getCachedCatalogData } from '../lib/catalogPreload';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -96,10 +97,23 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   const subtotal = getTotal();
   
-  // Productos elegibles para el descuento VIP (Solo Pizzas Sugerencia, no hamburguesas).
-  const eligibleItems = items.filter(item =>
-    item.name.toLowerCase().includes('pizza')
-  );
+  // Productos elegibles para el descuento VIP (Solo Pizzas Sugerencia: NUESTRAS PIZZAS y PIZZAS BLANCAS, nunca hamburguesas ni postres).
+  const catalogProducts = getCachedCatalogData()?.products || [];
+  const eligibleItems = items.filter(item => {
+    const nameLower = String(item.name || '').toLowerCase();
+    if (nameLower.includes('(promo jueves)') || nameLower.includes('dulce') || nameLower.includes('burguer')) {
+      return false;
+    }
+    const prod = catalogProducts.find((p: any) => Number(p.id) === Number(item.productId));
+    if (prod) {
+      return prod.jueves_promo_eligible === true || prod.category_id === 'NUESTRAS PIZZAS' || prod.category_id === 'PIZZAS BLANCAS';
+    }
+    const pid = Number(item.productId);
+    if ((pid >= 1 && pid <= 16) || (pid >= 19 && pid <= 21)) {
+      return true;
+    }
+    return nameLower.includes('pizza');
+  });
   const selectedRedeemItem = eligibleItems.find(i => i.id === redeemItemId)
     || (eligibleItems.length > 0 ? eligibleItems.reduce((cheapest, i) => i.price < cheapest.price ? i : cheapest) : null);
   const eligibleDiscount = selectedRedeemItem ? selectedRedeemItem.price : 0;
@@ -113,6 +127,13 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const userPoints = profile?.points || 0;
   const canRedeem = userPoints >= 20 && eligibleDiscount > 0;
   const pointsEarned = Math.floor(finalTotal / 10) * 2;
+
+  useEffect(() => {
+    if (canRedeem && sessionStorage.getItem('nestor_auto_redeem_vip') === 'true') {
+      setPointsRedeemed(true);
+      sessionStorage.removeItem('nestor_auto_redeem_vip');
+    }
+  }, [canRedeem]);
 
   const validateGeofence = async (): Promise<boolean> => {
     // 1. Domicilio estrictamente en Caniles (CP 18810)

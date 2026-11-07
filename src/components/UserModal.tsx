@@ -490,9 +490,12 @@ export default function UserModal() {
                     <button 
                       onClick={() => {
                         if ((profile?.points || 0) >= 20) {
+                          sessionStorage.setItem('nestor_auto_redeem_vip', 'true');
                           closeUserModal();
-                          const el = document.getElementById('category-NUESTRAS PIZZAS') || document.querySelector('[data-catalog-section]');
-                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          setTimeout(() => {
+                            const el = document.getElementById('category-NUESTRAS PIZZAS') || document.querySelector('[data-catalog-section]');
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }, 120);
                         }
                       }}
                       className={`text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all ${(profile?.points || 0) >= 20 ? 'bg-green-600 hover:bg-green-500 text-white cursor-pointer shadow-[0_0_12px_rgba(34,197,94,0.4)]' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}

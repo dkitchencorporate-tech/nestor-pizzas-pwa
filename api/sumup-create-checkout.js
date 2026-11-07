@@ -63,7 +63,7 @@ export default async function handler(req, res) {
 
   const { data: products, error: productsError } = await supabase
     .from('products')
-    .select('id, price, name, is_active, jueves_promo_eligible')
+    .select('id, price, name, is_active, jueves_promo_eligible, category_id')
     .in('id', productIds);
 
   if (productsError) {
@@ -103,14 +103,25 @@ export default async function handler(req, res) {
 
     const itemLabel = String(item.name || item.customization_details?.name || '');
     const isJuevesPromoItem = isThursdayInMadrid && product.jueves_promo_eligible === true && itemLabel.includes('(Promo Jueves)');
-    const unitPrice = isJuevesPromoItem ? JUEVES_PROMO_PRICE : product.price;
+    const frontendPrice = Number(item.price ?? item.unit_price ?? product.price);
+    const unitPrice = isJuevesPromoItem
+      ? JUEVES_PROMO_PRICE
+      : (!isNaN(frontendPrice) && frontendPrice >= product.price && frontendPrice <= product.price + 30
+          ? Math.round(frontendPrice * 100) / 100
+          : product.price);
     unitPricesByIndex[index] = unitPrice;
 
     subtotal += unitPrice * qty;
 
     if (pointsRedeemed) {
       const nameLower = (product.name || '').toLowerCase();
-      if (nameLower.includes('pizza') || nameLower.includes('burguer')) {
+      const isEligiblePizza = !isJuevesPromoItem && (
+        product.jueves_promo_eligible === true ||
+        product.category_id === 'NUESTRAS PIZZAS' ||
+        product.category_id === 'PIZZAS BLANCAS' ||
+        (nameLower.includes('pizza') && !nameLower.includes('dulce') && !nameLower.includes('burguer'))
+      );
+      if (isEligiblePizza) {
         if (item.redeem_target === true) {
           eligibleDiscount = unitPrice;
           redeemTargetChosen = true;

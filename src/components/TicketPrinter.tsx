@@ -19,9 +19,9 @@ export default function TicketPrinter({ order }: TicketPrinterProps) {
   const formattedDate = orderDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const formattedTime = orderDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
-  // Payment method classification
+  // Payment method classification ('physical' in CheckoutModal = efectivo en mano)
   const isPaid = order.payment_status === 'PAID' || order.payment_method === 'online' || order.payment_method === 'sumup_online' || order.payment_method === 'sumup';
-  const isTpv = order.payment_method === 'tpv' || order.payment_method === 'physical' || order.payment_method === 'card_delivery';
+  const isTpv = order.payment_method === 'tpv' || order.payment_method === 'card_delivery';
   const isCash = !isPaid && !isTpv;
   const orderCleanId = (order.id ? order.id.toString().replace(/^#+/, '') : '00000000').slice(0, 8).toUpperCase();
 
