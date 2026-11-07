@@ -230,55 +230,100 @@ export default function AdminAnalytics() {
     const { data: ordersData } = await supabase.from('orders').select('*');
     setAllOrders(ordersData || []);
 
-    // Create a unified map of users by phone number
-    const usersMap = new Map();
+    const cleanPhone = (p: any) => {
+      if (!p) return null;
+      const digits = String(p).replace(/\D/g, '');
+      if (digits.length >= 9) return digits.slice(-9);
+      return digits || null;
+    };
 
-    // 1. Add Profiles
+    const usersMap = new Map<string, any>();
+
+    // 1. Add Profiles (keyed by clean phone or ID)
     (profilesData || []).forEach(p => {
-      if (p.phone) usersMap.set(p.phone, { ...p, is_app: true, orderHistory: [] });
+      const cp = cleanPhone(p.phone);
+      const key = cp ? `phone:${cp}` : `id:${p.id}`;
+      usersMap.set(key, {
+        ...p,
+        is_app: true,
+        points: p.points || 0,
+        clean_phone: cp,
+        orderHistory: []
+      });
     });
 
     // 2. Add Kiosk Customers
     (kioskData || []).forEach(k => {
-      if (k.phone) {
-        if (!usersMap.has(k.phone)) {
-          usersMap.set(k.phone, { ...k, points: k.points || 0, is_kiosk: true, orderHistory: [] });
-        } else {
-          // Merge kiosk flags
-          usersMap.get(k.phone).is_kiosk = true;
-        }
+      const cp = cleanPhone(k.phone);
+      if (!cp) return;
+      const key = `phone:${cp}`;
+      if (usersMap.has(key)) {
+        const u = usersMap.get(key);
+        u.is_kiosk = true;
+        if (!u.address && k.address) u.address = k.address;
+        if (!u.points && k.points) u.points = k.points;
+      } else {
+        usersMap.set(key, {
+          ...k,
+          is_kiosk: true,
+          points: k.points || 0,
+          clean_phone: cp,
+          orderHistory: []
+        });
       }
     });
 
-    // 3. Process Orders for ghost clients and order history
+    // 3. Process Orders and link to users
     (ordersData || []).forEach(order => {
-      const phone = order.client_phone;
-      if (phone && phone.trim() !== '' && phone !== 'Sin Teléfono' && phone !== 'unknown') {
-        if (!usersMap.has(phone)) {
-          // Ghost client from an order
-          usersMap.set(phone, {
+      const cp = cleanPhone(order.client_phone);
+      let user: any = null;
+
+      if (cp && cp !== '000000000') {
+        const key = `phone:${cp}`;
+        if (usersMap.has(key)) {
+          user = usersMap.get(key);
+        } else {
+          user = {
             id: 'ghost-' + order.id,
-            full_name: order.client_name || 'Cliente Anónimo',
-            phone: phone,
+            full_name: order.client_name || `Cliente ${cp}`,
+            phone: order.client_phone || cp,
+            clean_phone: cp,
             points: 0,
             is_ghost: true,
             created_at: order.created_at,
             orderHistory: []
-          });
+          };
+          usersMap.set(key, user);
         }
-        // Attach order to the user's history
-        usersMap.get(phone).orderHistory.push(order);
       } else if (order.user_id) {
-        // Find user by id if phone is missing but id is linked
-        const userByProfile = Array.from(usersMap.values()).find(u => u.id === order.user_id);
-        if (userByProfile) {
-          userByProfile.orderHistory.push(order);
+        user = Array.from(usersMap.values()).find(u => u.id === order.user_id);
+      } else if (order.client_name && order.client_name.trim() !== '' && !['fuera', 'mesa', 'mostrador', 'kiosko', 'anonimo'].some(t => (order.client_name || '').toLowerCase().includes(t))) {
+        // Named counter ticket (e.g. "Juan de Dios", "Alejandro martinez", "Juliana")
+        const key = `name:${order.client_name.trim().toLowerCase()}`;
+        if (usersMap.has(key)) {
+          user = usersMap.get(key);
+        } else {
+          user = {
+            id: 'ticket-' + order.id,
+            full_name: order.client_name.trim(),
+            phone: order.client_phone || 'Mostrador / Local',
+            clean_phone: null,
+            points: 0,
+            is_ghost: true,
+            created_at: order.created_at,
+            orderHistory: []
+          };
+          usersMap.set(key, user);
         }
       }
+
+      if (user) {
+        user.orderHistory.push(order);
+      }
     });
-    
+
     const allUsers = Array.from(usersMap.values());
-    
+
     // Ordenar pedidos internamente por fecha y enriquecer métricas por cliente
     allUsers.forEach(u => {
       u.orderHistory.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -286,9 +331,17 @@ export default function AdminAnalytics() {
       u.totalSpent = u.orderHistory.reduce((sum: number, o: any) => sum + (o.status !== 'cancelled' ? Number(o.total_amount || 0) : 0), 0);
       u.lastOrderDate = u.orderHistory[0]?.created_at || null;
     });
-    
-    allUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    
+
+    // Ordenar: Clientes con pedidos reales van primero por última compra; luego el resto por fecha de registro
+    allUsers.sort((a, b) => {
+      if (a.orderCount > 0 && b.orderCount === 0) return -1;
+      if (b.orderCount > 0 && a.orderCount === 0) return 1;
+      if (a.orderCount > 0 && b.orderCount > 0) {
+        return new Date(b.lastOrderDate).getTime() - new Date(a.lastOrderDate).getTime();
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
     setUsers(allUsers);
   };
 
@@ -717,12 +770,12 @@ export default function AdminAnalytics() {
         {/* Table */}
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left text-sm text-gray-400">
-            <thead className="text-xs text-gray-500 uppercase bg-zinc-800/50">
+            <thead className="text-xs text-gray-500 uppercase bg-zinc-800/50 whitespace-nowrap">
               <tr>
                 <th className="px-4 py-3">ID / Auth</th>
                 <th className="px-4 py-3">Cliente</th>
                 <th className="px-4 py-3">Contacto</th>
-                <th className="px-4 py-3">Pedidos</th>
+                <th className="px-4 py-3 text-center">Pedidos</th>
                 <th className="px-4 py-3">Total Gastado</th>
                 <th className="px-4 py-3">Puntos VIP</th>
                 <th className="px-4 py-3 text-right">Última Actividad</th>
@@ -735,36 +788,36 @@ export default function AdminAnalytics() {
                   onClick={() => setSelectedUserForHistory(u)}
                   className="border-b border-zinc-800 hover:bg-zinc-800/40 cursor-pointer transition-colors"
                 >
-                  <td className="px-4 py-3 font-mono text-[10px]">{u.id.slice(0,8)}...</td>
+                  <td className="px-4 py-3 font-mono text-[10px] text-zinc-500 whitespace-nowrap">{u.id.slice(0,8)}...</td>
                   <td className="px-4 py-3 text-white font-bold">
                     <div className="flex items-center gap-2">
-                      <span>{u.full_name || t('no_name')}</span>
-                      {u.is_app && <span className="text-[9px] bg-green-500/20 text-green-400 border border-green-500/40 px-1.5 py-0.5 rounded font-mono uppercase">App</span>}
-                      {u.is_kiosk && <span className="text-[9px] bg-blue-500/20 text-blue-400 border border-blue-500/40 px-1.5 py-0.5 rounded font-mono uppercase">TPV</span>}
+                      <span className="truncate max-w-[200px]">{u.full_name || t('no_name')}</span>
+                      {u.is_app && <span className="text-[9px] bg-green-500/20 text-green-400 border border-green-500/40 px-1.5 py-0.5 rounded font-mono uppercase whitespace-nowrap">App</span>}
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <p className="text-white font-mono text-xs">{u.phone || t('no_phone')}</p>
                     {u.email && <p className="text-zinc-500 text-[11px] truncate max-w-[150px]">{u.email}</p>}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                  <td className="px-4 py-3 text-center whitespace-nowrap min-w-[115px]">
+                    <span className={`inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
                       (u.orderCount || 0) >= 2 
                         ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
                         : (u.orderCount || 0) === 1
                         ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                        : 'bg-zinc-800 text-zinc-500'
+                        : 'bg-zinc-800/80 text-zinc-500'
                     }`}>
-                      {u.orderCount || 0} {(u.orderCount || 0) === 1 ? 'pedido' : 'pedidos'}
+                      <span>{u.orderCount || 0}</span>
+                      <span>{(u.orderCount || 0) === 1 ? 'pedido' : 'pedidos'}</span>
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-mono font-bold text-green-400 text-sm">
+                  <td className="px-4 py-3 font-mono font-bold text-green-400 text-sm whitespace-nowrap">
                     {Number(u.totalSpent || 0).toFixed(2)}€
                   </td>
-                  <td className="px-4 py-3 text-amber-400 font-bold font-mono">
+                  <td className="px-4 py-3 text-amber-400 font-bold font-mono whitespace-nowrap">
                     {u.points || 0} pts
                   </td>
-                  <td className="px-4 py-3 text-xs text-right">
+                  <td className="px-4 py-3 text-xs text-right whitespace-nowrap">
                     <span className="text-zinc-400">
                       {u.lastOrderDate ? new Date(u.lastOrderDate).toLocaleDateString('es-ES') : new Date(u.created_at).toLocaleDateString('es-ES')}
                     </span>

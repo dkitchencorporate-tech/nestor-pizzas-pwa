@@ -315,12 +315,12 @@ export default function AdminHistory() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#0A0A0E] text-white overflow-hidden print:bg-white print:text-black">
+    <div className="h-full overflow-y-auto bg-[#0A0A0E] text-white print:bg-white print:text-black">
       
       {/* Header and Controls */}
-      <div className="p-4 sm:p-5 border-b border-zinc-800 bg-[#14141E] z-10 shadow-md flex flex-wrap items-center justify-between gap-3 print:hidden">
+      <div className="p-3 sm:p-4 border-b border-zinc-800 bg-[#14141E] z-10 shadow-md flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div>
-          <h2 className="text-xl sm:text-2xl font-display font-black uppercase text-white tracking-wide flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-display font-black uppercase text-white tracking-wide flex items-center gap-2">
             Historial de <span className="text-green-500">Pedidos & Arqueo</span>
           </h2>
           <p className="text-xs text-zinc-400 font-medium">Auditoría contable, conciliación de repartidores y cierre de caja</p>
@@ -329,7 +329,7 @@ export default function AdminHistory() {
         <div className="flex items-center gap-2">
           <button 
             onClick={handlePrintClick}
-            className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-105"
+            className="px-3.5 sm:px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-105"
           >
             <span>🖨️</span>
             <span>{dateFilter === 'today' ? 'Informe PDF / Cierre de Caja' : 'Descargar Informe PDF'}</span>
@@ -337,7 +337,7 @@ export default function AdminHistory() {
           
           <button 
             onClick={fetchHistory}
-            className="px-3.5 py-2.5 bg-zinc-800 text-zinc-300 rounded-xl text-xs font-bold uppercase hover:bg-zinc-700 hover:text-white transition-colors"
+            className="px-3 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-xs font-bold uppercase hover:bg-zinc-700 hover:text-white transition-colors"
           >
             🔄 Refrescar
           </button>
@@ -345,34 +345,34 @@ export default function AdminHistory() {
       </div>
 
       {/* Date Range Navigation Tabs */}
-      <div className="flex items-center overflow-x-auto no-scrollbar border-b border-zinc-800 bg-[#101018] px-4 pt-2 gap-1 print:hidden">
+      <div className="flex items-center overflow-x-auto no-scrollbar border-b border-zinc-800 bg-[#101018] px-3 pt-1.5 gap-1 print:hidden">
         <button 
           onClick={() => setDateFilter('today')}
-          className={`px-4 py-2.5 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === 'today' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-3 py-2 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === 'today' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
           📅 Hoy
         </button>
         <button 
           onClick={() => setDateFilter('yesterday')}
-          className={`px-4 py-2.5 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === 'yesterday' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-3 py-2 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === 'yesterday' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
           ⏪ Ayer
         </button>
         <button 
           onClick={() => setDateFilter('7days')}
-          className={`px-4 py-2.5 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === '7days' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-3 py-2 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === '7days' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
           📊 Últimos 7 Días
         </button>
         <button 
           onClick={() => setDateFilter('30days')}
-          className={`px-4 py-2.5 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === '30days' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+          className={`px-3 py-2 font-bold uppercase tracking-wider text-xs transition-all border-b-2 whitespace-nowrap rounded-t-lg ${dateFilter === '30days' ? 'border-green-500 text-green-400 bg-green-500/10' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
         >
           📈 Último Mes
         </button>
         
         {/* Custom Calendar Date Range Picker (Max 90 days) */}
-        <div className={`flex items-center gap-2 px-3 py-1.5 border-b-2 rounded-t-lg transition-all ${dateFilter === 'custom' ? 'border-green-500 bg-green-500/10 text-green-400' : 'border-transparent text-zinc-500'}`}>
+        <div className={`flex items-center gap-1.5 px-2.5 py-1 border-b-2 rounded-t-lg transition-all ${dateFilter === 'custom' ? 'border-green-500 bg-green-500/10 text-green-400' : 'border-transparent text-zinc-500'}`}>
           <button 
             onClick={() => setDateFilter('custom')} 
             className="text-xs font-bold uppercase whitespace-nowrap"
@@ -389,7 +389,7 @@ export default function AdminHistory() {
                 setCustomStartDate(e.target.value);
                 setDateFilter('custom');
               }}
-              className="bg-zinc-900 border border-zinc-700 text-white text-xs px-2 py-1 rounded-lg focus:outline-none focus:border-green-500"
+              className="bg-zinc-900 border border-zinc-700 text-white text-xs px-2 py-0.5 rounded-lg focus:outline-none focus:border-green-500"
             />
             
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Hasta:</span>
@@ -400,7 +400,7 @@ export default function AdminHistory() {
                 setCustomEndDate(e.target.value);
                 setDateFilter('custom');
               }}
-              className="bg-zinc-900 border border-zinc-700 text-white text-xs px-2 py-1 rounded-lg focus:outline-none focus:border-green-500"
+              className="bg-zinc-900 border border-zinc-700 text-white text-xs px-2 py-0.5 rounded-lg focus:outline-none focus:border-green-500"
             />
           </div>
         </div>
@@ -408,23 +408,23 @@ export default function AdminHistory() {
 
       {/* Range Warning Alert if > 90 days */}
       {rangeWarning && dateFilter === 'custom' && (
-        <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 py-2 text-xs text-amber-300 font-medium flex items-center gap-2 print:hidden">
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-1.5 text-xs text-amber-300 font-medium flex items-center gap-2 print:hidden">
           <span>⚠️</span>
           <span>{rangeWarning}</span>
         </div>
       )}
 
       {/* Multi-Criteria Interactive Filter Toolbar */}
-      <div className="p-3 sm:px-6 bg-[#14141E] border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 print:hidden">
+      <div className="p-2 sm:px-4 bg-[#14141E] border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 print:hidden">
         
         {/* Service Type Filter */}
-        <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800">
-          <span className="text-[10px] font-bold text-zinc-500 uppercase px-2">Tipo:</span>
+        <div className="flex items-center gap-1 bg-zinc-900/80 p-0.5 rounded-xl border border-zinc-800">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase px-1.5">Tipo:</span>
           {(['all', 'delivery', 'pickup', 'local'] as ServiceFilter[]).map((st) => (
             <button
               key={st}
               onClick={() => setServiceFilter(st)}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all capitalize ${serviceFilter === st ? 'bg-green-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`px-2 py-0.5 text-xs font-bold rounded-lg transition-all capitalize ${serviceFilter === st ? 'bg-green-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
             >
               {st === 'all' ? 'Todos' : (st === 'delivery' ? '🛵 Domicilio' : (st === 'pickup' ? '🛍️ Recogida' : '🍽️ Mesas'))}
             </button>
@@ -432,13 +432,13 @@ export default function AdminHistory() {
         </div>
 
         {/* Payment Method Filter */}
-        <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800">
-          <span className="text-[10px] font-bold text-zinc-500 uppercase px-2">Pago:</span>
+        <div className="flex items-center gap-1 bg-zinc-900/80 p-0.5 rounded-xl border border-zinc-800">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase px-1.5">Pago:</span>
           {(['all', 'cash', 'tpv', 'online'] as PaymentFilter[]).map((pm) => (
             <button
               key={pm}
               onClick={() => setPaymentFilter(pm)}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all capitalize ${paymentFilter === pm ? 'bg-blue-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`px-2 py-0.5 text-xs font-bold rounded-lg transition-all capitalize ${paymentFilter === pm ? 'bg-blue-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
             >
               {pm === 'all' ? 'Todos' : (pm === 'cash' ? '💵 Efectivo' : (pm === 'tpv' ? '💳 TPV Físico' : '📱 App / Online'))}
             </button>
@@ -446,13 +446,13 @@ export default function AdminHistory() {
         </div>
 
         {/* Status Filter */}
-        <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800">
-          <span className="text-[10px] font-bold text-zinc-500 uppercase px-2">Estado:</span>
+        <div className="flex items-center gap-1 bg-zinc-900/80 p-0.5 rounded-xl border border-zinc-800">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase px-1.5">Estado:</span>
           {(['delivered', 'cancelled', 'all'] as StatusFilter[]).map((sf) => (
             <button
               key={sf}
               onClick={() => setStatusFilter(sf)}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all capitalize ${statusFilter === sf ? (sf === 'cancelled' ? 'bg-red-600 text-white' : 'bg-zinc-700 text-white') : 'text-zinc-400 hover:text-zinc-200'}`}
+              className={`px-2 py-0.5 text-xs font-bold rounded-lg transition-all capitalize ${statusFilter === sf ? (sf === 'cancelled' ? 'bg-red-600 text-white' : 'bg-zinc-700 text-white') : 'text-zinc-400 hover:text-zinc-200'}`}
             >
               {sf === 'delivered' ? '🟢 Completados' : (sf === 'cancelled' ? '❌ Cancelados' : 'Todos')}
             </button>
@@ -462,57 +462,57 @@ export default function AdminHistory() {
       </div>
 
       {/* Real-Time Financial Summary Panel (Arqueo de Caja & Liquidación) */}
-      <div className="p-4 sm:px-6 bg-[#0E0E16] border-b border-zinc-800/80 print:hidden">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="p-3 sm:px-4 bg-[#0E0E16] border-b border-zinc-800/80 print:hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
           
           {/* Card 1: EFECTIVO EN REPARTO */}
-          <div className="bg-amber-500/10 border-2 border-amber-500/50 rounded-2xl p-3.5 flex flex-col justify-between shadow-lg relative overflow-hidden">
+          <div className="bg-amber-500/10 border border-amber-500/40 rounded-xl p-2.5 sm:p-3 flex flex-col justify-between shadow relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider">🛵 Efectivo Reparto</span>
               <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.5 rounded">{stats.cashDeliveryCount} ped.</span>
             </div>
             <div className="mt-1">
-              <span className="text-2xl font-black text-amber-300 leading-none whitespace-nowrap">{stats.cashDeliveryTotal.toFixed(2)}€</span>
-              <p className="text-[9px] text-amber-400/80 font-medium mt-1">A entregar por repartidores</p>
+              <span className="text-xl sm:text-2xl font-black text-amber-300 leading-none whitespace-nowrap">{stats.cashDeliveryTotal.toFixed(2)}€</span>
+              <p className="text-[9px] text-amber-400/80 font-medium mt-0.5">A entregar por repartidores</p>
             </div>
           </div>
 
           {/* Card 2: EFECTIVO EN LOCAL */}
-          <div className="bg-zinc-900/80 border border-zinc-700 rounded-2xl p-3.5 flex flex-col justify-between">
+          <div className="bg-zinc-900/80 border border-zinc-700 rounded-xl p-2.5 sm:p-3 flex flex-col justify-between">
             <span className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">💵 Efectivo Local/Barra</span>
             <div className="mt-1">
-              <span className="text-xl font-black text-zinc-200 leading-none whitespace-nowrap">{stats.cashLocalTotal.toFixed(2)}€</span>
-              <p className="text-[9px] text-zinc-500 font-medium mt-1">Cobrado en mostrador/mesas</p>
+              <span className="text-lg sm:text-xl font-black text-zinc-200 leading-none whitespace-nowrap">{stats.cashLocalTotal.toFixed(2)}€</span>
+              <p className="text-[9px] text-zinc-500 font-medium mt-0.5">Cobrado en mostrador/mesas</p>
             </div>
           </div>
 
           {/* Card 3: TOTAL DATAFONO TPV */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-3.5 flex flex-col justify-between">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-2.5 sm:p-3 flex flex-col justify-between">
             <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider">💳 Datáfono TPV Físico</span>
             <div className="mt-1">
-              <span className="text-xl font-black text-blue-300 leading-none whitespace-nowrap">{stats.totalTpv.toFixed(2)}€</span>
-              <p className="text-[9px] text-blue-400/70 font-medium mt-1">Tarjetas en TPV</p>
+              <span className="text-lg sm:text-xl font-black text-blue-300 leading-none whitespace-nowrap">{stats.totalTpv.toFixed(2)}€</span>
+              <p className="text-[9px] text-blue-400/70 font-medium mt-0.5">Tarjetas en TPV</p>
             </div>
           </div>
 
           {/* Card 4: TOTAL ONLINE / APP */}
-          <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-3.5 flex flex-col justify-between">
+          <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-2.5 sm:p-3 flex flex-col justify-between">
             <span className="text-[10px] font-black uppercase text-purple-400 tracking-wider">📱 App / SumUp Online</span>
             <div className="mt-1">
-              <span className="text-xl font-black text-purple-300 leading-none whitespace-nowrap">{stats.totalOnline.toFixed(2)}€</span>
-              <p className="text-[9px] text-purple-400/70 font-medium mt-1">Pasarela web</p>
+              <span className="text-lg sm:text-xl font-black text-purple-300 leading-none whitespace-nowrap">{stats.totalOnline.toFixed(2)}€</span>
+              <p className="text-[9px] text-purple-400/70 font-medium mt-0.5">Pasarela web</p>
             </div>
           </div>
 
           {/* Card 5: FACTURACIÓN TOTAL */}
-          <div className="bg-emerald-500/10 border-2 border-emerald-500/50 rounded-2xl p-3.5 flex flex-col justify-between col-span-2 sm:col-span-1 shadow-lg">
+          <div className="bg-emerald-500/10 border border-emerald-500/40 rounded-xl p-2.5 sm:p-3 flex flex-col justify-between col-span-2 sm:col-span-1 shadow">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">💰 Facturación Total</span>
               <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded">{stats.deliveredCount} ped.</span>
             </div>
             <div className="mt-1">
-              <span className="text-2xl font-black text-emerald-400 leading-none whitespace-nowrap">{stats.totalRevenue.toFixed(2)}€</span>
-              <p className="text-[9px] text-emerald-400/80 font-medium mt-1">Efectivo Total: {stats.totalCash.toFixed(2)}€</p>
+              <span className="text-xl sm:text-2xl font-black text-emerald-400 leading-none whitespace-nowrap">{stats.totalRevenue.toFixed(2)}€</span>
+              <p className="text-[9px] text-emerald-400/80 font-medium mt-0.5">Efectivo Total: {stats.totalCash.toFixed(2)}€</p>
             </div>
           </div>
 
@@ -520,7 +520,7 @@ export default function AdminHistory() {
       </div>
 
       {/* Orders List Container */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar space-y-3.5 print:hidden">
+      <div className="p-4 sm:p-6 space-y-3 print:hidden">
         
         {loading ? (
           <div className="text-center py-20 bg-[#14141E] rounded-3xl border border-zinc-800">
