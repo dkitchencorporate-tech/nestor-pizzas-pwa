@@ -142,6 +142,9 @@ export default async function handler(req, res) {
       if (rpcError) throw rpcError;
       orderId = createdOrderId;
       success = true;
+
+      // Asegurar que payment_status quede explícitamente como 'PAID' en orders
+      await supabaseService.from('orders').update({ payment_status: 'PAID' }).eq('id', orderId);
     } catch (orderErr) {
       console.error('process_checkout falló en sumup-verify-order:', checkout.sumup_checkout_id, orderErr);
     }

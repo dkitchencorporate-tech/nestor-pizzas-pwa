@@ -147,10 +147,9 @@ export default function AdminOrders() {
   };
 
   const handlePrint = async (order: any) => {
-    const success1 = await sendToNetworkPrinter(order);
-    const success2 = await sendToNetworkPrinter(order);
+    const success = await sendToNetworkPrinter(order);
     
-    if (!success1 && !success2) {
+    if (!success) {
       document.body.classList.add('printing-ticket');
       setPrintingOrder(order);
       setTimeout(() => {

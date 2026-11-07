@@ -121,7 +121,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // 2) Elegibilidad real de canje de puntos VIP (25+ puntos reales en el perfil, único).
+  // 2) Elegibilidad real de canje de puntos VIP (20+ puntos reales en el perfil, único).
   let discount = 0;
   if (pointsRedeemed && verifiedUserId && eligibleDiscount > 0) {
     const { data: profile } = await supabase
@@ -129,7 +129,7 @@ export default async function handler(req, res) {
       .select('points')
       .eq('id', verifiedUserId)
       .single();
-    if (profile && profile.points >= 25) {
+    if (profile && profile.points >= 20) {
       discount = eligibleDiscount;
     }
   }
