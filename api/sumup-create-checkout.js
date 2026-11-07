@@ -54,7 +54,7 @@ export default async function handler(req, res) {
   //    y activo. El pago con tarjeta no admite precios sueltos/manuales
   //    (eso queda reservado al Kiosko, uso exclusivo de personal autenticado).
   const productIds = items
-    .map(i => (typeof i.productId === 'number' && i.productId < 1000 ? i.productId : null))
+    .map(i => (typeof i.productId === 'number' && i.productId < 100000 ? i.productId : null))
     .filter(id => id !== null);
 
   if (productIds.length !== items.length) {
@@ -103,12 +103,27 @@ export default async function handler(req, res) {
 
     const itemLabel = String(item.name || item.customization_details?.name || '');
     const isJuevesPromoItem = isThursdayInMadrid && product.jueves_promo_eligible === true && itemLabel.includes('(Promo Jueves)');
-    const frontendPrice = Number(item.price ?? item.unit_price ?? product.price);
+
+    // Si el frontend aún no envía item.price (o pestaña en caché), calculamos suplementos reales de extras y base Maxxi
+    const extrasArr = Array.isArray(item.customization_details?.extras)
+      ? item.customization_details.extras
+      : (Array.isArray(item.extras) ? item.extras : []);
+    const isPatatas = product.category_id === 'NUESTRAS PATATAS';
+    const extrasSupplement = isPatatas
+      ? extrasArr.reduce((acc, ex) => acc + (String(ex).toLowerCase().includes('cheddar') ? 1.00 : 0), 0)
+      : extrasArr.length * 1.00;
+    const isAlreadyMazzi = String(product.name || '').toUpperCase().includes('MAZZI') || String(product.name || '').toUpperCase().includes('MAXXI');
+    const isMaxiSize = item.customization_details?.size === 'maxi' || itemLabel.includes('(Base Maxxi)');
+    const baseSupplement = (!isAlreadyMazzi && isMaxiSize) ? 3.00 : 0;
+    const computedPrice = Math.round((Number(product.price) + extrasSupplement + baseSupplement) * 100) / 100;
+
+    const rawFrontendPrice = item.price ?? item.unit_price;
+    const frontendPrice = rawFrontendPrice !== undefined && rawFrontendPrice !== null ? Number(rawFrontendPrice) : computedPrice;
     const unitPrice = isJuevesPromoItem
       ? JUEVES_PROMO_PRICE
       : (!isNaN(frontendPrice) && frontendPrice >= product.price && frontendPrice <= product.price + 30
           ? Math.round(frontendPrice * 100) / 100
-          : product.price);
+          : computedPrice);
     unitPricesByIndex[index] = unitPrice;
 
     subtotal += unitPrice * qty;

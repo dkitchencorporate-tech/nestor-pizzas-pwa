@@ -220,6 +220,8 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
     const orderItems = items.map(item => ({
       productId: item.productId,
       quantity: item.quantity,
+      price: item.price,
+      unit_price: item.price,
       name: item.name,
       redeem_target: !!(pointsRedeemed && selectedRedeemItem && item.id === selectedRedeemItem.id),
       customization_details: {
@@ -275,7 +277,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
     try {
       const orderItems = items.map(item => ({
-        product_id: typeof item.productId === 'number' && item.productId < 1000 ? item.productId : null,
+        product_id: typeof item.productId === 'number' && item.productId < 100000 ? item.productId : null,
         quantity: item.quantity,
         unit_price: item.price,
         redeem_target: !!(pointsRedeemed && selectedRedeemItem && item.id === selectedRedeemItem.id),
