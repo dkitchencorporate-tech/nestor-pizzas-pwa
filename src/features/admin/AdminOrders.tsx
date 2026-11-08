@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import TicketPrinter from '../../components/TicketPrinter';
-import { sendToNetworkPrinter } from '../../utils/printerService';
+import { sendToNetworkPrinter, pingLocalProxyDirect, isMobileOrTabletDevice } from '../../utils/printerService';
 import { useI18nStore } from '../../store/i18nStore';
 import DOMPurify from 'dompurify';
 import { formatAddress } from '../../utils/addressUtils';
@@ -25,6 +25,7 @@ export default function AdminOrders() {
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
   const [isOpeningAlarm, setIsOpeningAlarm] = useState(false);
   const prevPendingCountRef = useRef<number>(-1);
+  const prevOrderStatusesRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     fetchOrders();
@@ -135,7 +136,33 @@ export default function AdminOrders() {
       .order('created_at', { ascending: false })
       .limit(100);
       
-    if (data) setOrders(data);
+    if (data) {
+      const prevMap = prevOrderStatusesRef.current;
+      const isInitialLoad = prevMap.size === 0;
+      const newlyAcceptedOrders: any[] = [];
+
+      for (const ord of data) {
+        const prevStatus = prevMap.get(ord.id);
+        if (!isInitialLoad && prevStatus === 'pending' && ord.status === 'cooking') {
+          newlyAcceptedOrders.push(ord);
+        }
+        prevMap.set(ord.id, ord.status);
+      }
+
+      setOrders(data);
+
+      // Si un pedido fue aceptado a cocina desde otro terminal (ej. iPad) y este equipo es el PC de Caja,
+      // asegurar impresión inmediata en localhost:8080 (protegido contra duplicados por ID de pedido)
+      if (newlyAcceptedOrders.length > 0 && !isMobileOrTabletDevice()) {
+        pingLocalProxyDirect('http://localhost:8080', 800).then((health) => {
+          if (health.ok) {
+            for (const acceptedOrd of newlyAcceptedOrders) {
+              void sendToNetworkPrinter(acceptedOrd);
+            }
+          }
+        });
+      }
+    }
   };
 
   const stopAudio = () => {

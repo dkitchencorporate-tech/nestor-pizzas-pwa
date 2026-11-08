@@ -14,6 +14,7 @@ import AdminPromotions from '../features/admin/AdminPromotions';
 import { supabase } from '../lib/supabase';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { useAdminUiStore } from '../store/adminUiStore';
+import { initMasterPrintBridge } from '../utils/printerService';
 
 export default function AdminDashboard() {
   const { t } = useI18nStore();
@@ -50,6 +51,10 @@ export default function AdminDashboard() {
       }
     };
     fetchMode();
+    const stopPrintBridge = initMasterPrintBridge();
+    return () => {
+      stopPrintBridge();
+    };
   }, [user, profile]);
 
   const toggleSaturationMode = async () => {

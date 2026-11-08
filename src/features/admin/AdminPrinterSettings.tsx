@@ -46,9 +46,10 @@ export default function AdminPrinterSettings({ onClose }: AdminPrinterSettingsPr
     setStatusText('Verificando comunicación con el servidor de impresión...');
     testProxyHealth(currentProxy, 1500).then((res) => {
       if (res.ok && res.data) {
+        savePrinterProxyUrl(currentProxy);
         setStatus('online');
         setStatusText(
-          `Conectado al proxy v${res.data.version || '3.1.0'} (${res.data.service || 'Nestor Pizzas Print Proxy'})`
+          `Conectado y operativo: ${res.data.service || 'Nestor Pizzas Print Proxy'} (v${res.data.version || '3.1.0'})`
         );
       } else {
         setStatus('offline');
