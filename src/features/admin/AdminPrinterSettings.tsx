@@ -33,7 +33,12 @@ export default function AdminPrinterSettings({ onClose }: AdminPrinterSettingsPr
     if (rawConfig) {
       try {
         const parsed = JSON.parse(rawConfig);
-        if (parsed.ip) setIpAddress(parsed.ip);
+        const savedIp = parsed.ip;
+        if (savedIp && savedIp !== '192.168.1.100' && savedIp !== '192.168.1.200') {
+          setIpAddress(savedIp);
+        } else {
+          setIpAddress(DEFAULT_KITCHEN_PRINTER_IP);
+        }
         if (parsed.port) setPort(parsed.port);
         if (parsed.useDirectPrint !== undefined) setUseDirectPrint(parsed.useDirectPrint);
       } catch (e) {

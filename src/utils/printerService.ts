@@ -462,15 +462,18 @@ export const initMasterPrintBridge = (): (() => void) => {
   const executeLocalPrintJob = async (job: CloudPrintJob): Promise<boolean> => {
     if (!job || !job.job_id || !job.payload) return false;
     if (processedBridgeJobIds.has(job.job_id)) return false;
-    if (Date.now() - (job.created_at || 0) > 120000) return false;
+    // Tolerar desfase de reloj entre dispositivos de hasta 10 minutos
+    if (Math.abs(Date.now() - (job.created_at || 0)) > 600000) return false;
 
     processedBridgeJobIds.add(job.job_id);
 
-    // Si el trabajo trae un pedido con ID, registrar también en el mapa anti-duplicados de pedidos
+    // Si es una reimpresión manual explícita o prueba, permitir siempre.
+    // Solo si es un pedido idéntico automático en menos de 6s, evitar duplicado.
     const orderId = job.payload?.order?.id;
-    if (orderId) {
+    const isManual = job.payload?.is_manual_reprint === true;
+    if (orderId && !isManual) {
       const prevTs = processedOrderPrintTimestamps.get(String(orderId)) || 0;
-      if (Date.now() - prevTs < 12000) {
+      if (Date.now() - prevTs < 6000) {
         return true;
       }
       processedOrderPrintTimestamps.set(String(orderId), Date.now());
@@ -516,7 +519,7 @@ export const initMasterPrintBridge = (): (() => void) => {
           job &&
           job.status === 'pending' &&
           !processedBridgeJobIds.has(job.job_id) &&
-          Date.now() - (job.created_at || 0) < 120000
+          Math.abs(Date.now() - (job.created_at || 0)) < 600000
         ) {
           const printedOk = await executeLocalPrintJob(job);
           if (printedOk) {
@@ -613,7 +616,10 @@ export const initMasterPrintBridge = (): (() => void) => {
 /**
  * 7. Función principal invocada al aceptar o imprimir un pedido desde AdminOrders o AdminKiosk
  */
-export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
+export const sendToNetworkPrinter = async (
+  order: any,
+  isManualReprint: boolean = false
+): Promise<boolean> => {
   try {
     const configRaw = localStorage.getItem(CONFIG_STORAGE_KEY);
     const savedProxyUrl = localStorage.getItem(STORAGE_KEY);
@@ -627,15 +633,21 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
       }
     }
 
+    // Normalizar IP fija de cocina: en Caniles la IP real y fija de la TP8002 es 192.168.1.101
+    let kitchenIp = config.ip || DEFAULT_KITCHEN_PRINTER_IP;
+    if (kitchenIp === '192.168.1.100' || kitchenIp === '192.168.1.200') {
+      kitchenIp = DEFAULT_KITCHEN_PRINTER_IP;
+    }
+
     // Si el usuario desactivó explícitamente el modo directo Y no configuró URL de proxy, usar impresión navegador
     if (config.useDirectPrint === false && !savedProxyUrl) {
       return false;
     }
 
-    // Evitar doble disparo accidental del mismo pedido en menos de 8 segundos desde la misma terminal
-    if (order?.id) {
+    // Evitar doble disparo accidental del mismo pedido en menos de 6 segundos solo si NO es reimpresión manual
+    if (order?.id && !isManualReprint) {
       const prevTs = processedOrderPrintTimestamps.get(String(order.id)) || 0;
-      if (Date.now() - prevTs < 8000) {
+      if (Date.now() - prevTs < 6000) {
         return true;
       }
       processedOrderPrintTimestamps.set(String(order.id), Date.now());
@@ -856,10 +868,11 @@ export const sendToNetworkPrinter = async (order: any): Promise<boolean> => {
     };
 
     const payload = {
-      printer_ip: config.ip || DEFAULT_KITCHEN_PRINTER_IP,
+      printer_ip: kitchenIp,
       printer_port: parseInt(config.port, 10) || 9100,
       text,
       order: normalizedOrder,
+      is_manual_reprint: isManualReprint,
     };
 
     const result = await printOrderPayload(payload);

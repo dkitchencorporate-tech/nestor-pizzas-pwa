@@ -19,6 +19,7 @@ export default function AdminOrders() {
   const [silencedCount, setSilencedCount] = useState<number>(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [printingOrder, setPrintingOrder] = useState<any>(null);
+  const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
   // isAudioArmed: SIEMPRE false al cargar. El AudioContext muere con cada recarga.
   // El encargado DEBE pulsar "ACTIVAR ALARMA" una vez por sesión (política del navegador).
   const [isAudioArmed, setIsAudioArmed] = useState<boolean>(false);
@@ -194,9 +195,14 @@ export default function AdminOrders() {
     prevPendingCountRef.current = currentPending;
   };
 
-  const handlePrint = async (order: any) => {
-    const success = await sendToNetworkPrinter(order);
+  const handlePrint = async (order: any, isManual = false) => {
+    if (order?.id) setPrintingOrderId(order.id);
+    const success = await sendToNetworkPrinter(order, isManual);
     
+    if (order?.id) {
+      setTimeout(() => setPrintingOrderId(null), 2500);
+    }
+
     if (!success) {
       document.body.classList.add('printing-ticket');
       setPrintingOrder(order);
@@ -609,10 +615,16 @@ export default function AdminOrders() {
 {/* Print Button */}
                         <div className="pb-4 mb-4 border-b border-zinc-800/80 flex gap-2">
                           <button 
-                            onClick={() => handlePrint(order)}
-                            className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                            onClick={() => handlePrint(order, true)}
+                            disabled={printingOrderId === order.id}
+                            className={`flex-1 text-sm font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 ${
+                              printingOrderId === order.id
+                                ? 'bg-green-600 text-white animate-pulse'
+                                : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                            }`}
                           >
-                            <span className="text-xl">🖨️</span> Imprimir
+                            <span className="text-xl">🖨️</span>
+                            <span>{printingOrderId === order.id ? '¡Enviado a Impresoras!' : 'Imprimir'}</span>
                           </button>
                           
                           {order.delivery_method === 'local' && (order.status === 'pending' || order.status === 'cooking') && (
