@@ -126,6 +126,7 @@ export default async function handler(req, res) {
   let redeemedItemIndex = -1;
   let requiredPointsCost = 20;
   let requiredMinOrder = Number(loyaltyConfig.min_order_to_redeem || 15);
+  let hasJuevesPromo = false;
   // Guardado por posición para reutilizar el mismo precio (ya con el
   // descuento de Jueves Locos aplicado si toca) al construir el pedido
   // pendiente más abajo — así el importe que cobra SumUp y el que queda
@@ -149,6 +150,9 @@ export default async function handler(req, res) {
     // "(CRAZY THURSDAYS)") que quedaron en carritos guardados: la traducción de la etiqueta
     // hizo que aquí no se reconociera la oferta y se cobrara precio de catálogo (12/11/2026).
     const isJuevesPromoItem = isThursdayInMadrid && product.jueves_promo_eligible === true && JUEVES_LABEL_RE.test(itemLabel);
+    if (isJuevesPromoItem) {
+      hasJuevesPromo = true;
+    }
 
     // Si el frontend aún no envía item.price (o pestaña en caché), calculamos suplementos reales de extras y base Maxxi
     const extrasArr = Array.isArray(item.customization_details?.extras)
@@ -234,12 +238,17 @@ export default async function handler(req, res) {
   // El pedido mínimo de reparto se comprueba sobre el subtotal real del carrito antes del descuento VIP
   const { data: storeSettings } = await supabaseService
     .from('store_settings')
-    .select('delivery_fee, min_order_delivery')
+    .select('delivery_fee, min_order_delivery, jueves_promo_fee')
     .eq('id', 1)
     .single();
 
   const minOrderDelivery = Number(storeSettings?.min_order_delivery ?? 10);
-  const deliveryFee = deliveryMethod === 'delivery' ? Math.max(0, Number(storeSettings?.delivery_fee ?? 0)) : 0;
+  const baseDeliveryFee = deliveryMethod === 'delivery' ? Math.max(0, Number(storeSettings?.delivery_fee ?? 0)) : 0;
+  // Suplemento de reparto Jueves Locos (+1,00 €): aplica únicamente si el pedido es a domicilio y contiene pizzas promo
+  const juevesPromoDeliveryFee = (deliveryMethod === 'delivery' && hasJuevesPromo)
+    ? Math.max(0, Number(storeSettings?.jueves_promo_fee ?? 1.00))
+    : 0;
+  const deliveryFee = baseDeliveryFee + juevesPromoDeliveryFee;
   const afterDiscount = Math.max(0, subtotal - discount);
 
   if (deliveryMethod === 'delivery' && subtotal < minOrderDelivery) {

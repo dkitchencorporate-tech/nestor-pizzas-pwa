@@ -23,6 +23,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const { user, profile, updateProfile } = useAuthStore();
   const {
     deliveryFee,
+    juevesPromoFee,
     minOrderDelivery,
     allowDelivery,
     deliveryAllowCard,
@@ -166,10 +167,18 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
   const discount = pointsRedeemed && canRedeem && eligibleDiscount > 0 ? eligibleDiscount : 0;
 
+  // Suplemento de reparto Jueves Locos (+1,00 €): aplica únicamente si el pedido es a domicilio y contiene pizzas promo
+  const hasJuevesPromo = items.some(item => isJuevesPromoName(item.name));
+  const juevesPromoDeliveryFee = (deliveryMethod === 'delivery' && hasJuevesPromo)
+    ? Math.max(0, Number(juevesPromoFee ?? 1.00))
+    : 0;
+
   // El pedido mínimo de reparto (10€) se evalúa sobre el subtotal real de la cesta antes del regalo VIP
   const isUnderMinimum = deliveryMethod === 'delivery' && subtotal < minOrderDelivery;
   const missingAmount = Math.max(0, minOrderDelivery - subtotal);
-  const activeDeliveryFee = deliveryMethod === 'delivery' ? Math.max(0, Number(deliveryFee || 0)) : 0;
+  const activeDeliveryFee = deliveryMethod === 'delivery'
+    ? (Math.max(0, Number(deliveryFee || 0)) + juevesPromoDeliveryFee)
+    : 0;
   const finalTotal = Math.max(0, subtotal - discount) + activeDeliveryFee;
   const pointsEarned = loyaltyConfig.enabled ? Math.floor(finalTotal / 10) * pointsPer10Eur : 0;
 
@@ -225,6 +234,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       : 'Recogida en local (C. Alcalde Felip, 9 Caniles)';
     const finalOrderNotes = [
       scheduledTime !== 'asap' ? `⏰ Programado: ${scheduledTime}` : '',
+      hasJuevesPromo && deliveryMethod === 'delivery' ? `🛵 Reparto Jueves Locos (+${juevesPromoDeliveryFee.toFixed(2)} €)` : '',
       addressNotes ? `Dir/Mesa: ${addressNotes}` : '',
       orderNotes.trim() ? `📝 ${orderNotes.trim()}` : ''
     ].filter(Boolean).join(' | ');
@@ -319,6 +329,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
 
       const finalOrderNotes = [
         scheduledTime !== 'asap' ? `⏰ Programado: ${scheduledTime}` : '',
+        hasJuevesPromo && deliveryMethod === 'delivery' ? `🛵 Reparto Jueves Locos (+${juevesPromoDeliveryFee.toFixed(2)} €)` : '',
         addressNotes ? `Dir/Mesa: ${addressNotes}` : '',
         orderNotes.trim() ? `📝 ${orderNotes.trim()}` : ''
       ].filter(Boolean).join(' | ');
@@ -338,6 +349,14 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
       });
 
       if (checkoutError) throw checkoutError;
+
+      // Asegurar que el total registrado en orders coincida exactamente con finalTotal si hubo suplemento de reparto
+      if (orderId && activeDeliveryFee > 0) {
+        await supabase
+          .from('orders')
+          .update({ total_amount: finalTotal })
+          .eq('id', orderId);
+      }
 
       if (user && profile) {
         await supabase
@@ -481,6 +500,15 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
                 );
               })}
             </div>
+            {hasJuevesPromo && deliveryMethod === 'delivery' && (
+              <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 p-2.5 rounded-xl text-xs mt-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🛵</span>
+                  <span className="font-bold text-green-400">Suplemento reparto a domicilio (Promo Jueves):</span>
+                </div>
+                <span className="font-black text-green-400">+{juevesPromoDeliveryFee.toFixed(2)} €</span>
+              </div>
+            )}
           </div>
 
           {/* Puntos Club VIP */}
@@ -808,6 +836,11 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
             <div>
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">{t('total_to_pay')}</span>
               <span className="font-display font-black text-2xl sm:text-3xl text-white">{finalTotal.toFixed(2)} €</span>
+              {hasJuevesPromo && deliveryMethod === 'delivery' && (
+                <span className="text-[10px] text-green-400 font-semibold block leading-tight mt-0.5">
+                  (Incluye {juevesPromoDeliveryFee.toFixed(2).replace('.', ',')} € reparto a domicilio)
+                </span>
+              )}
             </div>
             <button 
               disabled={isProcessing || !clientName || !clientPhone || (deliveryMethod === 'delivery' && (!addressStreet || !addressNumber || !addressCP)) || isUnderMinimum || (!allowDelivery && !allowPickup) || (!isOpen && availableSlots.length === 0)}
