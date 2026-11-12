@@ -91,6 +91,9 @@ export default async function handler(req, res) {
   const madridWeekday = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Madrid', weekday: 'long' }).format(new Date());
   const isThursdayInMadrid = madridWeekday === 'Thursday';
   const JUEVES_PROMO_PRICE = 5.50;
+  const JUEVES_LABEL_RE = /\((?:promo jueves|jueves locos|crazy thursdays)\)/i;
+  const normalizeJuevesName = (name) =>
+    typeof name === 'string' ? name.replace(/\((?:promo jueves|jueves locos|crazy thursdays)\)/gi, '(Promo Jueves)') : name;
 
   // Cargar configuración dinámica de Club VIP / Promociones (app_settings.loyalty_config)
   let loyaltyConfig = { enabled: true, points_per_10_eur: 2, min_order_to_redeem: 15, rewards: [] };
@@ -142,7 +145,10 @@ export default async function handler(req, res) {
     }
 
     const itemLabel = String(item.name || item.customization_details?.name || '');
-    const isJuevesPromoItem = isThursdayInMadrid && product.jueves_promo_eligible === true && itemLabel.includes('(Promo Jueves)');
+    // Marcador canónico "(Promo Jueves)" + etiquetas antiguas/traducidas ("(JUEVES LOCOS)",
+    // "(CRAZY THURSDAYS)") que quedaron en carritos guardados: la traducción de la etiqueta
+    // hizo que aquí no se reconociera la oferta y se cobrara precio de catálogo (12/11/2026).
+    const isJuevesPromoItem = isThursdayInMadrid && product.jueves_promo_eligible === true && JUEVES_LABEL_RE.test(itemLabel);
 
     // Si el frontend aún no envía item.price (o pestaña en caché), calculamos suplementos reales de extras y base Maxxi
     const extrasArr = Array.isArray(item.customization_details?.extras)
@@ -259,7 +265,10 @@ export default async function handler(req, res) {
     p_delivery_method: deliveryMethod,
     p_items: items.map((item, index) => {
       const isRedeemedTarget = discount > 0 && index === redeemedItemIndex;
-      const baseCustom = item.customization_details || { name: item.name, notes: item.notes, extras: item.extras };
+      const rawCustom = item.customization_details || { name: item.name, notes: item.notes, extras: item.extras };
+      // process_checkout (SQL) reconoce la oferta por '(Promo Jueves)' en este nombre: se normaliza
+      // para que el pedido final se grabe con el mismo precio que cobra SumUp.
+      const baseCustom = { ...rawCustom, name: normalizeJuevesName(rawCustom.name ?? item.name) };
       return {
         product_id: item.productId,
         quantity: item.quantity,

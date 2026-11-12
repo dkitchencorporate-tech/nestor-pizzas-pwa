@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { CartItem } from '../store/cartStore';
 import { useI18nStore } from '../store/i18nStore';
 import { useHardwareBack } from '../utils/useHardwareBack';
+import { JUEVES_PROMO_MARKER } from '../utils/juevesPromo';
 
 interface PromoJuevesModalProps {
   products: any[];
@@ -59,7 +60,8 @@ export default function KioskPromoJuevesModal({ products, onClose, onAdd }: Prom
       const isPromo = index < pairs * 2;
       onAdd({
         productId: sp.product.id,
-        name: `${sp.product.name} ${isPromo ? `(${t('promo_title_2')})` : ''}`,
+        // Marcador fijo (no traducido): process_checkout lo usa para cobrar 5,50 €
+        name: isPromo ? `${sp.product.name} ${JUEVES_PROMO_MARKER}` : sp.product.name,
         price: isPromo ? 5.50 : sp.product.price,
         quantity: 1,
         notes: sp.note.trim() || undefined

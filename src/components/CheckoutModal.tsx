@@ -9,6 +9,7 @@ import { useI18nStore } from '../store/i18nStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { getCachedCatalogData } from '../lib/catalogPreload';
 import { useLoyaltyStore } from '../store/loyaltyStore';
+import { isJuevesPromoName, normalizeJuevesPromoName } from '../utils/juevesPromo';
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -111,7 +112,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
   const catalogProducts = getCachedCatalogData()?.products || [];
   const isPizzaSugerenciaItem = (item: any) => {
     const nameLower = String(item.name || '').toLowerCase();
-    if (nameLower.includes('(promo jueves)') || nameLower.includes('dulce') || nameLower.includes('burguer')) {
+    if (isJuevesPromoName(item.name) || nameLower.includes('dulce') || nameLower.includes('burguer')) {
       return false;
     }
     const prod = catalogProducts.find((p: any) => Number(p.id) === Number(item.productId));
@@ -235,10 +236,10 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
         quantity: item.quantity,
         price: item.price,
         unit_price: item.price,
-        name: item.name,
+        name: normalizeJuevesPromoName(item.name),
         redeem_target: isRedeemedTarget,
         customization_details: {
-          name: item.name,
+          name: normalizeJuevesPromoName(item.name),
           notes: item.notes,
           extras: item.extras,
           size: item.size,
@@ -303,7 +304,7 @@ export default function CheckoutModal({ onClose, onSuccess }: CheckoutModalProps
           unit_price: item.price,
           redeem_target: isRedeemedTarget,
           customization_details: {
-            name: item.name,
+            name: normalizeJuevesPromoName(item.name),
             notes: item.notes,
             extras: item.extras,
             size: item.size,
